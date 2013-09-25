@@ -1,65 +1,5 @@
 """
-    Name: Command Line Argument Parser Generator
-
-    CLAPG
-
-    CLARPAGE
-    CLAParse
-    CoLiArPaGe
-    CLAPGen
-
-    New option syntax:
-
-    <options> [| key: value [| key: value ...]]
-
-    Where key is one of:
-        Count: either a single integer or two integers separated by two dots
-            (i.e. min..max). The default for options is 0..1 and for arguments
-            it is 1.
-            If the maximum isn't 1 the type automatically becomes a list
-            If the maximum is 0 there is no upper bound for how many values
-            the option accepts.
-        Default: the default value for the variable
-        Delimiter: a single character (e.g. comma) used to separate values in
-            a list
-        DelimiterCount: 0..2 3..
-        Flags
-        Index
-        Member: the name of the member variable
-        Name: the name of the value that will be used in error messages and
-            also the name of the member unless "member" is also specified
-            (any characters in the name that are illegal in member names are
-             replaced with underscores).
-        OptionType: ignored if set, it's always deduced from other parameters
-            Value
-            Argument
-            DelimitedValue
-            DelimitedArgument
-        Text: overide the auto-generated text for the argument or option
-        Type:
-            Help
-            Info
-            MultiValue
-            Value
-            List    values are stored in a vector
-            Final   the option marks the end of all options, all remaining
-                    arguments are treated as arguments even if they start with
-                    a dash. POSIX-compliant program should make "--" the
-                    final option. There won't be a members for final options in
-                    the Arguments struct.
-        # Text: overide the auto-generated text for the argument or option
-        Value: the value that will be assigned (or appended) to the variable
-            if the flag is given.
-        Values: the legal values for the argument or option. The same set of
-            legal values applies to all values when "type" is "list" or
-            "multi-value".
-        ValueType: must be one of:
-            # int int8_t int16_t int32_t int64_t
-            # unsigned uint8_t uint16_t uint32_t uint64_t
-            # float double
-            String
-        Visible: set to False if the option or argument shouldn't be shown
-            in the help text
+    Name: clapgen - Command Line Argument Parser GENerator
 
 This is actually a language consisting of the following constructs:
 
@@ -76,6 +16,7 @@ Members:
 
 Options:
     (argument) - from text
+    count
     delimiter - from argument or value
     (delimiterCount) - from delimiter
     flags - from text
@@ -84,16 +25,15 @@ Options:
     minDelimiters - from delimiterCount
     (text)
     value - from flags (true)
-    (visible) - from text
 
 Arguments:
     (argument) - from text
+    count
     delimiter - from text
     delimiterCount - from delimiter and text
     index
     member - from text
     (text)
-    (visible) - from text
 """
 import argparse
 import os.path
