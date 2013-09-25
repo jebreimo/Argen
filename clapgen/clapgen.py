@@ -39,6 +39,8 @@ import argparse
 import os.path
 import sys
 import textwrap
+
+from error import Error
 import helptextparser
 import argparser_hpp
 import argparser_cpp
@@ -146,7 +148,7 @@ def main(args):
         return 1
     try:
         parserResult = helptextparser.parseFile(args.helpfile)
-    except helptextparser.Error as ex:
+    except Error as ex:
         print(ex)
         return 2
     if args.indent != -1:
