@@ -23,7 +23,7 @@ struct [[[className]]]
 
     [[[members]]]
 
-    enum Result {Result_Error, Result_Ok, Result_Help, Result_Info};
+    enum Result {RESULT_OK, RESULT_INFO, RESULT_HELP, RESULT_ERROR};
     Result [[[functionName]]]_result;
 };
 

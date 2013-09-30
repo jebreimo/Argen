@@ -225,7 +225,7 @@ namespace
         std::cerr << "Error: " << flag << ": " << errorMsg << "\\n"
                   << "Run \\"" << programName
                   << " [[[helpFlag]]]\\" for help.\\n";
-        result.[[[functionName]]]_result = [[[className]]]::Result_Error;
+        result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return false;
     }
 
@@ -332,11 +332,12 @@ namespace
     struct MandatoryOption
     {
         MandatoryOption(std::string name, std::string flags)
-            : name(name), flags(flags), given(false)
+            : name(name), flags(flags), given(false), mandatory(true)
         {}
         std::string name;
         std::string flags;
         bool given;
+        bool mandatory;
     };
 
     MandatoryOption mandatoryOptions[] = {
@@ -358,7 +359,7 @@ namespace
         const MandatoryOption* mo = std::find_if(
                 std::begin(mandatoryOptions),
                 std::end(mandatoryOptions),
-                [](const MandatoryOption& v) {return !v.given;});
+                [](const MandatoryOption& v) {return v.mandatory && !v.given;});
         if (mo != std::end(mandatoryOptions))
             return error(mo->flags, result, "mandatory option missing");
         return true;
@@ -378,7 +379,7 @@ namespace
 
 [[[className]]]::[[[className]]]()
     : [[[memberInitializers]]],
-      [[[functionName]]]_result(Result_Ok)
+      [[[functionName]]]_result(RESULT_OK)
 {
     [[[multiValueInitialization]]]
 }
@@ -443,7 +444,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         std::cerr << "Error: incorrect number of arguments (expected [[[minArguments]]], "
                   << " but received " << args.size() << ")\\n"
                   << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::Result_Error;
+        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return result;
     }
 
@@ -454,7 +455,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         std::cerr << "Error: too few arguments (expected at least [[[minArguments]]], "
                   << " but received " << args.size() << ")\\n"
                   << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::Result_Error;
+        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return result;
     }
 [[[ENDIF]]]
@@ -464,7 +465,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         std::cerr << "Error: too many arguments (expected at most [[[maxArguments]]], but received "
                   << args.size() << ")\\n"
                   << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::Result_Error;
+        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return result;
     }
 [[[ENDIF]]]
@@ -993,7 +994,7 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
 {
     writeHelp();
     result.[[[memberName]]] = true;
-    result.[[[functionName]]]_result = [[[className]]]::Result_Help;
+    result.[[[functionName]]]_result = [[[className]]]::RESULT_HELP;
     return false;
 }
 """
@@ -1004,7 +1005,7 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
 [[[|]]][[[className]]]& result[[[<]]])
 {
     result.[[[memberName]]] = true;
-    result.[[[functionName]]]_result = [[[className]]]::Result_Info;
+    result.[[[functionName]]]_result = [[[className]]]::RESULT_INFO;
     return false;
 }
 """
