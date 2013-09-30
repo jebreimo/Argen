@@ -49,7 +49,9 @@ def parseFlags(text):
     flags = []
     argName = None
     prevWasFlag = False
-    for word in text.replace(", ", " ").split():
+    for word in text.split():
+        if word[-1] == ",":
+            word = word[:-1]
         if word[0] in "-/":
             index = word.find("=")
             if index in (-1, 1) or word[:3] == "--=":
