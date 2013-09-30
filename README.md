@@ -1,9 +1,66 @@
-CLAPGen
-=======
+CLAPGen - A code generator for C++ Command Line Argument Parsers
+================================================================
 
-Generates sophisticated command line argument parsers for C++ programs
+An easy to use, yet very sophisticated generator of command line argument parsers for C++ programs.
+
+### What it does
+It takes what is essentilly a text file with the help text of a program - the one shown when the program is executed with the help option (typically -h, --help or /?) - and creates C++ code that parses the arguments and options, checks them for errors and converts them to their intended types. All the programmer has to do is include the generated files in the project or makefile, and call the generated parser function, typically from main.
+
+### Features
+* Handles virtually any kind of option, in particular those starting wit a dash (-), doube-dash (--) or slash (/).
+* Handles multi-value options (when multiple instances of the same option should produce a list of values).
+* Handles comma-separated values. In fact any single character can be used as separator.
+* An extremely flexible help text format.
+* Platform independent. Both generator and generated files have been tested on Linux, Mac OS X, Windows, 
+* Generated code has no dependencies apart from the standard library
+
+### Requirements
+* The generator requires Python 2.7 or 3.3 (it may work, but hasn't been tested on other versions).
+* The generated files requires a compiler with at least some C++11-support (lambdas and auto). It's been tested with Visual Studio 2010 and 2012 (Windows), Clang 3.3 (Mac) and gcc 4.8 (Linux).
+
+### A quick example
+In this example I assume there is a program draw_message that creates a 
+A help text typed into a file helptext.txt:
+
+    %prog% [options] ${file}$ ${message| Count: 0..}$
+    
+    Does something.
+    
+    OPTIONS
+    ${-h, --help}$
+        Prints this help message
+    ${-s W,H, --size=W,H| Default: 800,600}$
+        Set the image size to Width,Height (default is 800,600).
+    ${-i PATH, --include=PATH}$ Something
+
+And a C++ file main.cpp:
+
+    #include "ParseArguments.hpp"
+
+    int main(int argc, char* argv[])
+    {
+        auto args = parse_arguments(argc, argv);
+        if (args->parse_arguments_result > Arguments::RESULT_OK)
+            return args->parse_arguments_result;
+
+        return 0;
+    }
+
+Run it through clapgen:
+    $ ls
+    helptext.txt    main.cpp
+    $ clapgen helptext.txt
+    clapgen: generated ParseArguments.h and ParseArguments.cpp
+    $ c++ -std=c++11 main.cpp ParseArguments.cpp
 
 ### Argument
+Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value.
+#### Example
+This creates a non-standard option "out-file" that takes an argument "FILE":
+    ${out-file FILE|flags: out-file | argument: FILE}$ Sets the name of the output file
+
+Reference for option and argument properties
+--------------------------------------------
 
 ### Count
 Either a single integer or two integers separated by two dots (i.e. min..max). The default for options is 0..1 and for arguments it's 1.
@@ -14,7 +71,12 @@ Either a single integer or two integers separated by two dots (i.e. min..max). T
 The default value for the variable
 
 ### Delimiter
-A single character (e.g. comma) used to separate values in a list
+A single character (e.g. comma) used to separate values in a list.
+
+#### Example
+If the helptext file contains the following line:
+    ${-i PATHS, --include=PATHS | Delimiter: :} A colon-separated list of paths to be searched
+
 
 ### DelimiterCount
 0..2 3..
