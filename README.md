@@ -47,28 +47,34 @@ And a C++ file main.cpp:
     }
 
 Run it through clapgen:
+
     $ ls
     helptext.txt    main.cpp
     $ clapgen helptext.txt
     clapgen: generated ParseArguments.h and ParseArguments.cpp
-    $ c++ -std=c++11 main.cpp ParseArguments.cpp
-
-### Argument
-Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value.
-#### Example
-This creates a non-standard option "out-file" that takes an argument "FILE":
-    ${out-file FILE|flags: out-file | argument: FILE}$ Sets the name of the output file
+    $ ls
+    helptext.txt    main.cpp    ParseArguments.h    ParseArguments.cpp
+    $ c++ -std=c++11 main.cpp ParseArguments.cpp -o test
 
 Reference for option and argument properties
 --------------------------------------------
 
+### Argument
+Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value.
+
+#### Example
+This creates a non-standard option "out-file" that takes an argument "FILE":
+    ${out-file FILE|flags: out-file | argument: FILE}$ Sets the name of the output file
+
 ### Count
-Either a single integer or two integers separated by two dots (i.e. min..max). The default for options is 0..1 and for arguments it's 1.
-  If the maximum isn't 1 the type automatically becomes a list
-  If the maximum is 0 there is no upper bound for how many values the option accepts.
+Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integer. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no defined upper limit to the number of values.
+
+#### Example
+This adds a member of type std::vector<std::string> to the generated struct:
+    ${-i DIR --include=DIR | count: 0..}$ Include DIR among the directories to be searched.
 
 ### Default
-The default value for the variable
+The default value for the variable.
 
 ### Delimiter
 A single character (e.g. comma) used to separate values in a list.
@@ -108,7 +114,7 @@ This only applies to flags, i.e. options that don't take an argument. The value 
 The legal values for the argument or option. The same set of legal values applies to all values when "type" is "list" or "multi-value".
 
 ### ValueType
-This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in <cstddef>, <cstdint> or <string>, it is necessary to customize the generated file. Strings must be of type "std::string", just "string" won't work.
+This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in <cstddef>, <cstdint> or <string>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
 
     # int int8_t int16_t int32_t int64_t
     # unsigned uint8_t uint16_t uint32_t uint64_t
