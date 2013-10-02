@@ -13,6 +13,7 @@ class Member(object):
         self.valueType = props["valuetype"]
         self.count = utilities.parseCount(props["count"])
         self.minCount, self.maxCount = self.count
+        self.include = props.get("include")
         self.type = props.get("type")
         if not self.type:
             self.type = "value" if self.maxCount == 1 else "list"

@@ -56,4 +56,5 @@ OTHER OPTIONS
   ${--                      }$  End of options
   ${-i PATH, --include=PATH | count: 0.. | delimiter: : | default: "foo":"bar":"baz"}$
   ${--sysinclude            | member: include | value: "foo":"bar":"baz" | delimiter: :}$
+  ${--stygg=N               | valueType: uint64_t | include: <cstdint>}$
 Another option (${-z}$) is the zombie-option.

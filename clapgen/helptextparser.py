@@ -108,6 +108,17 @@ def parseArg(s):
     props["name"] = props["member"]
     props["autoindex"] = str(ArgCounter)
     ArgCounter += 1
+    if s:
+        if s[0] == "<":
+            if s.endswith("...>"):
+                props["count"] = "1.."
+            else:
+                props["count"] = "1"
+        elif s[0] == "[":
+            if s.endswith("...]"):
+                props["count"] = "0.."
+            else:
+                props["count"] = "0..1"
     return props
 
 def parseOption(s):
@@ -240,7 +251,7 @@ if __name__ == "__main__":
         try:
             txt, argProps, argLines = parseText(s)
             properties.inferIndexProperties(argProps)
-            args = [Argument(p) for p in argProps]
+            arg = [Argument(p) for p in argProps]
             args.extend(arg)
             lines.append(txt)
         except Error as ex:
@@ -249,29 +260,33 @@ if __name__ == "__main__":
     def main(args):
         args = []
         lines = []
-        test(lines, args, "${-s TEXT| count: ..10}$\n${--special| member: s | value: \"$spec$\"}$")
-        test(lines, args, "${-h,      --help        }$  Show help.")
-        test(lines, args, "${-o,      --outfile=FILE}$  Output file for logging info.")
-        test(lines, args, "${-o FILE, --outfile=FILE}$  Output file for logging info.")
-        test(lines, args, "${-p,      --point=X,Y,Z | Default: 0.0}$  Set the point.")
-        test(lines, args, "${-i PATH, --include=PATH| delimiter: :}$  Set paths to include.")
-        test(lines, args, "With${| Text: --top-secret}$\nnewline")
-        test(lines, args, "${| Text: --secret}$\nNo newline")
-        test(lines, args, "${--                     }$  End of options, remainder are arguments.")
-        test(lines, args, "${YYYY-MM-DD| delimiter: - | Member: date}$")
-        test(lines, args, "${HH:MM:SS| delimiter: : | Member: time}$")
-        test(lines, args, "${<Kid yoU not>|index:3}$")
-        test(lines, args, "${}$")
-        test(lines, args, "${-a                     | text: -a -A -all}$  All of them")
-        test(lines, args, "Kjell\n${|Text:--foo=N}$${|Text:--bar=N}$\nKaare")
-        test(lines, args, "[OPTIONS]\n\t${-b}$\n\t${-c}$\n\t${-d}$")
-        test(lines, args, "${-e=N| values: [0.0..5.0)}$  All of them")
-        test(lines, args, "${-a --bah|flags: foot ball}$  Odd options")
+        test(lines, args, "${<file1>}$")
+        test(lines, args, "${<file2 ...>}$")
+        test(lines, args, "${[file3]}$")
+        test(lines, args, "${[file4 ...]}$")
+        # test(lines, args, "${-s TEXT| count: ..10}$\n${--special| member: s | value: \"$spec$\"}$")
+        # test(lines, args, "${-h,      --help        }$  Show help.")
+        # test(lines, args, "${-o,      --outfile=FILE}$  Output file for logging info.")
+        # test(lines, args, "${-o FILE, --outfile=FILE}$  Output file for logging info.")
+        # test(lines, args, "${-p,      --point=X,Y,Z | Default: 0.0}$  Set the point.")
+        # test(lines, args, "${-i PATH, --include=PATH| delimiter: :}$  Set paths to include.")
+        # test(lines, args, "With${| Text: --top-secret}$\nnewline")
+        # test(lines, args, "${| Text: --secret}$\nNo newline")
+        # test(lines, args, "${--                     }$  End of options, remainder are arguments.")
+        # test(lines, args, "${YYYY-MM-DD| delimiter: - | Member: date}$")
+        # test(lines, args, "${HH:MM:SS| delimiter: : | Member: time}$")
+        # test(lines, args, "${<Kid yoU not>|index:3}$")
+        # test(lines, args, "${}$")
+        # test(lines, args, "${-a                     | text: -a -A -all}$  All of them")
+        # test(lines, args, "Kjell\n${|Text:--foo=N}$${|Text:--bar=N}$\nKaare")
+        # test(lines, args, "[OPTIONS]\n\t${-b}$\n\t${-c}$\n\t${-d}$")
+        # test(lines, args, "${-e=N| values: [0.0..5.0)}$  All of them")
+        # test(lines, args, "${-a --bah|flags: foot ball}$  Odd options")
         print("\n".join(lines))
         for arg in args:
             print(arg, arg.props)
         try:
-            members = makeMembers(args)
+            members = properties.makeMembers(args)
             for m in members:
                 print(m)
         except Error as ex:

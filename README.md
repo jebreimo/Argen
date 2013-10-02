@@ -22,7 +22,7 @@ It takes what is essentilly a text file with the help text of a program - the on
 In this example I assume there is a program draw_message that creates a 
 A help text typed into a file helptext.txt:
 
-    %prog% [options] ${file}$ ${message| Count: 0..}$
+    %prog% [options] ${<file>}$ ${[message ...]| Count: 0..| Default: "Hello world!"}$
     
     Does something.
     
@@ -31,7 +31,7 @@ A help text typed into a file helptext.txt:
         Prints this help message
     ${-s W,H, --size=W,H| Default: 800,600}$
         Set the image size to Width,Height (default is 800,600).
-    ${-i PATH, --include=PATH}$ Something
+    ${-i PATH, --include=PATH}$     Something
 
 And a C++ file main.cpp:
 
@@ -42,7 +42,13 @@ And a C++ file main.cpp:
         auto args = parse_arguments(argc, argv);
         if (args->parse_arguments_result > Arguments::RESULT_OK)
             return args->parse_arguments_result;
-
+        std::cout << "Size is " << args->size[0] << "x" << args->size[1]
+                  << "\nIncludes:\n";
+        for (auto it = begin(args->include); it != end(args->include); ++it)
+            std::cout << "  " << *it << "\n";
+        std::cout << "File is " << args->file << "\nMessages:\n"
+        for (auto it = begin(args->message); it != end(args->message); ++it)
+            std::cout << "  " << *it << "\n";
         return 0;
     }
 
@@ -56,6 +62,29 @@ Run it through clapgen:
     helptext.txt    main.cpp    ParseArguments.h    ParseArguments.cpp
     $ c++ -std=c++11 main.cpp ParseArguments.cpp -o test
 
+Run the command:
+
+    $ ./test -h
+    test [options] <file> [message ...]
+    
+    Does something.
+    
+    OPTIONS
+    -h, --help
+        Prints this help message
+    -s W,H, --size=W,H
+        Set the image size to Width,Height (default is 800,600).
+    -i PATH, --include=PATH     Something
+
+    $ ./test -size=100,80 -i /usr/include -i /usr/local/include text.txt
+    Size is 100x80
+    Includes:
+      /usr/include
+      /usr/local/include
+    File is text.txt
+    Messages:
+      Hello world!
+
 Reference for option and argument properties
 --------------------------------------------
 
@@ -64,6 +93,7 @@ Is used in combination with the *Flags* property to specify that an option requi
 
 #### Example
 This creates a non-standard option "out-file" that takes an argument "FILE":
+
     ${out-file FILE|flags: out-file | argument: FILE}$ Sets the name of the output file
 
 ### Count
@@ -71,6 +101,7 @@ Determines the number of values the member for an option or argument can hold. I
 
 #### Example
 This adds a member of type std::vector\<std::string\> to the generated struct:
+
     ${-i DIR --include=DIR | count: 0..}$ Include DIR among the directories to be searched.
 
 ### Default
@@ -81,13 +112,18 @@ A single character (e.g. comma) used to separate values in a list.
 
 #### Example
 If the helptext file contains the following line:
-    ${-i PATHS, --include=PATHS | Delimiter: :} A colon-separated list of paths to be searched
 
+    ${-i PATHS, --include=PATHS | Delimiter: :} A colon-separated list of paths to be searched
 
 ### DelimiterCount
 0..2 3..
 
 ### Flags
+
+### Include
+
+    ${<date>| ValueType: Date | Include: "Date.h" |
+      Values: [Date(1900, 1, 1)..Date::now()]}$
 
 ### Index
 
@@ -116,7 +152,4 @@ The legal values for the argument or option. The same set of legal values applie
 ### ValueType
 This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in \<cstddef\>, \<cstdint\> or \<string\>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
 
-    # int int8_t int16_t int32_t int64_t
-    # unsigned uint8_t uint16_t uint32_t uint64_t
-    # float double
-    String
+There must be a \<\<-operator for output-streaming the type. See the *Include* property to see how to include the file defining a custom type.

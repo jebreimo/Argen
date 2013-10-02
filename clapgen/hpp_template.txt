@@ -8,6 +8,7 @@
 [[[IF hasVectorMembers]]]
 #include <vector>
 [[[ENDIF]]]
+[[[customIncludes]]]
 
 /** @file
   * Defines the function [[[functionName]]] and its result [[[className]]].

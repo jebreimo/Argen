@@ -50,6 +50,12 @@ class HppExpander(codegen.Expander):
     def endNamespace(self, params, context):
         return "}" * len(self.namespace)
 
+    def customIncludes(self, params, context):
+        lines = []
+        for inc in set(m.include for m in self._members if m.include):
+            lines.append("#include " + inc)
+        return lines
+
 def createFile(fileName, members, **kw):
     hppFile = os.path.join(os.path.dirname(__file__), "hpp_template.txt")
     hppTemplate = open(hppFile).read()
