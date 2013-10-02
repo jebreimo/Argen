@@ -181,8 +181,9 @@ def inferMemberProperties(props):
                         "the \"values\" property." % props)
     if "default" not in props:
         props["default"] = inferDefaultValue(props)
-    elif props["default"] and props["type"] == "list":
-        raise Error("There can't be a default value when type is \"list\".")
+    elif props["default"] and count[0] != 0:
+        raise Error("%(name)s: can't have default value when minimum count "
+                    "is non-zero." % props)
 
 def getMemberProperties(args):
     members = {}
@@ -244,9 +245,11 @@ def inferArgumentProperties(props):
         props["type"] = props["type"].lower()
         if props["type"] in ("help", "info", "final"):
             if "value" not in props:
-                raise Error("Options of type %(type)s can't take an argument." % props)
+                raise Error("Options of type %(type)s can't take an argument."
+                            % props)
             elif props["value"] != "true":
-                raise Error("Options of type %(type)s must have \"true\" as its value." % props)
+                raise Error('Options of type %(type)s must have value "true".'
+                            % props)
     if "default" in props and "delimiter" in props:
         count = utilities.parseCount(props["delimitercount"])
         defvals = props["default"].split(props["delimiter"], count[1])

@@ -36,7 +36,7 @@ Arguments:
     (text)
 """
 import argparse
-import os.path
+import os
 import sys
 import textwrap
 
@@ -188,7 +188,8 @@ def main(args):
                                  className=args.className,
                                  functionName=args.functionName,
                                  namespace=args.namespace)
-        argparser_cpp.createFile(args.fileName + "." + args.cpp,
+        cppFile = args.fileName + "." + args.cpp
+        argparser_cpp.createFile(cppFile,
                                  text,
                                  parserResult.options,
                                  parserResult.arguments,
@@ -198,6 +199,8 @@ def main(args):
                                  namespace=args.namespace,
                                  headerFileName=os.path.basename(hppFile),
                                  includeTest=args.includeTest)
+        print("%s: generated %s and %s"
+              % (os.path.basename(sys.argv[0]), hppFile, cppFile))
     except Exception as ex:
         print("Error: " + str(ex))
         raise

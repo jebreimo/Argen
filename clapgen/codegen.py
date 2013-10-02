@@ -1,3 +1,6 @@
+class Error(Exception):
+    pass
+
 def _tokenize(tmplStr):
     for line in tmplStr.split("\n"):
         start = 0
@@ -12,7 +15,7 @@ def _tokenize(tmplStr):
             start = end + 3
             end = line.find("]]]", start)
             if end == -1:
-                raise Exception("[[[ not followed by ]]] on the same line.")
+                raise Error("[[[ not followed by ]]] on the same line.")
             if line[start:].startswith("IF "):
                 yield tuple(line[start:end].split(None, 2))
             elif line[start:].startswith("ELIF "):
@@ -23,17 +26,55 @@ def _tokenize(tmplStr):
                 yield "ELSE", ""
             elif line[start:].startswith("ENDIF"):
                 yield "ENDIF", ""
+            elif line[start:].startswith("SET "):
+                yield "SET", line[start + 4:end].lstrip()
             else:
                 yield "EXPAND", line[start:end]
             start = end + 3
 
-def dictExpander(dictionary):
-    return lambda key, context: dictionary[key]
+class Expander(object):
+    def __init__(self, context=("", 0)):
+        self.context = context
+
+    def __call__(self, key, params, context):
+        if callable(self.__getattribute__(key)):
+            context = (self.context[0] + context[0],
+                       self.context[1] + context[1])
+            return self.__getattribute__(key)(params, context)
+        else:
+            return self.__getattribute__(key)
+
+    def _assign_value_(self, identifier, value):
+        self.__setattr__(identifier, value)
+
+class DictExpander(Expander):
+    def __init__(self, dict):
+        Expander.__init__(self)
+        self._dict = dict
+
+    def __call__(self, key, params, context):
+        return self._dict[key]
+
+    def _assign_value_(self, identifier, value):
+        self._dict[identifier] = value
+
+class FuncExpander(Expander):
+    def __init__(self, expandFunc, assignFunc = None):
+        Expander.__init__(self)
+        self._expand = expandFunc
+        self._assign = assignFunc
+
+    def __call__(self, key, params, context):
+        return self._expand(key, params, context)
+
+    def _assign_value_(self, identifier, value):
+        if self._assign:
+            self._assign(identifier, value)
 
 class TemplateProcessor:
-    def __init__(self, template, expanderFunc):
+    def __init__(self, template, expander):
         self.template = template
-        self.expander = expanderFunc
+        self.expander = expander
         self.lines = []
         self.curline = []
         self.column = 0
@@ -72,6 +113,9 @@ class TemplateProcessor:
                 self._addText(tstr)
             elif ttype == "EXPAND":
                 self.handleEXPAND(tstr)
+            elif ttype == "SET":
+                self.handleSET(tstr)
+                ignoreNewline = not "".join(self.curline)
             elif ttype == ">":
                 self.pushAlignment()
             elif ttype == "|":
@@ -79,10 +123,10 @@ class TemplateProcessor:
             elif ttype == "<":
                 self.popAlignment()
             else:
-                raise Exception("Unknown token: " + ttype)
+                raise Error("Unknown token: " + ttype)
         if len(self.scope) != 1:
-            raise Exception("Number of IFs without closing ENDIFs: %d" %
-                            (len(self.scope) - 1))
+            raise Error("Number of IFs without closing ENDIFs: %d" %
+                        (len(self.scope) - 1))
 
     def handleNEWLINE(self):
         if self.scope[-1] != "active":
@@ -113,12 +157,12 @@ class TemplateProcessor:
 
     def handleENDIF(self):
         if len(self.scope) == 1:
-            raise Exception("ENDIF must be preceded by IF")
+            raise Error("ENDIF must be preceded by IF")
         self.scope.pop()
 
     def handleELIF(self, key):
         if len(self.scope) == 1:
-            raise Exception("ELIF must be preceded by IF")
+            raise Error("ELIF must be preceded by IF")
         elif self.scope[-1] == "active":
             self.scope[-1] = "done"
         elif self.scope[-1] == "inactive" and self._expand(key):
@@ -126,11 +170,18 @@ class TemplateProcessor:
 
     def handleELSE(self):
         if len(self.scope) == 1:
-            raise Exception("ELSE must be preceded by IF")
+            raise Error("ELSE must be preceded by IF")
         elif self.scope[-1] == "active":
             self.scope[-1] = "done"
         elif self.scope[-1] == "inactive":
             self.scope[-1] = "active"
+
+    def handleSET(self, text):
+        parts = text.split("=", 1)
+        if len(parts) == 1 or not parts[0]:
+            raise Error('"SET %s": invalid format for SET. '
+                        'Correct format is "SET identifier=value".' % text)
+        self.expander._assign_value_(parts[0], parts[1])
 
     def pushAlignment(self):
         self.alignments.append(self._alignment())
@@ -171,7 +222,7 @@ class TemplateProcessor:
             return text, ()
         e = text.find(")", b + 1)
         if e == -1:
-            raise Exception("No closing parenthesis: " + text)
+            raise Error("No closing parenthesis: " + text)
         return text[:b], [s.strip() for s in text[b + 1:e].split(",")]
 
     def _expand(self, key):
@@ -196,18 +247,6 @@ def makeLines(template, expanderFunc):
 
 def makeText(template, expanderFunc):
     return "\n".join(makeLines(template, expanderFunc))
-
-class Expander(object):
-    def __init__(self, context=("", 0)):
-        self.context = context
-
-    def __call__(self, key, params, context):
-        if callable(self.__getattribute__(key)):
-            context = (self.context[0] + context[0],
-                       self.context[1] + context[1])
-            return self.__getattribute__(key)(params, context)
-        else:
-            return self.__getattribute__(key)
 
 class LineBuilder:
     def __init__(self, lineWidth=80):

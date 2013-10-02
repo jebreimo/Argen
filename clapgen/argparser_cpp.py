@@ -1,530 +1,14 @@
 import codegen
+import os
 
-cppTemplate = """\
-#include "[[[headerFileName]]]"
+def isMandatory(member):
+    return member.isOption and member.minCount == 1 and member.type != "list"
 
-#include <algorithm>
-#include <cstring>
-#include <iostream>
-#include <iterator>
-[[[IF includeString]]]
-#include <string>
-[[[ENDIF]]]
-#include <sstream>
-[[[IF includeVector]]]
-#include <vector>
-[[[ENDIF]]]
-[[[IF namespace]]]
+def isDefaultList(member):
+    return member.type == "list" and member.default
 
-[[[beginNamespace]]]
-[[[ENDIF]]]
-
-namespace
-{
-    void markMandatoryOption(const std::string& name);
-
-    std::string programName;
-    std::string helpText =
-        [[[helpText]]];
-
-    void writeHelp()
-    {
-        std::string s = "%prog%";
-        auto first = begin(helpText);
-        while (first != end(helpText))
-        {
-            auto last = std::search(first, end(helpText), begin(s), end(s));
-            if (last == end(helpText))
-                break;
-            std::cout.write(&*first, distance(first, last));
-            std::cout << programName;
-            first = last + 6;
-        }
-        std::cout.write(&*first, distance(first, end(helpText)));
-        std::cout.flush();
-    }
-
-[[[IF hasShortOptions]]]
-    bool resemblesShortOption(const char* s)
-    {
-[[[IF hasDashOptions]]]
-        if ((s[0] == '-') && (s[1] != '\\0') &&
-            (s[1] != '-' || s[2] == '\\0' || s[2] == '='))
-            return true;
-[[[IF hasSlashOptions]]]
-        else if (s[0] == '/' && s[1] != '\\0')
-            return true;
-[[[ENDIF]]]
-        else
-            return false;
-[[[ELSE]]]
-        return s[0] == '/' && s[1] != '\\0';
-[[[ENDIF]]]
-    }
-
-[[[ENDIF]]]
-[[[IF hasNormalOptions]]]
-    bool resemblesOption(const char* s)
-    {
-[[[IF hasDashOptions]]]
-[[[IF hasSlashOptions]]]
-        return (s[0] == '-' || s[0] == '/') && s[1] != '\\0';
-[[[ELSE]]]
-        return s[0] == '-' && s[1] != '\\0';
-[[[ENDIF]]]
-[[[ELSE]]]
-        return s[0] == '/' && s[1] != '\\0';
-[[[ENDIF]]]
-    }
-
-[[[ENDIF]]]
-    class ArgumentIterator
-    {
-    public:
-        ArgumentIterator(int argc, char* argv[])
-            : m_ArgIt(*argv),
-              m_ArgsIt(&argv[0]),
-              m_ArgsEnd(&argv[argc])
-        {}
-
-        bool nextArgument(std::string& arg)
-        {
-            arg.clear();
-            if (m_ArgsIt == m_ArgsEnd)
-            {
-                return false;
-            }
-[[[IF hasShortOptions]]]
-            else if (m_ArgIt != *m_ArgsIt)
-            {
-                arg = "[[[IF hasDashOptions]]]-[[[ELSE]]]/[[[ENDIF]]]";
-                arg.push_back(*m_ArgIt);
-                if (!*++m_ArgIt)
-                    m_ArgIt = *++m_ArgsIt;
-                return true;
-            }
-[[[ENDIF]]]
-
-[[[IF hasShortOptions]]]
-            if (resemblesShortOption(m_ArgIt))
-            {
-                arg.assign(m_ArgIt, m_ArgIt + 2);
-                if (*(m_ArgIt + 2))
-                    m_ArgIt += 2;
-                else
-                    m_ArgIt = *++m_ArgsIt;
-                return true;
-            }
-
-[[[ENDIF]]]
-            char* end = m_ArgIt;
-[[[IF hasNormalOptions]]]
-            if (resemblesOption(m_ArgIt))
-            {
-[[[IF hasShortOptions]]]
-                end += 3;
-[[[ELSE]]]
-                end += 2;
-[[[ENDIF]]]
-                while (*end && *end != '=')
-                    ++end;
-            }
-            else
-            {
-                while (*end)
-                    ++end;
-            }
-[[[ELSE]]]
-            while (*end)
-                ++end;
-[[[ENDIF]]]
-
-            arg.assign(m_ArgIt, end);
-[[[IF hasNormalOptions]]]
-            if (*end)
-                m_ArgIt = end + 1;
-            else
-                m_ArgIt = *++m_ArgsIt;
-[[[ELSE]]]
-            m_ArgIt = *++m_ArgsIt;
-[[[ENDIF]]]
-            return true;
-        }
-
-        bool nextValue(std::string& value)
-        {
-            if (m_ArgsIt == m_ArgsEnd)
-                return false;
-            value = m_ArgIt;
-            m_ArgIt = *++m_ArgsIt;
-            return true;
-        }
-
-[[[IF hasDelimitedValues]]]
-        bool nextDelimitedValue(std::string& value, char delimiter)
-        {
-            if (m_ArgsIt == m_ArgsEnd)
-            {
-                return false;
-            }
-            else if (!*m_ArgIt)
-            {
-                m_ArgIt = *++m_ArgsIt;
-                return false;
-            }
-            char* end = m_ArgIt;
-            while (*end && *end != delimiter)
-                ++end;
-            value.assign(m_ArgIt, end);
-            m_ArgIt = end + (*end ? 1 : 0);
-            return true;
-        }
-
-[[[ENDIF]]]
-        bool hasValue() const
-        {
-            return m_ArgIt != *m_ArgsIt;
-        }
-    private:
-        char* m_ArgIt;
-        char** m_ArgsIt;
-        char** m_ArgsEnd;
-    };
-
-    template <typename T>
-    bool fromString(const std::string& s, T& value)
-    {
-        std::istringstream stream(s);
-        stream >> std::boolalpha >> value;
-        return !stream.fail();
-    }
-
-    bool fromString(const std::string& s, std::string& value)
-    {
-        value = s;
-        return true;
-    }
-
-    template <typename T>
-    std::string toString(const T& value)
-    {
-        std::ostringstream stream;
-        stream << value;
-        return stream.str();
-    }
-
-    std::string toString(const std::string& value)
-    {
-        return value;
-    }
-
-    bool error(const std::string& flag,
-               [[[className]]]& result,
-               const std::string& errorMsg)
-    {
-        std::cerr << "Error: " << flag << ": " << errorMsg << "\\n"
-                  << "Run \\"" << programName
-                  << " [[[helpFlag]]]\\" for help.\\n";
-        result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return false;
-    }
-
-[[[IF hasValueWithoutCheck]]]
-    template <typename T>
-    bool getValue(T& value,
-                  const std::string& flag,
-                  ArgumentIterator& argIt,
-                  [[[className]]]& result)
-    {
-        std::string strValue;
-        if (!argIt.nextValue(strValue))
-            return error(flag, result, "no value provided");
-        if (!fromString(strValue, value))
-            return error(flag, result, "invalid option value \\"" + strValue + "\\".");
-        return true;
-    }
-
-[[[ENDIF]]]
-[[[IF hasValueWithCheck]]]
-    template <typename T, typename UnaryPred>
-    bool getValue(T& value,
-                  UnaryPred checkValue,
-                  const std::string& flag,
-                  ArgumentIterator& argIt,
-                  [[[className]]]& result)
-    {
-        std::string strValue;
-        if (!argIt.nextValue(strValue))
-            return error(flag, result, "no value provided");
-        if (!fromString(strValue, value))
-            return error(flag, result, "invalid option value \\"" + strValue + "\\".");
-        if (!checkValue(value))
-            return error(flag, result, "illegal option value \\"" + strValue + "\\".");
-        return true;
-    }
-
-[[[ENDIF]]]
-[[[IF hasDelimitedValuesWithoutCheck]]]
-    template <typename T>
-    bool addDelimitedValues(std::vector<T>& dest,
-                            char delimiter,
-                            const std::string& flag,
-                            ArgumentIterator& argIt,
-                            [[[className]]]& result)
-    {
-        std::string strValue;
-        while (argIt.nextDelimitedValue(strValue, delimiter))
-        {
-            T value;
-            if (!fromString(strValue, value))
-                return error(flag, result, "invalid option value \\"" + strValue + "\\".");
-            dest.push_back(value);
-        }
-        return true;
-    }
-
-[[[ENDIF]]]
-[[[IF hasDelimitedValuesWithCheck]]]
-    template <typename T, typename UnaryPred>
-    bool addDelimitedValues(std::vector<T>& dest,
-                            char delimiter,
-                            UnaryPred checkValue,
-                            const std::string& flag,
-                            ArgumentIterator& argIt,
-                            [[[className]]]& result)
-    {
-        std::string strValue;
-        while (argIt.nextDelimitedValue(strValue, delimiter))
-        {
-            T value;
-            if (!fromString(strValue, value))
-                return error(flag, result, "invalid option value \\"" + strValue + "\\".");
-            if (!checkValue(value))
-                return error(flag, result, "illegal option value \\"" + strValue + "\\".");
-            dest.push_back(value);
-        }
-        return true;
-    }
-
-[[[ENDIF]]]
-    [[[implementOtionProcessors]]]
-    typedef bool (*ProcessOptionFunc)(const std::string&,
-                                      ArgumentIterator&,
-                                      [[[className]]]&);
-    typedef std::pair<std::string, ProcessOptionFunc> OptionProcessor;
-
-    OptionProcessor optionProcessors[] = {
-        [[[declareOptionProcessors]]]
-    };
-
-    ProcessOptionFunc findOptionProcessor(const std::string& flag)
-    {
-        const OptionProcessor* op = std::find_if(
-                std::begin(optionProcessors),
-                std::end(optionProcessors),
-                [&](const OptionProcessor& op) {return op.first == flag;});
-        if (op == std::end(optionProcessors))
-            return NULL;
-        return op->second;
-    }
-[[[IF hasMandatoryOptions]]]
-
-    struct MandatoryOption
-    {
-        MandatoryOption(std::string name, std::string flags)
-            : name(name), flags(flags), given(false), mandatory(true)
-        {}
-        std::string name;
-        std::string flags;
-        bool given;
-        bool mandatory;
-    };
-
-    MandatoryOption mandatoryOptions[] = {
-        [[[declareMandatoryOptions]]]
-    };
-
-    void markMandatoryOption(const std::string& name)
-    {
-        MandatoryOption* mo = std::find_if(
-                std::begin(mandatoryOptions),
-                std::end(mandatoryOptions),
-                [&](const MandatoryOption& v) {return v.name == name;});
-        if (mo != std::end(mandatoryOptions))
-            mo->given = true;
-    }
-
-    bool checkMandatoryOptions([[[className]]]& result)
-    {
-        const MandatoryOption* mo = std::find_if(
-                std::begin(mandatoryOptions),
-                std::end(mandatoryOptions),
-                [](const MandatoryOption& v) {return v.mandatory && !v.given;});
-        if (mo != std::end(mandatoryOptions))
-            return error(mo->flags, result, "mandatory option missing");
-        return true;
-    }
-[[[ENDIF]]]
-[[[IF hasMinimumListLengths]]]
-
-    bool checkListLengths([[[className]]]& result)
-    {
-        [[[checkListLengths]]]
-        return true;
-    }
-
-[[[ENDIF]]]
-    [[[implementArgumentProcessors]]]
-}
-
-[[[className]]]::[[[className]]]()
-    : [[[memberInitializers]]],
-      [[[functionName]]]_result(RESULT_OK)
-{
-    [[[multiValueInitialization]]]
-}
-
-[[[className]]]::~[[[className]]]()
-{
-}
-
-std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
-{
-    if (argc == 0)
-        return std::unique_ptr<[[[className]]]>();
-
-    size_t pos = std::string(argv[0]).find_last_of("/\\\\");
-    if (pos == std::string::npos)
-        programName = argv[0];
-    else
-        programName = &argv[0][pos + 1];
-
-    std::unique_ptr<[[[className]]]> result(new [[[className]]]);
-    std::vector<std::string> args;
-
-    ArgumentIterator argIt(argc - 1, argv + 1);
-    std::string arg;
-    while (argIt.nextArgument(arg))
-    {
-        ProcessOptionFunc func = findOptionProcessor(arg);
-        if (func)
-        {
-            if (!func(arg, argIt, *result))
-                return result;
-        }
-[[[IF hasFinalOption]]]
-        else if ([[[checkFinalOption]]])
-        {
-            while (argIt.nextValue(arg))
-                args.push_back(arg);
-        }
-[[[ENDIF]]]
-        else if (resemblesOption(arg.c_str()))
-        {
-            error(arg, *result, "unknown option.");
-            return result;
-        }
-        else
-        {
-            args.push_back(arg);
-        }
-    }
-
-[[[IF hasMandatoryOptions]]]
-    if (!checkMandatoryOptions(*result))
-        return result;
-
-[[[ENDIF]]]
-    if (!checkListLengths(*result))
-        return result;
-
-[[[IF hasFixedNumberOfArguments]]]
-    if (args.size() != [[[minArguments]]])
-    {
-        std::cerr << "Error: incorrect number of arguments (expected [[[minArguments]]], "
-                  << " but received " << args.size() << ")\\n"
-                  << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return result;
-    }
-
-[[[ELSE]]]
-[[[IF hasMinArguments]]]
-    if (args.size() < [[[minArguments]]])
-    {
-        std::cerr << "Error: too few arguments (expected at least [[[minArguments]]], "
-                  << " but received " << args.size() << ")\\n"
-                  << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return result;
-    }
-[[[ENDIF]]]
-[[[IF hasMaxArguments]]]
-    if (args.size() > [[[maxArguments]]])
-    {
-        std::cerr << "Error: too many arguments (expected at most [[[maxArguments]]], but received "
-                  << args.size() << ")\\n"
-                  << "Run \\"" << programName << " [[[helpFlag]]]\\" for help.";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return result;
-    }
-[[[ENDIF]]]
-
-[[[ENDIF]]]
-    size_t excess = args.size() - [[[minArguments]]];
-    std::vector<std::string>::const_iterator it = args.begin();
-
-    [[[processArguments]]]
-    return result;
-}
-
-[[[IF namespace]]]
-[[[endNamespace]]]
-[[[ENDIF]]]
-[[[IF includeTest]]]
-
-#include <iomanip>
-
-template <typename It>
-void printAllValues(It begin, It end)
-{
-    if (begin == end)
-        return;
-    std::cout << *begin;
-    for (++begin; begin != end; ++begin)
-        std::cout << ", " << *begin;
-}
-
-#define PRINT_VALUE(member) \\
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " "<< args->member << "\\n"
-#define PRINT_STRING(member) \\
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " \\"" << args->member << "\\"\\n"
-#define PRINT_LIST(member) \\
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " {"; \\
-    printAllValues(begin(args->member), end(args->member)); \\
-    std::cout << "}\\n"
-
-int main(int argc, char* argv[])
-{
-    std::cout << "\\n============================= Input Arguments "
-                    "============================\\n";
-    for (int i = 0; i < argc; ++i)
-        std::cout << "argv[" << i << "] = \\"" << argv[i] << "\\"\\n";
-
-    std::cout << "\\n============================== Parser output "
-                    "=============================\\n";
-    std::unique_ptr<[[[qualifiedClassName]]]> args = [[[qualifiedFunctionName]]](argc, argv);
-
-    std::cout << "\\n================================= Values "
-                    "=================================\\n";
-    std::cout.setf(std::ios_base::boolalpha);
-    std::cout.setf(std::ios_base::left, std::ios_base::adjustfield);
-    [[[printMembers]]]
-    return 0;
-}
-
-[[[ENDIF]]]
-"""
+def isTrackable(member):
+    return isMandatory(member) or isDefaultList(member)
 
 class CppExpander(codegen.Expander):
     def __init__(self, text, opts, args, members, className="ParseArguments",
@@ -556,16 +40,13 @@ class CppExpander(codegen.Expander):
                                         any(f for f in o.flags
                                             if len(f) > 1 and f[0] in "-/"))
         self.hasLongOptions = self.hasShortOptions and self.hasNormalOptions
-        print(self.hasShortOptions)
-        print(self.hasDashOptions)
-        print(self.hasSlashOptions)
-        print(self.hasNormalOptions)
         self.helpFlag = self.__helpFlag()
         self.className = className
         self.qualifiedClassName = namespace + "::" + className
         self.functionName = functionName
         self.qualifiedFunctionName = namespace + "::" + functionName
-        self.hasMandatoryOptions = any(m for m in members if m.count == (1, 1))
+        self.hasTrackedOptions = any(m for m in members if isTrackable(m))
+        self.hasMandatoryOptions = any(m for m in members if isMandatory(m))
         self.includeTest = includeTest
         self.memberWidth = min(20, max(len(m.name) + 1 for m in members))
         self.hasFinalOption = any(m for m in members if m.type == "final")
@@ -585,6 +66,7 @@ class CppExpander(codegen.Expander):
                         if o.delimiter and o.member.values)
         self.hasDelimitedValuesWithoutCheck = any(o for o in opts
                         if o.delimiter and not o.member.values)
+        self.hasInfoOptions = any(m for m in members if m.type == "info")
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -628,33 +110,33 @@ class CppExpander(codegen.Expander):
         return "}" * len(self.namespace)
 
     def memberInitializers(self, params, context):
-        inits = []
+        lines = []
         for m in self._members:
-            if m.type == "multivalue" and m.minCount == 0:
+            if m.type in ("list", "multivalue") and m.minCount == 0:
                 if m.default:
                     v = m.default.split("|")
                     if len(set(v)) == 1 and v[0]:
-                        inits.append("%s(%d, %s)" % (m["name"], len(v), v[0]))
+                        lines.append("%s(%d, %s)" % (m["name"], len(v), v[0]))
                     else:
-                        inits.append("%s(%d)" % (m["name"], len(v)))
+                        lines.append("%s(%d)" % (m["name"], len(v)))
                 else:
-                    inits.append("%(name)s(%(maxCount)d)" % m)
+                    lines.append("%(name)s(%(maxCount)d)" % m)
             elif m.default and m.type not in  ("final", "list", "multivalue"):
-                inits.append("%(name)s(%(default)s)" % m)
-        for i in range(len(inits) - 1):
-            inits[i] += ","
-        return inits
+                lines.append("%(name)s(%(default)s)" % m)
+        for i in range(len(lines) - 1):
+            lines[i] += ","
+        return lines
 
     def multiValueInitialization(self, params, context):
-        inits = []
+        lines = []
         for m in self._members:
-            if m.type != "multivalue" or m.minCount != 0 or not m.default:
+            if m.type not in ("list", "multivalue") or not m.default:
                 continue
             v = m.default.split("|")
-            if len(v) > 1:
+            if len(set(v)) > 1:
                 for i in range(len(v)):
-                    inits.append("%s[%d] = %s;" % (m["name"], i, v[i]))
-        return inits
+                    lines.append("%s[%d] = %s;" % (m["name"], i, v[i]))
+        return lines
 
     def __hasShortOptions(self):
         dashes = set()
@@ -737,14 +219,6 @@ class CppExpander(codegen.Expander):
                         words.append("arg == \"%s\"" % f)
         return codegen.join(words, 79 - context[1], " || ", " ||")
 
-    def declareMandatoryOptions(self, params, context):
-        words = []
-        for m in self._members:
-            if (m.isOption and m.type in ("value", "multivalue") and
-                                m.minCount != 0):
-                words.append('MandatoryOption("%(name)s", "%(flags)s")' % m)
-        return codegen.join(words, 79 - context[1], ", ", ",")
-
     def checkListLengths(self, params, context):
         words = []
         for m in self._members:
@@ -814,37 +288,42 @@ class CppExpander(codegen.Expander):
                 lines.extend(["    --excess;", "}"])
         return lines
 
-"""\
-[[[IF minCountIs1]]]
-[[[processArgument]]]
-[[[ELIF minCountIsGreaterThan1]]]
-for (size_t i = 0; i < [[[minCount]]]; ++i)
-{
-    [[[processArgument]]]
-}
-[[[ENDIF]]]
-[[[IF hasDynamicCount]]]
-[[[IF maxCountIs1]]]
-if (excess)
-{
-    [[[processArgument]]]
-    --excess;
-}
-[[[ELSE]]]
-for (size_t i = [[[minCount]]]; excess && i < [[[maxCount]]] ; ++i)
-{
-    [[[processArgument]]]
-    --excess;
-}
-[[[ENDIF]]]
-[[[ENDIF]]]
-"""
+    def initializeTrackedOptions(self, params, context):
+        lines = []
+        for m in self._members:
+            if isTrackable(m):
+                lines.append("%(name)s(false)" % m)
+        return codegen.join(lines, 79 - context[1], ", ", ",")
+
+    def trackedOptions(self, params, context):
+        lines = []
+        for m in self._members:
+            if isTrackable(m):
+                lines.append("bool %(name)s;" % m)
+        return lines
+
+    def mandatoryOptionChecks(self, params, context):
+        lines = []
+        for m in self._members:
+            if isMandatory(m):
+                lines.append("if (!result.reserved_for_internal_use->%(name)s)"
+                             % m)
+                lines.append('    return error("%(flags)s", result, '
+                             '"missing mandatory option.");' % m)
+        return lines
 
 processMultivalueListOptionTemplate = """\
 bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]]ArgumentIterator& argIt,
 [[[|]]][[[className]]]& result[[[<]]])
 {
+[[[IF hasDefault]]]
+    if (!result.reserved_for_internal_use->[[[memberName]]])
+    {
+        result.[[[memberName]]].clear();
+        result.reserved_for_internal_use->[[[memberName]]] = true;
+    }
+[[[ENDIF]]]
 [[[IF value]]]
     [[[multivalueValueAssignment]]]
 [[[IF hasNormalOptions]]]
@@ -891,6 +370,13 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]]ArgumentIterator& argIt,
 [[[|]]][[[className]]]& result[[[<]]])
 {
+[[[IF hasDefault]]]
+    if (!result.reserved_for_internal_use->[[[memberName]]])
+    {
+        result.[[[memberName]]].clear();
+        result.reserved_for_internal_use->[[[memberName]]] = true;
+    }
+[[[ENDIF]]]
 [[[IF hasMaxCount]]]
     if (result.[[[memberName]]].size() == [[[maxCount]]])
         return error(flag, result, "too many values (max is [[[maxCount]]]).");
@@ -923,7 +409,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]][[[className]]]& result[[[<]]])
 {
 [[[IF isMandatory]]]
-    markMandatoryOption("[[[memberName]]]");
+    result.reserved_for_internal_use->[[[memberName]]] = true;
 [[[ENDIF]]]
     result.[[[memberName]]].clear();
 [[[IF value]]]
@@ -965,7 +451,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]][[[className]]]& result[[[<]]])
 {
 [[[IF isMandatory]]]
-    markMandatoryOption("[[[memberName]]]");
+    result.reserved_for_internal_use->[[[memberName]]] = true;
 [[[ENDIF]]]
 [[[IF value]]]
     result.[[[memberName]]] = [[[value]]];
@@ -1006,7 +492,7 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
 {
     result.[[[memberName]]] = true;
     result.[[[functionName]]]_result = [[[className]]]::RESULT_INFO;
-    return false;
+    return true;
 }
 """
 
@@ -1180,8 +666,9 @@ class ProcessOptionExpander(codegen.Expander):
         self.maxCount = member.maxCount
         self.hasMaxCount = self.maxCount != -1
         self.className = parent.className
-        self.isMandatory = member.minCount != 0
+        self.isMandatory = isMandatory(member)
         self.functionName = parent.functionName
+        self.hasDefault = member.default
 
     def valueCheck(self, params, context):
         var = params[0] if params else "result." + self.memberName
@@ -1210,6 +697,8 @@ class ProcessOptionExpander(codegen.Expander):
         return [s % v for v in self.value.split("|")]
 
 def createFile(fileName, text, opts, args, members, **kw):
+    cppFile = os.path.join(os.path.dirname(__file__), "cpp_template.txt")
+    cppTemplate = open(cppFile).read()
     kw["fileName"] = fileName
     open(fileName, "w").write(codegen.makeText(
             cppTemplate,

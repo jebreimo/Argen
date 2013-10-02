@@ -43,17 +43,17 @@ OTHER OPTIONS
   ${--flag                  | default: true}$  Text
   ${--size=ROWSxCOLS        | delimiter: x | default: 800x600}$
   ${--cuboid=LENxWIDxHEI    | delimiter: x | values: -1000..1000 | count:1}$
-  ${--rect=LENxWID          | delimiter: x | member: cuboid | default: 10x16}$
+  ${--rect=LENxWID          | delimiter: x | member: cuboid}$
   ${--line=LEN              | member: cuboid}$
   ${--antiflag              | member: flag | value: false}$
   ${-p N, --percentage=N    | valuetype: int | values: 0..100 200..| default: 50}$
-  ${-s TEXT                 | count: ..10}$
+  ${-s TEXT                 | count: ..10 | default: "Kjakan Gundersen"}$
   ${--special               | member: s | value: "$spec$"}$
   ${-n X,Y                  | valuetype: double | values: -9999 -1000..-500 -100..-10 -5 0 5 10..100 500..1000 2000..}$
   ${-m NUM, --month=NUM     | valuetype: unsigned | values: 1..12 | count: 3}$
   ${--string=STR            | default: "Two words"}$
   ${--kjell                 | valuetype:int}$  Option that specify non-boolean type, but no argument or value
   ${--                      }$  End of options
-  ${-i PATH, --include=PATH | count: 1.. | delimiter: :}$
+  ${-i PATH, --include=PATH | count: 0.. | delimiter: : | default: "foo":"bar":"baz"}$
   ${--sysinclude            | member: include | value: "foo":"bar":"baz" | delimiter: :}$
 Another option (${-z}$) is the zombie-option.
