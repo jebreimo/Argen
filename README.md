@@ -70,7 +70,7 @@ This creates a non-standard option "out-file" that takes an argument "FILE":
 Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integer. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no defined upper limit to the number of values.
 
 #### Example
-This adds a member of type std::vector<std::string> to the generated struct:
+This adds a member of type std::vector\<std::string\> to the generated struct:
     ${-i DIR --include=DIR | count: 0..}$ Include DIR among the directories to be searched.
 
 ### Default
@@ -114,7 +114,7 @@ This only applies to flags, i.e. options that don't take an argument. The value 
 The legal values for the argument or option. The same set of legal values applies to all values when "type" is "list" or "multi-value".
 
 ### ValueType
-This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in <cstddef>, <cstdint> or <string>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
+This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in \<cstddef\>, \<cstdint\> or \<string\>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
 
     # int int8_t int16_t int32_t int64_t
     # unsigned uint8_t uint16_t uint32_t uint64_t
