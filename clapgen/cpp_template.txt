@@ -165,6 +165,7 @@ namespace
             return true;
         }
 
+[[[IF requiresNextValue]]]
         bool nextValue(std::string& value)
         {
             if (m_ArgsIt == m_ArgsEnd)
@@ -174,6 +175,7 @@ namespace
             return true;
         }
 
+[[[ENDIF]]]
 [[[IF hasDelimitedValues]]]
         bool nextDelimitedValue(std::string& value, char delimiter)
         {
@@ -195,16 +197,19 @@ namespace
         }
 
 [[[ENDIF]]]
+[[[IF hasNormalOptions]]]
         bool hasValue() const
         {
             return m_ArgIt != *m_ArgsIt;
         }
+[[[ENDIF]]]
     private:
         char* m_ArgIt;
         char** m_ArgsIt;
         char** m_ArgsEnd;
     };
 
+[[[IF requiresFromString]]]
     template <typename T>
     bool fromString(const std::string& s, T& value)
     {
@@ -219,6 +224,7 @@ namespace
         return true;
     }
 
+[[[ENDIF]]]
     template <typename T>
     std::string toString(const T& value)
     {

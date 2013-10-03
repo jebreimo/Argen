@@ -52,21 +52,24 @@ class CppExpander(codegen.Expander):
         self.hasFinalOption = any(m for m in members if m.type == "final")
         self.hasDelimitedValues = any(m for m in members
                                       if m.type == "multivalue")
-        self.hasMinimumListLengths = any(m for m in members if m.type == "list"
-                                         and m.minCount != 0)
+        self.hasMinimumListLengths = any(
+                m for m in members if m.type == "list" and m.minCount != 0)
         self.minArguments, self.maxArguments = self.__argumentCount()
         self.hasMinArguments = self.minArguments != 0
         self.hasMaxArguments = self.maxArguments != -1
-        self.hasFixedNumberOfArguments = self.minArguments == self.maxArguments
+        self.hasFixedNumberOfArguments = (
+                self.minArguments == self.maxArguments)
         self.hasValueWithCheck = any(o for o in opts
-                        if not o.delimiter and o.member.values)
+                if not o.value and not o.delimiter and o.member.values)
         self.hasValueWithoutCheck = any(o for o in opts
-                        if not o.delimiter and not o.member.values)
+                if not o.value and not o.delimiter and not o.member.values)
         self.hasDelimitedValuesWithCheck = any(o for o in opts
-                        if o.delimiter and o.member.values)
+                if not o.value and o.delimiter and o.member.values)
         self.hasDelimitedValuesWithoutCheck = any(o for o in opts
-                        if o.delimiter and not o.member.values)
+                if not o.value and o.delimiter and not o.member.values)
         self.hasInfoOptions = any(m for m in members if m.type == "info")
+        self.requiresNextValue = any(o for o in opts if not o.value)
+        self.requiresFromString = args or any(o for o in opts if not o.value)
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -179,19 +182,25 @@ class CppExpander(codegen.Expander):
                 continue
             poe = ProcessOptionExpander(context, self, m, o)
             if m.type == "help":
-                lines.extend(codegen.makeLines(processHelpOptionTemplate, poe))
+                tmpl = processHelpOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
                 processed.add(m)
             elif m.type == "info":
-                lines.extend(codegen.makeLines(processInfoOptionTemplate, poe))
+                tmpl = processInfoOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
                 processed.add(m)
             elif m.type == "multivalue":
-                lines.extend(codegen.makeLines(processMultivalueOptionTemplate, poe))
+                tmpl = processMultivalueOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
             elif m.type == "list" and o.delimiter:
-                lines.extend(codegen.makeLines(processMultivalueListOptionTemplate, poe))
+                tmpl = processMultivalueListOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
             elif m.type == "list":
-                lines.extend(codegen.makeLines(processListOptionTemplate, poe))
+                tmpl = processListOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
             elif m.type != "final":
-                lines.extend(codegen.makeLines(processOptionTemplate, poe))
+                tmpl = processOptionTemplate
+                lines.extend(codegen.makeLines(tmpl, poe))
         return lines
 
     def declareOptionProcessors(self, params, context):

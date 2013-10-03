@@ -44,7 +44,7 @@ struct [[[className]]]
 [[[IF hasInfoOptions]]]
         /** @brief [[[functionName]]] encountered one or more info options.
           *
-          * Only options have been parsed. Arguments are ignored and
+          * Only options have been parsed; arguments are ignored and
           * validation has been restricted to illegal or invalid options.
           * The only members that can be relied upon are the ones
           * corresponding to the info options.

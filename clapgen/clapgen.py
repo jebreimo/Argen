@@ -78,7 +78,7 @@ def makeArgParser():
                     dest="indent", default=-1,
                     help="indentation width when option help text is word-wrapped")
     ap.add_argument("-c", "--class", metavar="NAME",
-                    dest="className", default="ParseArguments",
+                    dest="className", default="Arguments",
                     help="the name of the generated class")
     ap.add_argument("-f", "--file", metavar="NAME",
                     dest="fileName", default="ParseArguments",
