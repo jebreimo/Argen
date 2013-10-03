@@ -7,6 +7,8 @@ import utilities
 
 ArgCounter = 0
 OptCounter = 0
+StartDefinition = "${"
+EndDefinition = "}$"
 
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):
@@ -165,10 +167,10 @@ def parseDefinition(s):
     return text, props
 
 def findDefinition(s, index=0):
-    start = s.find("${", index)
+    start = s.find(StartDefinition, index)
     if start == -1:
         return None
-    end = s.find("}$", start + 2)
+    end = s.find(EndDefinition, start + 2)
     if end == -1:
         return start, len(s), s[start + 2:]
     else:
@@ -198,9 +200,9 @@ def parseText(text):
     skippedNewlines = 0
     while cur:
         lineNo += appendText(outText, text[prv[1]:cur[0]])
-        if "${" in cur[2]:
-            raise Error("Definition seems to be missing a closing \"}$\"",
-                        lineNo)
+        if StartDefinition in cur[2]:
+            raise Error("Definition seems to be missing a closing \"%s\""
+                        % EndDefinition, lineNo)
         try:
             txt, props = parseDefinition(cur[2])
             props["lineno"] = str(lineNo)
@@ -260,10 +262,11 @@ if __name__ == "__main__":
     def main(args):
         args = []
         lines = []
-        test(lines, args, "${<file1>}$")
-        test(lines, args, "${<file2 ...>}$")
-        test(lines, args, "${[file3]}$")
-        test(lines, args, "${[file4 ...]}$")
+        # test(lines, args, "${<file1>}$")
+        # test(lines, args, "${<file2 ...>}$")
+        # test(lines, args, "${[file3]}$")
+        # test(lines, args, "${[file4 ...]}$")
+        test(lines, args, "${knut VALUE, finn VALUE|flags: knut finn|argument: VALUE}$")
         # test(lines, args, "${-s TEXT| count: ..10}$\n${--special| member: s | value: \"$spec$\"}$")
         # test(lines, args, "${-h,      --help        }$  Show help.")
         # test(lines, args, "${-o,      --outfile=FILE}$  Output file for logging info.")

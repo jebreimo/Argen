@@ -84,57 +84,60 @@ class TemplateProcessor:
 
     def __call__(self):
         ignoreNewline = False
-        for ttype, tstr in _tokenize(self.template):
-            if ignoreNewline:
-                ignoreNewline = False
-                if ttype == "NEWLINE":
-                    self.lineNo += 1
-                    continue
+        try:
+            for ttype, tstr in _tokenize(self.template):
+                if ignoreNewline:
+                    ignoreNewline = False
+                    if ttype == "NEWLINE":
+                        self.lineNo += 1
+                        continue
 
-            if ttype == "NEWLINE":
-                self.handleNEWLINE()
-            elif ttype == "IF":
-                self.handleIF(tstr)
-                ignoreNewline = not "".join(self.curline)
-            elif ttype == "ENDIF":
-                self.handleENDIF()
-                ignoreNewline = not "".join(self.curline)
-            elif self.scope[-1] == "done":
-                pass
-            elif ttype == "ELIF":
-                self.handleELIF(tstr)
-                ignoreNewline = not "".join(self.curline)
-            elif ttype == "ELSE":
-                self.handleELSE()
-                ignoreNewline = not "".join(self.curline)
-            elif self.scope[-1] == "inactive":
-                pass
-            elif ttype == "TEXT":
-                self._addText(tstr)
-            elif ttype == "EXPAND":
-                self.handleEXPAND(tstr)
-            elif ttype == "SET":
-                self.handleSET(tstr)
-                ignoreNewline = not "".join(self.curline)
-            elif ttype == ">":
-                self.pushAlignment()
-            elif ttype == "|":
-                self.align()
-            elif ttype == "<":
-                self.popAlignment()
-            else:
-                raise Error("Unknown token: " + ttype)
-        if len(self.scope) != 1:
-            raise Error("Number of IFs without closing ENDIFs: %d" %
-                        (len(self.scope) - 1))
+                if ttype == "NEWLINE":
+                    self.handleNEWLINE()
+                elif ttype == "IF":
+                    self.handleIF(tstr)
+                    ignoreNewline = not "".join(self.curline)
+                elif ttype == "ENDIF":
+                    self.handleENDIF()
+                    ignoreNewline = not "".join(self.curline)
+                elif self.scope[-1] == "done":
+                    pass
+                elif ttype == "ELIF":
+                    self.handleELIF(tstr)
+                    ignoreNewline = not "".join(self.curline)
+                elif ttype == "ELSE":
+                    self.handleELSE()
+                    ignoreNewline = not "".join(self.curline)
+                elif self.scope[-1] == "inactive":
+                    pass
+                elif ttype == "TEXT":
+                    self._addText(tstr)
+                elif ttype == "EXPAND":
+                    self.handleEXPAND(tstr)
+                elif ttype == "SET":
+                    self.handleSET(tstr)
+                    ignoreNewline = not "".join(self.curline)
+                elif ttype == ">":
+                    self.pushAlignment()
+                elif ttype == "|":
+                    self.align()
+                elif ttype == "<":
+                    self.popAlignment()
+                else:
+                    raise Error("Unknown token: " + ttype)
+            if len(self.scope) != 1:
+                raise Error("Number of IFs without closing ENDIFs: %d" %
+                            (len(self.scope) - 1))
+        except Error as ex:
+            raise Error("[line %d]: %s" % (self.lineNo, str(ex)))
 
     def handleNEWLINE(self):
+        self.lineNo += 1
         if self.scope[-1] != "active":
             return
         self.lines.append("".join(self.curline).rstrip())
         self.curline = []
         self.column = 0
-        self.lineNo += 1
 
     def handleEXPAND(self, key):
         if self.scope[-1] != "active":

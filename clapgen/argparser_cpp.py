@@ -85,6 +85,26 @@ class CppExpander(codegen.Expander):
                 return True
         return False
 
+    def __hasShortOptions(self):
+        dashes = set()
+        slashes = set()
+        for o in self._options:
+            for f in o.flags:
+                if len(f) == 1:
+                    return False
+                elif len(f) == 2:
+                    if f[0] == "-":
+                        dashes.add(f[1])
+                    elif f[0] == '/':
+                        slashes.add(f[1])
+                    else:
+                        return False
+                elif len(f) > 2 and f[:2] != "--":
+                    return False
+        return ((len(dashes) != 0 and len(slashes) == 0) or
+                (len(dashes) == 0 and len(slashes) != 0) or
+                (len(dashes) != 0 and dashes == slashes))
+
     def __helpFlag(self):
         for m in self._members:
             if m.type == "help":
@@ -137,26 +157,6 @@ class CppExpander(codegen.Expander):
                 for i in range(len(v)):
                     lines.append("%s[%d] = %s;" % (m["name"], i, v[i]))
         return lines
-
-    def __hasShortOptions(self):
-        dashes = set()
-        slashes = set()
-        for o in self._options:
-            for f in o.flags:
-                if len(f) == 1:
-                    return False
-                elif len(f) == 2:
-                    if f[0] == "-":
-                        dashes.add(f[1])
-                    elif f[0] == '/':
-                        slashes.add(f[1])
-                    else:
-                        return False
-                elif len(f) > 2 and f[:2] != "--":
-                    return False
-        return ((len(dashes) != 0 and len(slashes) == 0) or
-                (len(dashes) == 0 and len(slashes) != 0) or
-                (len(dashes) != 0 and dashes == slashes))
 
     def printMembers(self, params, context):
         lines = []

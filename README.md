@@ -22,7 +22,7 @@ It takes what is essentilly a text file with the help text of a program - the on
 In this example I assume there is a program draw_message that creates a 
 A help text typed into a file helptext.txt:
 
-    %prog% [options] ${<file>}$ ${[message ...]| Count: 0..| Default: "Hello world!"}$
+    %prog% [options] ${<file>}$ ${[message ...]| Default: "Hello world!"}$
     
     Does something.
     
@@ -31,7 +31,8 @@ A help text typed into a file helptext.txt:
         Prints this help message
     ${-s W,H, --size=W,H| Default: 800,600}$
         Set the image size to Width,Height (default is 800,600).
-    ${-i PATH, --include=PATH}$     Something
+    ${-i PATH, --include=PATH}$
+        Something
 
 And a C++ file main.cpp:
 

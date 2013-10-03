@@ -55,7 +55,9 @@ namespace
         std::cout.flush();
     }
 
+[[[SET unknownOptionCheck=]]]
 [[[IF hasShortOptions]]]
+[[[SET unknownOptionCheck=resemblesShortOption]]]
     bool resemblesShortOption(const char* s)
     {
 [[[IF hasDashOptions]]]
@@ -75,6 +77,7 @@ namespace
 
 [[[ENDIF]]]
 [[[IF hasNormalOptions]]]
+[[[SET unknownOptionCheck=resemblesOption]]]
     bool resemblesOption(const char* s)
     {
 [[[IF hasDashOptions]]]
@@ -415,11 +418,13 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
                 args.push_back(arg);
         }
 [[[ENDIF]]]
-        else if (resemblesOption(arg.c_str()))
+[[[IF unknownOptionCheck]]]
+        else if ([[[unknownOptionCheck]]](arg.c_str()))
         {
             error(arg, *result, "unknown option.");
             return [[[return_result]]];
         }
+[[[ENDIF]]]
         else
         {
             args.push_back(arg);
@@ -436,9 +441,11 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         return [[[return_result]]];
 
 [[[ENDIF]]]
+[[[IF hasMinimumListLengths]]]
     if (!checkListLengths(*result))
         return [[[return_result]]];
 
+[[[ENDIF]]]
 [[[IF hasFixedNumberOfArguments]]]
     if (args.size() != [[[minArguments]]])
     {
