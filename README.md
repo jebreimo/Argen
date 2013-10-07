@@ -90,34 +90,63 @@ Reference for option and argument properties
 --------------------------------------------
 
 ### Argument
-Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value.
+Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
 
 #### Example
 This creates a non-standard option "out-file" that takes an argument "FILE":
 
-    ${out-file FILE|flags: out-file | argument: FILE}$ Sets the name of the output file
+    ${out-file FILE|flags: out-file | argument: FILE}$  Sets the name of the output file
 
+The help text for this option will be:
+
+    out-file FILE  Sets the name of the output file
+    
 ### Count
-Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integer. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no defined upper limit to the number of values.
+Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The count-value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integers. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no upper limit to the number of values.
 
 #### Example
 This adds a member of type std::vector\<std::string\> to the generated struct:
 
-    ${-i DIR --include=DIR | count: 0..}$ Include DIR among the directories to be searched.
+    ${-a VALUE --alpha=VALUE | count: 1 }$ A mandatory option
+    ${-b FILE --bravo=FILE | count: 0..}$ A list with 0 or more values.
+    ${-c NUM --charlie=NUM | count: 3..5}$ An option that must be given 3 to 5 times.
 
 ### Default
-The default value for the variable.
+The default value for the option or argument's member. If this property is not specified, it uses the default constructor for the member's type (see the *ValueType* property). To set the default value for options and arguments that accept delimited values (see *Delimiter* below), use the delimiter to separate individual values, each value.
+    
+
+#### Examples
+This creates an int-option with default-value 0.
+
+    ${-a NUM --alpha=NUM | Default: 10}$
+
+This creates an optional argument of comma-separated strings. If the argument isn't given on the command line its values will be "/foo" and "/bar".
+
+    ${[PATHS]| Delimiter: , | Default: "foo","bar"}$ 
 
 ### Delimiter
-A single character (e.g. comma) used to separate values in a list.
+A single character (e.g. comma or colon) used to separate values in a list. If an argument or the value part of an option contains a comma (e.g. `--point=X,Y`), the delimiter automatically becomes comma. The delimited values must all have the same type; it's for instance not possible for the first value to be an int and the second be a double. Whitespace characters can not be used as delimiters.
 
 #### Example
-If the helptext file contains the following line:
+The following line creates a member (std::vector\<std::string\>) with each colon-separated value given in PATHS:
 
     ${-i PATHS, --include=PATHS | Delimiter: :} A colon-separated list of paths to be searched
 
+The following line results in a member (std::vector\<double\>) that accepts two comma-separated values. The comma in the option's value makes it unnecessary to explicitly state the delimiter:
+
+    ${-o X,Y --origin=X,Y| Default: 0.0,0.0}$
+
 ### DelimiterCount
-0..2 3..
+Specifies the number of delimiters an argument or option-value must contain. The number of actual values is always one greater than the number of delimiters. The format is the same as for the *Count* property: a single number for a fixed number of separators and the double-dot syntax for a variable number of values. The default is 0.. which means any number of delimiters are allowed. Howver the DelimiterCount automatically becomes the number of delimter characters if the argument or option's value contains one or more of them.
+
+#### Example
+The DelimiterCount automatically becomes 1 on the following line:
+
+    ${-s ROWSxCOLS| Delimiter: x | Default: 1x1}$
+
+Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
+
+    ${<dimensions>| Delimiter: , | DelimiterCount: 2..5 | Type: int}$
 
 ### Flags
 
@@ -153,4 +182,4 @@ The legal values for the argument or option. The same set of legal values applie
 ### ValueType
 This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in \<cstddef\>, \<cstdint\> or \<string\>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
 
-There must be a \<\<-operator for output-streaming the type. See the *Include* property to see how to include the file defining a custom type.
+There must be a \>\>-operator for input-streaming the type. If the *Values* property is used, the comparison-operators should be defined. See the *Include* property to see how to include the file defining a custom type.

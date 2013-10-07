@@ -86,11 +86,15 @@ def inferIndexProperties(propsList):
 def inferDefaultValue(props):
     value = ""
     if "values" in props:
-        value = utilities.parseValues(props["values"])[0][0]
-    elif props["valuetype"] == "bool":
-        value = "false"
-    elif props["valuetype"] != "std::string":
-        value = "0"
+        vals = utilities.parseValues(props["values"])
+        print(vals)
+        if vals and vals[0][2] == "le":
+            value = utilities.parseValues(props["values"])[0][0]
+    if not value:
+        if props["valuetype"] == "bool":
+            value = "false"
+        elif props["valuetype"] != "std::string":
+            value = "0"
     if props["type"] == "multivalue":
         count = min(a.minDelimiters for a in props["arguments"])
         value = "|".join([value] * count)

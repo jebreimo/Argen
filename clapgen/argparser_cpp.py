@@ -680,6 +680,13 @@ class ProcessOptionExpander(codegen.Expander):
         self.hasDefault = member.default
 
     def valueCheck(self, params, context):
+        def _cmp(operator, lhs, rhs, parens):
+            if operator == "<=":
+                return "!(%s < %s)" % (rhs, lhs)
+            elif parens: # operator is "<"
+                return "(%s < %s)" % (lhs, rhs)
+            else:
+                return "%s < %s" % (lhs, rhs)
         var = params[0] if params else "result." + self.memberName
         op = dict(g="<", ge="<=", l="<", le="<=")
         lines = []
@@ -687,19 +694,17 @@ class ProcessOptionExpander(codegen.Expander):
             v0, v1, o0, o1 = v
             if v0 == v1:
                 lines.append("(%s == %s)" % (var, v0))
-            elif not v1:
-                lines.append("(%s %s %s)" %
-                             (v0, op[o0], var))
-            elif not v0:
-                lines.append("(%s %s %s)" %
-                             (var, op[o1], v1))
-            else:
-                lines.append("(%s %s %s && %s %s %s)" %
-                             (v0, op[o0], var, var, op[o1], v1))
+            elif v0 and v1:
+                lines.append("(%s && %s)" % (_cmp(op[o0], v0, var, False),
+                                             _cmp(op[o1], var, v1, False)))
+            elif v0:
+                lines.append(_cmp(op[o0], v0, var, True))
+            elif v1:
+                lines.append(_cmp(op[o1], var, v1, True))
         if lines:
             return codegen.join(lines, 76 - context[1], " || ", " ||")
         else:
-            return ["true"]
+            return "true"
 
     def multivalueValueAssignment(self, params, context):
         s = "result.%s.push_back(%%s);" % self.member.name

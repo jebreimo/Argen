@@ -18,8 +18,7 @@ def parseValues(s):
     values = []
     for value in s.split():
         c = value.count('"')
-        if ((c not in (0, 2)) or
-            ((c == 2) and (value[0] != '"' or value[-1] != '"'))):
+        if c not in (0, 2):
             raise Error("values contains invalud string: \"" + value + "\"")
         minmax = value.split("..", 1)
         if len(minmax) == 2:
@@ -34,7 +33,7 @@ def parseValues(s):
                 s = s[1:]
             if not e:
                 eCmp = ""
-            elif e[0] != ")":
+            elif e[-1] != ")":
                 eCmp = "le"
             else:
                 eCmp = "l"
