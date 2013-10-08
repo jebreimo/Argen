@@ -111,16 +111,15 @@ def parseArg(s):
     props["autoindex"] = str(ArgCounter)
     ArgCounter += 1
     if s:
-        if s[0] == "<":
-            if s.endswith("...>"):
-                props["count"] = "1.."
-            else:
-                props["count"] = "1"
-        elif s[0] == "[":
-            if s.endswith("...]"):
+        if s[0] == "[":
+            if s.endswith("...") or s.endswith("...]"):
                 props["count"] = "0.."
             else:
                 props["count"] = "0..1"
+        elif s.endswith("..."):
+            props["count"] = "1.."
+        else:
+            props["count"] = "1"
     return props
 
 def parseOption(s):
