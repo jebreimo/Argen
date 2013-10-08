@@ -1,5 +1,5 @@
-CLAPGen - A code generator for C++ Command Line Argument Parsers
-================================================================
+CLAPGen - Generates C++ code for parsing for options and arguments
+==================================================================
 
 An easy to use, yet very sophisticated generator of command line argument parsers for C++ programs.
 
@@ -161,12 +161,18 @@ Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
     ${<dimensions>| Delimiter: , | DelimiterCount: 2..5 | Type: int}$
 
 ### Flags
-Explicitly set the flags for an option. The automatic detection of options and arguments require that options start with a dash `-` or a slash `/`. To create other options - for instance a single-letter option - it's necessary to use this property. The flags must separated by whitespace. It's not possible specify that an  the Flags property to 
+Explicitly set the flags for an option. The automatic detection of options and arguments require that options consist of at least two characters and start with a dash `-` or a slash `/`. To create other options - for instance a single-character option - it's necessary to use this property. If there are multiple flags for the same option the flags must separated by whitespace. It's not possible specify the option argument with the Flags property, to do so the `Argument` option must also be used.
 
 ### Include
+    Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
+    
+#### Examples
+    ${--population=N | ValueType: int64_t | Include: <cstdint> }$
 
     ${<date>| ValueType: Date | Include: "Date.h" |
-      Values: [Date(1900, 1, 1)..Date::now()]}$
+      Values: [Date(1900, 1, 1)..Date::now()>}$
+
+### IncludeCPP
 
 ### Index
 
@@ -195,6 +201,7 @@ The legal values for the argument or option. The same set of legal values applie
 ### ValueType
 This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
 #### Requirements for custom types:
-* There must be a `>>` operator for input-streams.
+* There must be a `>>` operator for streams.
 * Unless *Default* is specified it must have a default-constructor.
-* If the *Values* property is used it must support the `==` operator if *Values* contains any single values, and the `>` operator if it contains any ranges.
+* If the *Values* property is used it must support the `==` operator if *Values* contains any single values, and the `<` operator if it contains any ranges.
+* If clapgen is run with the --test option there must also be a `<<` operator for streams.

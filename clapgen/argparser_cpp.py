@@ -70,8 +70,6 @@ class CppExpander(codegen.Expander):
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         self.requiresNextValue = any(o for o in opts if not o.value)
         self.requiresFromString = args or any(o for o in opts if not o.value)
-        self.customIncludes = ["#include " + m.includeCpp for m in members
-                               if m.includeCpp]
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -321,6 +319,12 @@ class CppExpander(codegen.Expander):
                              % m)
                 lines.append('    return error("%(flags)s", result, '
                              '"missing mandatory option.");' % m)
+        return lines
+
+    def customIncludes(self, params, context):
+        lines = []
+        for inc in set(m.includeCpp for m in self._members if m.includeCpp):
+            lines.append("#include " + inc)
         return lines
 
 processMultivalueListOptionTemplate = """\
