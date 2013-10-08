@@ -15,6 +15,10 @@ def parseCount(s):
         return count
 
 def parseValues(s):
+    """parseValues(s) -> list of (min, max, min-comparison, max-comparison)
+
+    Parses the value of the Values property.
+    """
     values = []
     for value in s.split():
         c = value.count('"')
@@ -22,27 +26,28 @@ def parseValues(s):
             raise Error("values contains invalud string: \"" + value + "\"")
         minmax = value.split("..", 1)
         if len(minmax) == 2:
-            s, e = minmax
-            if not s:
-                sCmp = ""
-            elif s[0] != "(":
-                sCmp = "ge"
+            lo, hi = minmax
+            if s[0] in "[<" and s[-1] in "]>":
+                loPar, hiPar = s[0], s[-1]
+                lo, hi = lo[1:], hi[:-1]
             else:
-                sCmp = "g"
-            if s and s[0] in "[(":
-                s = s[1:]
-            if not e:
-                eCmp = ""
-            elif e[-1] != ")":
-                eCmp = "le"
+                loPar, hiPar = "", ""
+            if not lo:
+                loCmp = ""
+            elif loPar != "<":
+                loCmp = "<="
             else:
-                eCmp = "l"
-            if e and e[-1] in "])":
-                e = e[:-1]
-            if s or e:
-                values.append((s, e, sCmp, eCmp))
+                loCmp = "<"
+            if not hi:
+                hiCmp = ""
+            elif hiPar != ">":
+                hiCmp = "<="
+            else:
+                hiCmp = "<"
+            if lo or hi:
+                values.append((lo, hi, loCmp, hiCmp))
         else:
-            values.append((value, value, "e", "e"))
+            values.append((value, value, "=", "="))
     return values
 
 def translateToSpace(s, chars):

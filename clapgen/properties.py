@@ -38,7 +38,7 @@ def inferValueType(props):
     if "values" in props:
         vals.extend(utilities.translateToSpace(
                 props["values"].replace("..", " "),
-                "[]()").split())
+                "[]<>").split())
     vals.extend(a.value for a in props["arguments"] if a.value)
     if not vals:
         return "std::string"
@@ -56,7 +56,6 @@ def inferValueType(props):
                     "(String values must be enclosed by quotes, e.g. \"foo\")"
                     % (props["name"]),
                     ", ".join(a.lineNo for a in props["arguments"]))
-inferValueType.trans = {ord(x): ord(" ") for x in "[]()"}
 
 def inferIndexProperties(propsList):
     propsWithIndex = [p for p in propsList if "autoindex" in p]

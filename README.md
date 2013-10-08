@@ -61,12 +61,18 @@ Run it through clapgen:
     clapgen: generated ParseArguments.h and ParseArguments.cpp
     $ ls
     helptext.txt    main.cpp    ParseArguments.h    ParseArguments.cpp
-    $ c++ -std=c++11 main.cpp ParseArguments.cpp -o test
 
-Run the command:
+Compile the program (UNIX)
 
-    $ ./test -h
-    test [options] <file> [message ...]
+    $ c++ -std=c++11 main.cpp ParseArguments.cpp -o ParseArguments
+
+Compile the program (Visual Studio):
+
+    $ cl /EHsc main.cpp ParseArguments.cpp
+Run the command with the help option:
+
+    $ ./ParseArguments -h
+    ParseArguments [options] <file> [message ...]
     
     Does something.
     
@@ -77,6 +83,8 @@ Run the command:
         Set the image size to Width,Height (default is 800,600).
     -i PATH, --include=PATH     Something
 
+Run the command with options and arguments:
+
     $ ./test -size=100,80 -i /usr/include -i /usr/local/include text.txt
     Size is 100x80
     Includes:
@@ -85,6 +93,10 @@ Run the command:
     File is text.txt
     Messages:
       Hello world!
+
+Reference for clapgen options
+-----------------------------
+### -t, --test
 
 Reference for option and argument properties
 --------------------------------------------
@@ -149,6 +161,7 @@ Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
     ${<dimensions>| Delimiter: , | DelimiterCount: 2..5 | Type: int}$
 
 ### Flags
+Explicitly set the flags for an option. The automatic detection of options and arguments require that options start with a dash `-` or a slash `/`. To create other options - for instance a single-letter option - it's necessary to use this property. The flags must separated by whitespace. It's not possible specify that an  the Flags property to 
 
 ### Include
 
@@ -180,6 +193,8 @@ This only applies to flags, i.e. options that don't take an argument. The value 
 The legal values for the argument or option. The same set of legal values applies to all values when "type" is "list" or "multi-value".
 
 ### ValueType
-This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in \<cstddef\>, \<cstdint\> or \<string\>, it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string".
-
-There must be a \>\>-operator for input-streaming the type. If the *Values* property is used, the comparison-operators should be defined. See the *Include* property to see how to include the file defining a custom type.
+This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
+#### Requirements for custom types:
+* There must be a `>>` operator for input-streams.
+* Unless *Default* is specified it must have a default-constructor.
+* If the *Values* property is used it must support the `==` operator if *Values* contains any single values, and the `>` operator if it contains any ranges.

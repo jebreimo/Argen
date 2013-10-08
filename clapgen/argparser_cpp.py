@@ -681,26 +681,25 @@ class ProcessOptionExpander(codegen.Expander):
 
     def valueCheck(self, params, context):
         def _cmp(operator, lhs, rhs, parens):
+            # operator is either "<=" or "<"
             if operator == "<=":
                 return "!(%s < %s)" % (rhs, lhs)
-            elif parens: # operator is "<"
+            elif parens:
                 return "(%s < %s)" % (lhs, rhs)
             else:
                 return "%s < %s" % (lhs, rhs)
         var = params[0] if params else "result." + self.memberName
-        op = dict(g="<", ge="<=", l="<", le="<=")
         lines = []
-        for v in self.member.values:
-            v0, v1, o0, o1 = v
-            if v0 == v1:
-                lines.append("(%s == %s)" % (var, v0))
-            elif v0 and v1:
-                lines.append("(%s && %s)" % (_cmp(op[o0], v0, var, False),
-                                             _cmp(op[o1], var, v1, False)))
-            elif v0:
-                lines.append(_cmp(op[o0], v0, var, True))
-            elif v1:
-                lines.append(_cmp(op[o1], var, v1, True))
+        for lo, hi, loCmp, hiCmp in self.member.values:
+            if lo == hi:
+                lines.append("(%s == %s)" % (var, lo))
+            elif lo and hi:
+                lines.append("(%s && %s)" % (_cmp(loCmp, lo, var, False),
+                                             _cmp(hiCmp, var, hi, False)))
+            elif lo:
+                lines.append(_cmp(loCmp, lo, var, True))
+            elif hi:
+                lines.append(_cmp(hiCmp, var, hi, True))
         if lines:
             return codegen.join(lines, 76 - context[1], " || ", " ||")
         else:
