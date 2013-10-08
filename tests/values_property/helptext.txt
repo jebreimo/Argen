@@ -1,0 +1,11 @@
+${-a N| Values: 0..5}$
+${-b N| Values: ..}$
+${-c N| Values: 0..5 10..15}$
+${-d N| Values: [0..5>}$
+${-e N| Values: 2.0..5}$
+${-f N| Values: [2.0..5>}$
+${-g N| Values: <2.0..5>}$
+${-h N| Values: <2.0..5>}$
+${-i N| Values: [2.0..5]}$
+${-j N| Values: [2.0..4> [5..6] <7..11] <13..17>}$
+${--help}$
