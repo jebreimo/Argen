@@ -17,8 +17,8 @@
 
 [[[beginNamespace]]]
 [[[ENDIF]]]
-
 [[[IF hasTrackedOptions]]]
+
 /** A struct private to the implementation.
   */
 struct TrackedOptions;

@@ -86,7 +86,6 @@ def inferDefaultValue(props):
     value = ""
     if "values" in props:
         vals = utilities.parseValues(props["values"])
-        print(vals)
         if vals and vals[0][2] == "le":
             value = utilities.parseValues(props["values"])[0][0]
     if not value:

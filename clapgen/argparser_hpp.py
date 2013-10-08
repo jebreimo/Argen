@@ -9,14 +9,12 @@ class HppExpander(codegen.Expander):
         self.className = className
         self.includeGuard = codegen.makeMacroName(fileName)
         self.functionName = functionName
-        self.namespace = namespace.split("::")
+        self.namespace = [s for s in namespace.split("::") if s]
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         def isMandatory(m): return m.isOption and m.count == (1, 1)
         def isDefaultList(m): return m.type == "list" and m.default
         def isTrackable(m): return isMandatory(m) or isDefaultList(m)
         self.hasTrackedOptions = any(m for m in members if isTrackable(m))
-        if not self.namespace[0]:
-            self.namespace = []
         self._members = members
 
     def members(self, params, context):
@@ -45,10 +43,16 @@ class HppExpander(codegen.Expander):
         return False
 
     def beginNamespace(self, params, context):
-        return "namespace " + " { namespace ".join(self.namespace) + " {"
+        if self.namespace:
+            return ""
+        else:
+            return "namespace " + " { namespace ".join(self.namespace) + " {"
 
     def endNamespace(self, params, context):
-        return "}" * len(self.namespace)
+        if self.namespace:
+            return ""
+        else:
+            return "}" * len(self.namespace)
 
     def customIncludes(self, params, context):
         lines = []

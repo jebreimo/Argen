@@ -113,7 +113,8 @@ class TemplateProcessor:
                 elif ttype == "TEXT":
                     self._addText(tstr)
                 elif ttype == "EXPAND":
-                    self.handleEXPAND(tstr)
+                    ignoreNewline = (not self.handleEXPAND(tstr) and
+                                     not "".join(self.curline))
                 elif ttype == "SET":
                     self.handleSET(tstr)
                     ignoreNewline = not "".join(self.curline)
@@ -141,14 +142,19 @@ class TemplateProcessor:
 
     def handleEXPAND(self, key):
         if self.scope[-1] != "active":
-            return
+            return False
         text = self._expand(key)
         if type(text) == str:
+            if not text:
+                return False
             self._addText(text)
         elif type(text) == list:
+            if not text:
+                return False
             self._addLines(text)
         else:
             self._addText(str(text))
+        return True
 
     def handleIF(self, key):
         if self.scope[-1] != "active":

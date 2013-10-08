@@ -11,6 +11,7 @@
 [[[IF includeVector]]]
 #include <vector>
 [[[ENDIF]]]
+[[[customIncludes]]]
 [[[IF namespace]]]
 
 [[[beginNamespace]]]

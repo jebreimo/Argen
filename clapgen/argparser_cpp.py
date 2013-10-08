@@ -70,6 +70,8 @@ class CppExpander(codegen.Expander):
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         self.requiresNextValue = any(o for o in opts if not o.value)
         self.requiresFromString = args or any(o for o in opts if not o.value)
+        self.customIncludes = ["#include " + m.includeCpp for m in members
+                               if m.includeCpp]
 
     def __argumentCount(self):
         minc, maxc = 0, 0
