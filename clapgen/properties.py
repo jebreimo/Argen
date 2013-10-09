@@ -164,11 +164,11 @@ def inferMemberProperties(props):
         for lo, hi in (a.delimiterCount for a in args):
             if lo != hi:
                 raise Error("%(name)s: type \"multivalue\" requires a "
-                            "fixed number of delimiters.")
+                            "fixed number of delimiters." % props)
         for a in args:
             if a.minDelimiters != a.maxDelimiters:
                 raise Error("%(name)s: type \"multivalue\" requires a "
-                            "fixed number of delimiters.")
+                            "fixed number of delimiters." % props)
     elif props["type"] != "list" and count[1] != 1:
         raise Error('%(name)s: type must be "list" or "multivalue" when '
                     'the maximum count is greater than 1.' % props)
@@ -223,6 +223,12 @@ def inferArgumentProperties(props):
         raise Error("Value property can't be empty.")
     if "value" not in props and "argument" not in props:
         props["value"] = "true"
+    if "delimitercount" in props:
+        lo, hi = utilities.parseCount(props["delimitercount"])
+        if lo < 0:
+            raise Error("Minimum DelimiterCount can't be less than zero.")
+        elif hi != -1 and hi < lo:
+            raise Error("Maximum DelimiterCount can't be less than the minimum.")
     if "delimiter" not in props:
         s = props.get("value") or props.get("argument", "")
         if "," in s:

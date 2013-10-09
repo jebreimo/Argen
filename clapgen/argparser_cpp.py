@@ -50,8 +50,8 @@ class CppExpander(codegen.Expander):
         self.includeTest = includeTest
         self.memberWidth = min(20, max(len(m.name) + 1 for m in members))
         self.hasFinalOption = any(m for m in members if m.type == "final")
-        self.hasDelimitedValues = any(m for m in members
-                                      if m.type == "multivalue")
+        self.hasDelimitedValues = (any(o for o in opts if o.delimiter) or
+                                   any(a for a in args if a.delimiter))
         self.hasMinimumListLengths = any(
                 m for m in members if m.type == "list" and m.minCount != 0)
         self.minArguments, self.maxArguments = self.__argumentCount()
@@ -142,7 +142,7 @@ class CppExpander(codegen.Expander):
                         lines.append("%s(%d, %s)" % (m["name"], len(v), v[0]))
                     else:
                         lines.append("%s(%d)" % (m["name"], len(v)))
-                else:
+                elif m.type in "multivalue":
                     lines.append("%(name)s(%(maxCount)d)" % m)
             elif m.default and m.type not in  ("final", "list", "multivalue"):
                 lines.append("%(name)s(%(default)s)" % m)
@@ -360,15 +360,15 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
         return false;
 [[[IF hasFixedNumberOfValues]]]
     if (result.[[[memberName]]].size() - prevSize != [[[minValues]]])
-        return error(flag, result, "option argument must contain [[[minValues]]] values.");
+        return error(flag, result, "the option value must contain [[[minValues]]] values.");
 [[[ELSE]]]
 [[[IF hasMinValues]]]
     if (result.[[[memberName]]].size() - prevSize < [[[minValues]]])
-        return error(flag, result, "option argument must contain at least [[[minValues]]] values.");
+        return error(flag, result, "the option value must contain at least [[[minValues]]] values.");
 [[[ENDIF]]]
 [[[IF hasMaxValues]]]
     if (result.[[[memberName]]].size() - prevSize > [[[maxValues]]])
-        return error(flag, result, "option argument can't contain more than [[[maxValues]]] values.");
+        return error(flag, result, "the option value can't contain more than [[[maxValues]]] values.");
 [[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF hasMaxCount]]]
@@ -446,7 +446,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
                             [[[ENDIF]]]flag, argIt, result))
         return false;
     if (result.[[[memberName]]].size() != [[[minValues]]])
-        return error(flag, result, "option argument must contain [[[minValues]]] "
+        return error(flag, result, "the option value must contain [[[minValues]]] "
                                    "values separated by \\"[[[delimiter]]]\\".");
 [[[ELSE]]]
     [[[valueType]]] value;
@@ -583,7 +583,7 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
         first = last + 1;
     }
     if (result.[[[memberName]]].size() != [[[minValues]]])
-        return error("[[[name]]]", result, "option argument must contain [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the option value must contain [[[minValues]]] values.");
 [[[ELIF isStringMember]]]
     if (!([[[valueCheck(value)]]]))
         return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
@@ -636,15 +636,15 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     }
 [[[IF hasFixedNumberOfValues]]]
     if (result.[[[memberName]]].size() - prevSize != [[[minValues]]])
-        return error("[[[name]]]", result, "option argument must contain [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the option value must contain [[[minValues]]] values.");
 [[[ELSE]]]
 [[[IF hasMinValues]]]
     if (result.[[[memberName]]].size() - prevSize < [[[minValues]]])
-        return error("[[[name]]]", result, "option argument must contain at least [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the option value must contain at least [[[minValues]]] values.");
 [[[ENDIF]]]
 [[[IF hasMaxValues]]]
     if (result.[[[memberName]]].size() - prevSize > [[[maxValues]]])
-        return error("[[[name]]]", result, "option argument can't contain more than [[[maxValues]]] values.");
+        return error("[[[name]]]", result, "the option value can't contain more than [[[maxValues]]] values.");
 [[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF hasMaxCount]]]
