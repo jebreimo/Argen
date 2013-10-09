@@ -96,12 +96,30 @@ Run the command with options and arguments:
 
 Reference for clapgen options
 -----------------------------
+### --class=NAME
+The default is "Arguments".
+
+### --cpp=SUFFIX
+Set the file name suffix for the generated source file. The default is "cpp".
+
+### --file=NAME
+
+### --function=NAME
+Set the name of the generated function. The default is "parse_arguments".
+### --hpp=SUFFIX
+Set the file name suffix for the generated header file. The default is "hpp".
+### --namespace=NAME
+Set the namespace for the generated code. Multi-level namespaces are specified using `::` to separate each name (e.g. `--namespace=jeb::application`)
 ### -t, --test
+Include a main-function in the source file to test the argument parser.
 
 Reference for option and argument properties
 --------------------------------------------
 
 ### Argument
+
+    Argument: NAME
+
 Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
 
 #### Example
@@ -114,16 +132,24 @@ The help text for this option will be:
     out-file FILE  Sets the name of the output file
     
 ### Count
+
+    Count: VALUE or MIN..MAX
+
 Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The count-value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integers. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no upper limit to the number of values.
 
 #### Example
 This adds a member of type std::vector\<std::string\> to the generated struct:
 
     ${-a VALUE --alpha=VALUE | count: 1 }$ A mandatory option
+
     ${-b FILE --bravo=FILE | count: 0..}$ A list with 0 or more values.
+
     ${-c NUM --charlie=NUM | count: 3..5}$ An option that must be given 3 to 5 times.
 
 ### Default
+
+    Default: VALUE
+
 The default value for the option or argument's member. If this property is not specified, it uses the default constructor for the member's type (see the *ValueType* property). To set the default value for options and arguments that accept delimited values (see *Delimiter* below), use the delimiter to separate individual values, each value.
     
 
@@ -137,6 +163,9 @@ This creates an optional argument of comma-separated strings. If the argument is
     ${[PATHS]| Delimiter: , | Default: "foo","bar"}$ 
 
 ### Delimiter
+
+    Delimiter: CHARACTER
+
 A single character (e.g. comma or colon) used to separate values in a list. If an argument or the value part of an option contains a comma (e.g. `--point=X,Y`), the delimiter automatically becomes comma. The delimited values must all have the same type; it's for instance not possible for the first value to be an int and the second be a double. Whitespace characters can not be used as delimiters.
 
 #### Example
@@ -149,6 +178,9 @@ The following line results in a member (std::vector\<double\>) that accepts two 
     ${-o X,Y --origin=X,Y| Default: 0.0,0.0}$
 
 ### DelimiterCount
+
+    DelimiterCount: VALUE or MIN..MAX
+
 Specifies the number of delimiters an argument or option-value must contain. The number of actual values is always one greater than the number of delimiters. The format is the same as for the *Count* property: a single number for a fixed number of separators and the double-dot syntax for a variable number of values. The default is 0.. which means any number of delimiters are allowed. Howver the DelimiterCount automatically becomes the number of delimter characters if the argument or option's value contains one or more of them.
 
 #### Example
@@ -161,10 +193,16 @@ Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
     ${<dimensions>| Delimiter: , | DelimiterCount: 2..5 | Type: int}$
 
 ### Flags
+
+    Flags: NAME ...
+
 Explicitly set the flags for an option. The automatic detection of options and arguments require that options consist of at least two characters and start with a dash `-` or a slash `/`. To create other options - for instance a single-character option - it's necessary to use this property. If there are multiple flags for the same option the flags must separated by whitespace. It's not possible specify the option argument with the Flags property, to do so the `Argument` option must also be used.
 
 ### Include
-    Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
+
+    Include: FILE
+
+    Adds an include directive to the generated header file. Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
     
 #### Examples
     ${--population=N | ValueType: int64_t | Include: <cstdint> }$
@@ -174,31 +212,51 @@ Explicitly set the flags for an option. The automatic detection of options and a
 
 ### IncludeCPP
 
+    IncludeCPP: FILE
+
+    Add an include directive to the cpp-file Used in combination with the Default and Values properties if either of these refer to values, types or functions that require additional include files. to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
+
 ### Index
 
-### Member
-The name of the member variable
+    Index: NUMBER
 
-### Name
-The name of the value that will be used in error messages and also the name of the member unless "member" is also specified (any characters in the name that are illegal in member names are replaced with underscores).
+### Member
+
+    Member: NAME
+
+The name of the member variable
 
 ### Text
 
+    Text: OPTION-DEFINITION or ARGUMENT-DEFINITION
+
 ### Type
-    Help
-    Info
-    MultiValue
-    Value
-    List    values are stored in a vector
-    Final   the option marks the end of all options, all remaining arguments are treated as arguments even if they start with a dash. POSIX-compliant program should make "--" the final option. There won't be a members for final options in the Arguments struct.
+
+    Type: TYPE
+
+* *Help*
+* *Info*
+* *MultiValue*
+* *Value*
+* *List*    values are stored in a vector
+* *Final*   the option marks the end of all options, all remaining arguments are treated as arguments even if they start with a dash. POSIX-compliant program should make "--" the final option. There won't be a members for final options in the Arguments struct.
 
 ### Value
+
+    Value: VALUE
+
 This only applies to flags, i.e. options that don't take an argument. The value that will be assigned (or appended) to the variable if the flag is given.
 
 ### Values
+
+    Values: VALUE or MIN..MAX ...
+
 The legal values for the argument or option. The same set of legal values applies to all values when "type" is "list" or "multi-value".
 
 ### ValueType
+
+    ValueType: TYPE
+
 This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
 #### Requirements for custom types:
 * There must be a `>>` operator for streams.

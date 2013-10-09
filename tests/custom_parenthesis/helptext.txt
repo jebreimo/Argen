@@ -1,0 +1,8 @@
+Usage: %prog% [options] @[[name ...]]@
+
+This program demonstrates that other parenthesis than ${ and }$ can be used.
+
+@[-help         ]@ Show help
+@[-include=PATH ]@ Include PATH in search
+@[-version      ]@ Show %prog%'s version number
+@[-test=VALUE   | Delimiter: _ | DelimiterCount: 3..8 ]@ Something

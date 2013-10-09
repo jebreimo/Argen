@@ -89,7 +89,7 @@ def makeArgParser():
     ap.add_argument("--hpp", metavar="HPP",
                     dest="hpp", default="h",
                     help="the extension of the generated header file (default is h)")
-    ap.add_argument("--ns", metavar="NAME",
+    ap.add_argument("--namespace", metavar="NAME",
                     dest="namespace", default="",
                     help="the namespace of the generated functions and classes")
     ap.add_argument("--func", metavar="NAME",
@@ -102,7 +102,16 @@ def makeArgParser():
     ap.add_argument("--test",
                     dest="includeTest", action="store_const",
                     const=True, default=False,
-                    help="don't include test code at the end of the cpp file")
+                    help="Include a main-function the source file")
+    ap.add_argument("--parenthesis", metavar="PARENS",
+                    dest="parenthesis", default="",
+                    help="Set the parenthesis used to enclose the argument "
+                         "and option definitions in the help file. "
+                         "PARENS must consist of the opening and closing "
+                         "parenthesis separated by whitespace (default is "
+                         "\"${ }$\"). The whitespace separator must either "
+                         "be escaped or the entire option must be enclosed "
+                         "in quotes.")
     ap.add_argument("helpfile", metavar="text file",
                     help="a text file containing the help text")
     return ap
@@ -147,6 +156,20 @@ def main(args):
     except argparse.ArgumentError:
         return 1
     try:
+        if args.parenthesis:
+            parens = args.parenthesis.split()
+            if len(parens) == 2 and parens[0] and parens[1]:
+                helptextparser.StartDefinition = parens[0]
+                helptextparser.EndDefinition = parens[1]
+            else:
+                print("Invalid parenthesis: " + args.parenthesis)
+                print("The parenthesis string must consist of the opening "
+                      " and closing parenthesis separated by a space "
+                      " character. The space character must either be "
+                      " escaped or the entire option must be enclosed in "
+                      " quotes. For instance to produce the default "
+                      " perenthesis: \"--parenthesis=${ }$\".")
+                return 1
         parserResult = helptextparser.parseFile(args.helpfile)
     except Error as ex:
         print(ex)
