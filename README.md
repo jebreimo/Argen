@@ -7,12 +7,11 @@ An easy to use, yet very sophisticated generator of command line argument parser
 It takes what is essentilly a text file with the help text of a program - the one shown when the program is executed with the help option (typically -h, --help or /?) - and creates C++ code that parses the arguments and options, checks them for errors and converts them to their intended types. All the programmer has to do is include the generated files in the project or makefile, and call the generated parser function, typically from main.
 
 ### Features
-* Handles virtually any kind of option, in particular those starting wit a dash (-), doube-dash (--) or slash (/).
-* Handles multi-value options (when multiple instances of the same option should produce a list of values).
-* Handles comma-separated values. In fact any single character can be used as separator.
-* An extremely flexible help text format.
-* Platform independent. Both generator and generated files have been tested on Linux, Mac OS X, Windows, 
-* Generated code has no dependencies apart from the standard library
+* **Multiple kinds of options**. Posix dash options, DOS/Windows slash options, double-dash options, and virtually any other kind.
+* **Multi-value options**. Multiple instances of the same option are added to a list. Comma-separated values are supported, in fact almost any separator can be used.
+* **Extremely flexible help text format**.
+* **Platform independent**. Both generator and generated files have been tested on Linux, Mac OS X and Windows.
+* **No dependencies**. Generated code does not require any other libraries than the standard library
 
 ### Requirements
 * The generator requires Python 2.7 or 3.3 (it may work, but hasn't been tested on other versions).
@@ -96,21 +95,34 @@ Run the command with options and arguments:
 
 Reference for clapgen options
 -----------------------------
+### --align=NUM
+Set the width of the initial whitespace when the help text for an option is split across multiple lines. clapgen normally detects this width automatically, but it sometimes gets it wrong, and then the correct value can be set with this option.
+
 ### --class=NAME
-The default is "Arguments".
+Set the name of the generated class to NAME. The default is "Arguments".
 
 ### --cpp=SUFFIX
 Set the file name suffix for the generated source file. The default is "cpp".
 
 ### --file=NAME
+Set the name of the generated header and source files. The default is "ParseArguments".
 
 ### --function=NAME
 Set the name of the generated function. The default is "parse_arguments".
+
 ### --hpp=SUFFIX
 Set the file name suffix for the generated header file. The default is "hpp".
+
+### --debug
+Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
+
 ### --namespace=NAME
 Set the namespace for the generated code. Multi-level namespaces are specified using `::` to separate each name (e.g. `--namespace=jeb::application`)
-### -t, --test
+
+### --parenthesis=PARENS
+This option should only be used if the actual help text must contain either `${` or `$}`. The option sets the sequence of characters that marks the start and end of an argument or option definition. The PARENS value must consist of both the start and the end sequence, separated by a single space. As space is also used to separate arguments it's necessary to enclose the entire option in double-quotes (e.g. `clapgen "--parenthesis=@< >@" ...`).
+
+### --test
 Include a main-function in the source file to test the argument parser.
 
 Reference for option and argument properties
@@ -259,7 +271,7 @@ The legal values for the argument or option. The same set of legal values applie
 
 This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
 #### Requirements for custom types:
-* There must be a `>>` operator for streams.
+* There must be a -input-operator (`>>`) for streams.
 * Unless *Default* is specified it must have a default-constructor.
 * If the *Values* property is used it must support the `==` operator if *Values* contains any single values, and the `<` operator if it contains any ranges.
-* If clapgen is run with the --test option there must also be a `<<` operator for streams.
+* If clapgen is run with the --test option there must also be a output-operator (`<<`) for streams.

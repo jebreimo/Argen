@@ -86,7 +86,7 @@ def inferDefaultValue(props):
     value = ""
     if "values" in props:
         vals = utilities.parseValues(props["values"])
-        if vals and vals[0][2] == "le":
+        if vals and vals[0][2] == "<=":
             value = utilities.parseValues(props["values"])[0][0]
     if not value:
         if props["valuetype"] == "bool":
@@ -95,7 +95,7 @@ def inferDefaultValue(props):
             value = "0"
     if props["type"] == "multivalue":
         count = min(a.minDelimiters for a in props["arguments"])
-        value = "|".join([value] * count)
+        value = "|".join([value] * (count + 1))
     return value
 
 def minmaxCount(counts):
