@@ -171,9 +171,12 @@ def main(args):
                       " perenthesis: \"--parenthesis=${ }$\".")
                 return 1
         parserResult = helptextparser.parseFile(args.helpfile)
-    except Error as ex:
+    except IOError as ex:
         print(ex)
         return 2
+    except Error as ex:
+        print(ex)
+        return 3
     if args.indent != -1:
         indentation = args.indent
     else:

@@ -10,12 +10,13 @@ It takes what is essentilly a text file with the help text of a program - the on
 * **Multiple kinds of options**. Posix dash options, DOS/Windows slash options, double-dash options, and virtually any other kind.
 * **Multi-value options**. Multiple instances of the same option are added to a list. Comma-separated values are supported, in fact almost any separator can be used.
 * **Extremely flexible help text format**.
+* **Clever deduction of argument and option properties**.
 * **Platform independent**. Both generator and generated files have been tested on Linux, Mac OS X and Windows.
 * **No dependencies**. Generated code does not require any other libraries than the standard library
 
 ### Requirements
-* The generator requires Python 2.7 or 3.3 (it may work, but hasn't been tested on other versions).
-* The generated files requires a compiler with at least some C++11-support (lambdas and auto). It's been tested with Visual Studio 2010 and 2012 (Windows), Clang 3.3 (Mac) and gcc 4.8 (Linux).
+* The generator requires Python 2.7 or 3.3 (it may work, but has not been tested with other versions).
+* The generated files requires a compiler with at least some C++11-support (lambdas, auto, unique_ptr). It's been tested with Visual Studio 2010 and 2012 (Windows), Clang 3.3 (Mac) and gcc 4.8 (Linux).
 
 ### A quick example
 In this example I assume there is a program draw_message that creates a 
@@ -246,7 +247,8 @@ The name of the member variable
 
     Type: TYPE
 
-* *Help*
+TYPE must be one of the following words:
+* *Help*: specify that this is a help option. Options automatically become help options if their `Member` property is "help" (this is for instance true if the option is `/?` or `--help`). When the generated *parse_arguments* function encounters a help-option it writes the help message to stdout and returns immediately without parsing any remaining options or arguments.
 * *Info*
 * *MultiValue*
 * *Value*
