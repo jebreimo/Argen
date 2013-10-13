@@ -43,16 +43,13 @@ class HppExpander(codegen.Expander):
         return False
 
     def beginNamespace(self, params, context):
-        if self.namespace:
+        if not self.namespace:
             return ""
         else:
             return "namespace " + " { namespace ".join(self.namespace) + " {"
 
     def endNamespace(self, params, context):
-        if self.namespace:
-            return ""
-        else:
-            return "}" * len(self.namespace)
+        return "}" * len(self.namespace)
 
     def customIncludes(self, params, context):
         lines = []

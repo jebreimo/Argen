@@ -105,6 +105,9 @@ Set the name of the generated class to NAME. The default is "Arguments".
 ### --cpp=SUFFIX
 Set the file name suffix for the generated source file. The default is "cpp".
 
+### --debug
+Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
+
 ### --file=NAME
 Set the name of the generated header and source files. The default is "ParseArguments".
 
@@ -113,9 +116,6 @@ Set the name of the generated function. The default is "parse_arguments".
 
 ### --hpp=SUFFIX
 Set the file name suffix for the generated header file. The default is "hpp".
-
-### --debug
-Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
 
 ### --namespace=NAME
 Set the namespace for the generated code. Multi-level namespaces are specified using `::` to separate each name (e.g. `--namespace=jeb::application`)

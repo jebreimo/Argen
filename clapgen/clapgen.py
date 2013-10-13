@@ -1,39 +1,6 @@
+#!/usr/bin/env python
 """
-    Name: clapgen - Command Line Argument Parser GENerator
-
-This is actually a language consisting of the following constructs:
-
-Members:
-    (count) - from delimiterCount
-    default - from valueType
-    maxCount - from count or maxDelimiters
-    memberType - from count, valueType
-    minCount - from count or minDelimiters
-    name - from member
-    type - from flag or count
-    values
-    valueType - from default, values, option-value, option/argument
-
-Options:
-    (argument) - from text
-    count
-    delimiter - from argument or value
-    (delimiterCount) - from delimiter
-    flags - from text
-    maxDelimiters - from delimiterCount
-    member - from flags
-    minDelimiters - from delimiterCount
-    (text)
-    value - from flags (true)
-
-Arguments:
-    (argument) - from text
-    count
-    delimiter - from text
-    delimiterCount - from delimiter and text
-    index
-    member - from text
-    (text)
+    clapgen - Command Line Argument Parser GENerator
 """
 import argparse
 import os
@@ -92,10 +59,10 @@ def makeArgParser():
     ap.add_argument("--namespace", metavar="NAME",
                     dest="namespace", default="",
                     help="the namespace of the generated functions and classes")
-    ap.add_argument("--func", metavar="NAME",
+    ap.add_argument("--function", metavar="NAME",
                     dest="functionName", default="parse_arguments",
                     help="the name of the generated function (default is parse_arguments)")
-    ap.add_argument("--list",
+    ap.add_argument("--debug",
                     dest="listProperties", action="store_const",
                     const=True, default=False,
                     help="list the parser result without generating files")
@@ -105,13 +72,8 @@ def makeArgParser():
                     help="Include a main-function the source file")
     ap.add_argument("--parenthesis", metavar="PARENS",
                     dest="parenthesis", default="",
-                    help="Set the parenthesis used to enclose the argument "
-                         "and option definitions in the help file. "
-                         "PARENS must consist of the opening and closing "
-                         "parenthesis separated by whitespace (default is "
-                         "\"${ }$\"). The whitespace separator must either "
-                         "be escaped or the entire option must be enclosed "
-                         "in quotes.")
+                    help="Set the parenthesis used to enclose the definitions "
+                         "in the help file.")
     ap.add_argument("helpfile", metavar="text file",
                     help="a text file containing the help text")
     return ap
