@@ -86,7 +86,7 @@ def inferDefaultValue(props):
     value = ""
     if "values" in props:
         vals = utilities.parseValues(props["values"])
-        if vals and vals[0][2] == "<=":
+        if vals and vals[0][2] in ("=", "<="):
             value = utilities.parseValues(props["values"])[0][0]
     if not value:
         if props["valuetype"] == "bool":
