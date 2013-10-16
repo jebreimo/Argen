@@ -58,38 +58,38 @@ namespace
 
 [[[SET unknownOptionCheck=]]]
 [[[IF hasShortOptions]]]
-[[[SET unknownOptionCheck=resemblesShortOption]]]
+    [[[SET unknownOptionCheck=resemblesShortOption]]]
     bool resemblesShortOption(const char* s)
     {
-[[[IF hasDashOptions]]]
+    [[[IF hasDashOptions]]]
         if ((s[0] == '-') && (s[1] != '\0') &&
             (s[1] != '-' || s[2] == '\0' || s[2] == '='))
             return true;
-[[[IF hasSlashOptions]]]
+        [[[IF hasSlashOptions]]]
         else if (s[0] == '/' && s[1] != '\0')
             return true;
-[[[ENDIF]]]
+        [[[ENDIF]]]
         else
             return false;
-[[[ELSE]]]
+    [[[ELSE]]]
         return s[0] == '/' && s[1] != '\0';
-[[[ENDIF]]]
+    [[[ENDIF]]]
     }
 
 [[[ENDIF]]]
 [[[IF hasNormalOptions]]]
-[[[SET unknownOptionCheck=resemblesOption]]]
+    [[[SET unknownOptionCheck=resemblesOption]]]
     bool resemblesOption(const char* s)
     {
-[[[IF hasDashOptions]]]
-[[[IF hasSlashOptions]]]
+    [[[IF hasDashOptions]]]
+        [[[IF hasSlashOptions]]]
         return (s[0] == '-' || s[0] == '/') && s[1] != '\0';
-[[[ELSE]]]
+        [[[ELSE]]]
         return s[0] == '-' && s[1] != '\0';
-[[[ENDIF]]]
-[[[ELSE]]]
+        [[[ENDIF]]]
+    [[[ELSE]]]
         return s[0] == '/' && s[1] != '\0';
-[[[ENDIF]]]
+    [[[ENDIF]]]
     }
 
 [[[ENDIF]]]
@@ -136,11 +136,11 @@ namespace
 [[[IF hasNormalOptions]]]
             if (resemblesOption(m_ArgIt))
             {
-[[[IF hasShortOptions]]]
+    [[[IF hasShortOptions]]]
                 end += 3;
-[[[ELSE]]]
+    [[[ELSE]]]
                 end += 2;
-[[[ENDIF]]]
+    [[[ENDIF]]]
                 while (*end && *end != '=')
                     ++end;
             }
@@ -373,9 +373,9 @@ namespace
         result->reserved_for_internal_use = nullptr;
         return result;
     }
-[[[SET return_result=std::move(cleanReservedInternals(result))]]]
+    [[[SET return_result=std::move(cleanReservedInternals(result))]]]
 [[[ELSE]]]
-[[[SET return_result=result]]]
+    [[[SET return_result=result]]]
 [[[ENDIF]]]
 }
 
@@ -464,7 +464,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     }
 
 [[[ELSE]]]
-[[[IF hasMinArguments]]]
+    [[[IF hasMinArguments]]]
     if (args.size() < [[[minArguments]]])
     {
         std::cerr << "Error: too few arguments (expected at least [[[minArguments]]], "
@@ -473,8 +473,8 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
-[[[ENDIF]]]
-[[[IF hasMaxArguments]]]
+    [[[ENDIF]]]
+    [[[IF hasMaxArguments]]]
     if (args.size() > [[[maxArguments]]])
     {
         std::cerr << "Error: too many arguments (expected at most [[[maxArguments]]], but received "
@@ -483,7 +483,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
-[[[ENDIF]]]
+    [[[ENDIF]]]
 
 [[[ENDIF]]]
     size_t excess = args.size() - [[[minArguments]]];

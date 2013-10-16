@@ -71,6 +71,9 @@ class FuncExpander(Expander):
         if self._assign:
             self._assign(identifier, value)
 
+def isEmptyOrSpace(s):
+    return not s or s.isspace()
+
 class TemplateProcessor:
     def __init__(self, template, expander):
         self.template = template
@@ -89,6 +92,8 @@ class TemplateProcessor:
                 if ignoreNewline:
                     ignoreNewline = False
                     if ttype == "NEWLINE":
+                        if isEmptyOrSpace("".join(self.curline)):
+                            self.curline = []
                         self.lineNo += 1
                         continue
 
@@ -96,18 +101,18 @@ class TemplateProcessor:
                     self.handleNEWLINE()
                 elif ttype == "IF":
                     self.handleIF(tstr)
-                    ignoreNewline = not "".join(self.curline)
+                    ignoreNewline = isEmptyOrSpace("".join(self.curline))
                 elif ttype == "ENDIF":
                     self.handleENDIF()
-                    ignoreNewline = not "".join(self.curline)
+                    ignoreNewline = isEmptyOrSpace("".join(self.curline))
                 elif self.scope[-1] == "done":
                     pass
                 elif ttype == "ELIF":
                     self.handleELIF(tstr)
-                    ignoreNewline = not "".join(self.curline)
+                    ignoreNewline = isEmptyOrSpace("".join(self.curline))
                 elif ttype == "ELSE":
                     self.handleELSE()
-                    ignoreNewline = not "".join(self.curline)
+                    ignoreNewline = isEmptyOrSpace("".join(self.curline))
                 elif self.scope[-1] == "inactive":
                     pass
                 elif ttype == "TEXT":
@@ -117,7 +122,7 @@ class TemplateProcessor:
                                      not "".join(self.curline))
                 elif ttype == "SET":
                     self.handleSET(tstr)
-                    ignoreNewline = not "".join(self.curline)
+                    ignoreNewline = isEmptyOrSpace("".join(self.curline))
                 elif ttype == ">":
                     self.pushAlignment()
                 elif ttype == "|":

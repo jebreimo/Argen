@@ -133,7 +133,7 @@ Reference for option and argument properties
 
     Argument: NAME
 
-Is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
+*Argument* is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
 
 #### Example
 This creates a non-standard option "out-file" that takes an argument "FILE":
@@ -163,11 +163,10 @@ This adds a member of type std::vector\<std::string\> to the generated struct:
 
     Default: VALUE
 
-The default value for the option or argument's member. If this property is not specified, it uses the default constructor for the member's type (see the *ValueType* property). To set the default value for options and arguments that accept delimited values (see *Delimiter* below), use the delimiter to separate individual values, each value.
+The default value for the option or argument's member. If this property is not specified, it uses the default constructor for the member's type (see the *ValueType* property). To set the default value for options and arguments that accept delimited values (see *Delimiter* below), use the delimiter to separate individual values.
     
-
 #### Examples
-This creates an int-option with default-value 0.
+This creates an int-option with default-value 10:
 
     ${-a NUM --alpha=NUM | Default: 10}$
 
@@ -215,10 +214,10 @@ Explicitly set the flags for an option. The automatic detection of options and a
 
     Include: FILE
 
-    Adds an include directive to the generated header file. Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
+    Adds an include directive to the generated header file. Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in "" or \<>.
     
 #### Examples
-    ${--population=N | ValueType: int64_t | Include: <cstdint> }$
+    ${--population=N | ValueType: int64_t | Include: <cstdint>}$
 
     ${<date>| ValueType: Date | Include: "Date.h" |
       Values: [Date(1900, 1, 1)..Date::now()>}$
@@ -227,7 +226,7 @@ Explicitly set the flags for an option. The automatic detection of options and a
 
     IncludeCPP: FILE
 
-    Add an include directive to the cpp-file Used in combination with the Default and Values properties if either of these refer to values, types or functions that require additional include files. to make the generated include file include the header file that defines the type. The property value must be enclosed in quotes or lesser-than-greater-than-pairs.
+    Add an include directive to the cpp-file. *IncludeCPP is used in combination with the Default and Values properties. It's possible to use values that require additional include files if either of these refer to values, types or functions that require additional include files. 
 
 ### Index
 
