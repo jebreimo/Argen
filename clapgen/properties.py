@@ -8,8 +8,8 @@ def updateProperties(props, other):
             props[key] = other[key]
         elif props[key] != other[key]:
             raise Error(
-                    "Multiple definitions of property %s: \"%s\" and \"%s\"" %
-                    (key, props[key], other[key]))
+                    "Multiple definitions of property %s: \"%s\" and \"%s\""
+                    % (key, props[key], other[key]))
 
 def maxCount(a, b):
     return -1 if -1 in (a, b) else max(a, b)
@@ -41,6 +41,11 @@ def inferValueType(props):
                 "[]<>").split())
     vals.extend(a.value for a in props["arguments"] if a.value)
     if not vals:
+        argNames = set(o.argument for o in props["arguments"] if o.flags)
+        if len(argNames) == 1:
+            argName = list(argNames)[0]
+            if argName in ("NUM", "COUNT", "INT", "SIZE", "LEN", "LENGTH"):
+                return "int"
         return "std::string"
     types = set(v for v in [getValueType(s) for s in vals] if v)
     if len(types) == 1:

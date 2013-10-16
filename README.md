@@ -151,11 +151,12 @@ The help text for this option will be:
 Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The count-value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integers. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no upper limit to the number of values.
 
 #### Example
-This adds a member of type std::vector\<std::string\> to the generated struct:
 
     ${-a VALUE --alpha=VALUE | count: 1 }$ A mandatory option
 
     ${-b FILE --bravo=FILE | count: 0..}$ A list with 0 or more values.
+
+The above line adds a member named "bravo" of type `std::vector\<std::string\>` to the generated struct.
 
     ${-c NUM --charlie=NUM | count: 3..5}$ An option that must be given 3 to 5 times.
 
@@ -210,13 +211,20 @@ Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
 
 Explicitly set the flags for an option. The automatic detection of options and arguments require that options consist of at least two characters and start with a dash `-` or a slash `/`. To create other options - for instance a single-character option - it's necessary to use this property. If there are multiple flags for the same option the flags must separated by whitespace. It's not possible specify the option argument with the Flags property, to do so the `Argument` option must also be used.
 
+#### Examples
+
+    ${a, average| Flags: a average}$ Calculate the average.
+    
+Creates an option that can be invoked with two different flags, "a" and "average". The text in front of "|" doesn't start with a dash or slash and is therefore assumed to be an argument. By using the flags property, the initial text is ignored and the space separated words after flags are used instead. As no other properties are specified, it becomes a boolean option that is false by default and true when the option is given.
+
 ### Include
 
     Include: FILE
 
-    Adds an include directive to the generated header file. Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in "" or \<>.
+Adds an include directive to the generated header file. Used in combination with the ValueType property to make the generated include file include the header file that defines the type. The property value must be enclosed in "" or \<>.
     
 #### Examples
+
     ${--population=N | ValueType: int64_t | Include: <cstdint>}$
 
     ${<date>| ValueType: Date | Include: "Date.h" |
@@ -226,11 +234,25 @@ Explicitly set the flags for an option. The automatic detection of options and a
 
     IncludeCPP: FILE
 
-    Add an include directive to the cpp-file. *IncludeCPP is used in combination with the Default and Values properties. It's possible to use values that require additional include files if either of these refer to values, types or functions that require additional include files. 
+Add an include directive to the generated cpp-file. *IncludeCPP* is used in combination with the `Default` and `Values` properties.
+    
+#### Examples
+
+    ${-a NUM, --alpha=NUM| ValueType: int | Default: INT_MAX | IncludeCPP: <limits.h>}$
+
+Creates a member *alpha* of type *int* which has the default value *INT_MAX*. INT_MAX is a constant defined in the standard C header file "*limits.h*".
 
 ### Index
 
     Index: NUMBER
+
+The zero-based index of the argument. This property allows out-of-order definition of arguments. The *Index* property only applies to arguments (i.e. non-options), and 
+
+#### Example
+
+    ${<file>}$
+    ${<destination file>}$
+    ${[files...]| Index: 1}$
 
 ### Member
 
