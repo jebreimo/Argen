@@ -73,7 +73,7 @@ def makeArgParser():
     ap.add_argument("--parenthesis", metavar="PARENS",
                     dest="parenthesis", default="",
                     help="Set the parenthesis used to enclose the definitions "
-                         "in the help file.")
+                         "and separate properties from each other in the help file.")
     ap.add_argument("helpfile", metavar="text file",
                     help="a text file containing the help text")
     return ap
@@ -120,13 +120,16 @@ def main(args):
     try:
         if args.parenthesis:
             parens = args.parenthesis.split()
-            if len(parens) == 2 and parens[0] and parens[1]:
+            if len(parens) == 3 and parens[0] and parens[1] and parens[2]:
                 helptextparser.StartDefinition = parens[0]
-                helptextparser.EndDefinition = parens[1]
+                helptextparser.DefinitionSeparator = parens[1]
+                helptextparser.EndDefinition = parens[2]
             else:
                 print("Invalid parenthesis: " + args.parenthesis)
                 print("The parenthesis string must consist of the opening "
-                      " and closing parenthesis separated by a space "
+                      " parenthesis (defaults is \"${\"), the property "
+                      " separator (default is \"|\") and the closing "
+                      " parenthesis (default is \"}$\")separated by a space "
                       " character. The space character must either be "
                       " escaped or the entire option must be enclosed in "
                       " quotes. For instance to produce the default "

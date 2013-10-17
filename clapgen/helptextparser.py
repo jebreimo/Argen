@@ -9,6 +9,7 @@ ArgCounter = 0
 OptCounter = 0
 StartDefinition = "${"
 EndDefinition = "}$"
+DefinitionSeparator = "|"
 
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):
@@ -85,7 +86,7 @@ def isLegalFlag(f):
         return f
 
 def parseProperties(s):
-    parts = [p.strip() for p in s.split("|")]
+    parts = [p.strip() for p in s.split(DefinitionSeparator)]
     props = dict((k.strip().lower(), v.strip())
                   for k, v in (s.split(":", 1) for s in parts))
     if "flags" in props:
@@ -143,7 +144,7 @@ def parseFlagsProperty(flags):
                 name=name)
 
 def parseDefinition(s):
-    parts = s.split("|", 1)
+    parts = s.split(DefinitionSeparator, 1)
     text = parts[0]
     if len(parts) == 2:
         explicitProps = parseProperties(parts[1])
