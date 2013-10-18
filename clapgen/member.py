@@ -33,7 +33,7 @@ class Member(object):
 
     @property
     def lineNo(self):
-        return ", ".join(a.lineNo for a in self.arguments)
+        return ", ".join(set(a.lineNo for a in self.arguments))
 
     @property
     def flags(self):

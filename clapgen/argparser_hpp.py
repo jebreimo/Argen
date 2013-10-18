@@ -1,6 +1,15 @@
 import codegen
 import os
 
+def isMandatory(m):
+    return m.isOption and m.count == (1, 1)
+
+def isDefaultList(m):
+    return m.type == "list" and m.default
+
+def isTrackable(m):
+    return isMandatory(m) or isDefaultList(m) or m.condition
+
 class HppExpander(codegen.Expander):
     def __init__(self, members, className="Arguments",
                  fileName="ParseArguments.hpp",
@@ -11,9 +20,6 @@ class HppExpander(codegen.Expander):
         self.functionName = functionName
         self.namespace = [s for s in namespace.split("::") if s]
         self.hasInfoOptions = any(m for m in members if m.type == "info")
-        def isMandatory(m): return m.isOption and m.count == (1, 1)
-        def isDefaultList(m): return m.type == "list" and m.default
-        def isTrackable(m): return isMandatory(m) or isDefaultList(m)
         self.hasTrackedOptions = any(m for m in members if isTrackable(m))
         self._members = members
 

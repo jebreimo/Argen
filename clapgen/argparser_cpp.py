@@ -263,7 +263,8 @@ class CppExpander(codegen.Expander):
         lines = []
         a, m = arg, arg.member
         if m.type == "multivalue" and not a.delimiter and isSimple(m):
-            lines.append("result->%s.clear();" % m.name)
+            if m.default:
+                lines.append("result->%s.clear();" % m.name)
             lines.append("result->%s.push_back(*it++);" % m.name)
         elif m.type == "list" and not a.delimiter and isSimple(m):
             lines.append("result->%s.push_back(*it++);" % m.name)
@@ -290,6 +291,8 @@ class CppExpander(codegen.Expander):
                 if a.maxCount - a.minCount == 1:
                     lines.append("if (excess != 0)")
                 else:
+                    if a.member.minCount == 0 and a.member.default:
+                        lines.append("result->%(name)s.clear();" % a.member)
                     lines.append("for (size_t i = %d; excess && i < %d; ++i)"
                              % (a.minCount, a.maxCount))
                 lines.append("{")
@@ -341,40 +344,40 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[ENDIF]]]
 [[[IF value]]]
     [[[multivalueValueAssignment]]]
-[[[IF hasNormalOptions]]]
-[[[IF hasShortOptions]]]
+    [[[IF hasNormalOptions]]]
+        [[[IF hasShortOptions]]]
     if (!resemblesShortOption(flag.c_str()) && argIt.hasValue())
-[[[ELSE]]]
+        [[[ELSE]]]
     if (argIt.hasValue())
-[[[ENDIF]]]
+        [[[ENDIF]]]
         return error(flag, result, "option does not take a value.");
-[[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ELSE]]]
-[[[IF hasMinOrMaxValues]]]
+    [[[IF hasMinOrMaxValues]]]
     size_t prevSize = result.[[[memberName]]].size();
-[[[ENDIF]]]
+    [[[ENDIF]]]
     if (!addDelimitedValues(result.[[[memberName]]], '[[[delimiter]]]', [[[IF hasValueCheck]]]
                             []([[[parameterType]]] v)
                             {return [[[valueCheck(v)]]];},
                             [[[ENDIF]]]flag, argIt, result))
         return false;
-[[[IF hasFixedNumberOfValues]]]
+    [[[IF hasFixedNumberOfValues]]]
     if (result.[[[memberName]]].size() - prevSize != [[[minValues]]])
         return error(flag, result, "the option value must contain [[[minValues]]] values.");
-[[[ELSE]]]
-[[[IF hasMinValues]]]
+    [[[ELSE]]]
+        [[[IF hasMinValues]]]
     if (result.[[[memberName]]].size() - prevSize < [[[minValues]]])
         return error(flag, result, "the option value must contain at least [[[minValues]]] values.");
-[[[ENDIF]]]
-[[[IF hasMaxValues]]]
+        [[[ENDIF]]]
+        [[[IF hasMaxValues]]]
     if (result.[[[memberName]]].size() - prevSize > [[[maxValues]]])
         return error(flag, result, "the option value can't contain more than [[[maxValues]]] values.");
-[[[ENDIF]]]
-[[[ENDIF]]]
-[[[IF hasMaxCount]]]
+        [[[ENDIF]]]
+    [[[ENDIF]]]
+    [[[IF hasMaxCount]]]
     if (result.[[[memberName]]].size() > [[[maxCount]]])
         return error(flag, result, "too many values (max is [[[maxCount]]]).");
-[[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ENDIF]]]
     return true;
 }
@@ -398,14 +401,14 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[ENDIF]]]
 [[[IF value]]]
     result.[[[memberName]]].push_back([[[value]]]);
-[[[IF hasNormalOptions]]]
-[[[IF hasShortOptions]]]
+    [[[IF hasNormalOptions]]]
+        [[[IF hasShortOptions]]]
     if (!resemblesShortOption(flag.c_str()) && argIt.hasValue())
-[[[ELSE]]]
+        [[[ELSE]]]
     if (argIt.hasValue())
-[[[ENDIF]]]
+        [[[ENDIF]]]
         return error(flag, result, "option does not take a value.");
-[[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ELSE]]]
     [[[valueType]]] value;
     if (!getValue(value, [[[IF hasValueCheck]]]
@@ -429,17 +432,17 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
     result.[[[memberName]]].clear();
 [[[IF value]]]
     [[[multivalueValueAssignment]]]
-[[[IF hasNormalOptions]]]
-[[[IF hasShortOptions]]]
+    [[[IF hasNormalOptions]]]
+        [[[IF hasShortOptions]]]
     if (!resemblesShortOption(flag.c_str()) && argIt.hasValue())
         return error(flag, result, "option does not take a value.");
-[[[ELSE]]]
+        [[[ELSE]]]
     if (argIt.hasValue())
         return error(flag, result, "option does not take a value.");
-[[[ENDIF]]]
-[[[ENDIF]]]
+        [[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ELSE]]]
-[[[IF delimiter]]]
+    [[[IF delimiter]]]
     if (!addDelimitedValues(result.[[[memberName]]], '[[[delimiter]]]', [[[IF hasValueCheck]]]
                             []([[[parameterType]]] v)
                             {return [[[valueCheck(v)]]];},
@@ -448,13 +451,13 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
     if (result.[[[memberName]]].size() != [[[minValues]]])
         return error(flag, result, "the option value must contain [[[minValues]]] "
                                    "values separated by \\"[[[delimiter]]]\\".");
-[[[ELSE]]]
+    [[[ELSE]]]
     [[[valueType]]] value;
     return getValue(value, [[[IF hasValueCheck]]]
                     []([[[parameterType]]] v){return [[[valueCheck(v)]]];},
                     [[[ENDIF]]]flag, argIt, result);
     result.[[[memberName]]].push_back(value);
-[[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ENDIF]]]
     return true;
 }
@@ -470,15 +473,15 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[ENDIF]]]
 [[[IF value]]]
     result.[[[memberName]]] = [[[value]]];
-[[[IF hasNormalOptions]]]
-[[[IF hasShortOptions]]]
+    [[[IF hasNormalOptions]]]
+        [[[IF hasShortOptions]]]
     if (!resemblesShortOption(flag.c_str()) && argIt.hasValue())
         return error(flag, result, "option does not take a value.");
-[[[ELSE]]]
+        [[[ELSE]]]
     if (argIt.hasValue())
         return error(flag, result, "option does not take a value.");
-[[[ENDIF]]]
-[[[ENDIF]]]
+        [[[ENDIF]]]
+    [[[ENDIF]]]
     return true;
 [[[ELSE]]]
     return getValue(result.[[[memberName]]], [[[IF hasValueCheck]]]
@@ -534,19 +537,19 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
 [[[|]]][[[className]]]& result[[[<]]])
 {
 [[[IF isStringMember]]]
-[[[IF hasValueCheck]]]
+    [[[IF hasValueCheck]]]
     if (!([[[valueCheck(value)]]]))
         return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
-[[[ENDIF]]]
+    [[[ENDIF]]]
     result.[[[memberName]]].push_back(value);
 [[[ELSE]]]
     [[[valueType]]] v;
     if (!fromString(value, v))
         return error("[[[name]]]", result, "invalid argument value \\"" + value + "\\".");
-[[[IF hasValueCheck]]]
+    [[[IF hasValueCheck]]]
     if (!([[[valueCheck(v)]]]))
         return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
-[[[ENDIF]]]
+    [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
 [[[ENDIF]]]
     return true;
@@ -564,19 +567,19 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     {
         size_t last = value.find_first_of('[[[delimiter]]]', first);
         size_t len = (last == std::string::npos ? value.size() : last) - first;
-[[[IF isStringMember]]]
+    [[[IF isStringMember]]]
         [[[valueType]]] v = value.substr(first, len);
-[[[ELSE]]]
+    [[[ELSE]]]
         [[[valueType]]] v;
         if (!fromString(value.substr(first, len), v))
             return error("[[[name]]]", result, "invalid argument value \\""
                          + value.substr(first, len) + "\\".");
-[[[ENDIF]]]
-[[[IF hasValueCheck]]]
+    [[[ENDIF]]]
+    [[[IF hasValueCheck]]]
         if (!([[[valueCheck(v)]]]))
             return error("[[[name]]]", result, "illegal argument value \\"" +
                          value.substr(first, len) + "\\".");
-[[[ENDIF]]]
+    [[[ENDIF]]]
         result.[[[memberName]]].push_back(v);
         if (last == std::string::npos)
             break;
@@ -592,13 +595,12 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     [[[valueType]]] v;
     if (!fromString(value, v))
         return error("[[[name]]]", result, "invalid argument value \\"" + value + "\\".");
-[[[IF hasValueCheck]]]
+    [[[IF hasValueCheck]]]
         if (!([[[valueCheck(value)]]]))
             return error("[[[name]]]", result, "illegal argument value \\"" +
                          value.substr(first, last) + "\\".");
-[[[ENDIF]]]
+    [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
-[[[ENDIF]]]
 [[[ENDIF]]]
     return true;
 }
@@ -638,14 +640,14 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     if (result.[[[memberName]]].size() - prevSize != [[[minValues]]])
         return error("[[[name]]]", result, "the option value must contain [[[minValues]]] values.");
 [[[ELSE]]]
-[[[IF hasMinValues]]]
+    [[[IF hasMinValues]]]
     if (result.[[[memberName]]].size() - prevSize < [[[minValues]]])
         return error("[[[name]]]", result, "the option value must contain at least [[[minValues]]] values.");
-[[[ENDIF]]]
-[[[IF hasMaxValues]]]
+    [[[ENDIF]]]
+    [[[IF hasMaxValues]]]
     if (result.[[[memberName]]].size() - prevSize > [[[maxValues]]])
         return error("[[[name]]]", result, "the option value can't contain more than [[[maxValues]]] values.");
-[[[ENDIF]]]
+    [[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF hasMaxCount]]]
     if (result.[[[memberName]]].size() > [[[maxCount]]])

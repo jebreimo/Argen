@@ -85,8 +85,45 @@ def isLegalFlag(f):
     else:
         return f
 
+def findSingle(s, sub, start = 0):
+    """findSingle(s, sub[, start]) -> int
+
+       Returns the index of the first instance of sub in s which isn't
+       immediately followed by another instance of sub. The search starts at
+       start.
+    """
+    index = s.find(sub, start)
+    while index != -1:
+        nextStart = index + len(sub)
+        while s[nextStart:nextStart + len(sub)] == sub:
+            nextStart += len(sub)
+        if (nextStart == index + len(sub)):
+            return index
+        index = s.find(sub, nextStart)
+    return index
+
+def splitSingle(s, separator, maxCount=-1):
+    """
+    splitSingle(s, separator[, maxCount]) -> list of strings
+
+    Essentially performs the same operation as
+    s.split(separator, maxCount), but sequences of separators are
+    left alone (e.g. the C++ logical or-operator "||" is not considered a
+    separator when separator is "|").
+    """
+    result = []
+    start = 0
+    next = findSingle(s, separator)
+    while next != -1 and maxCount != 0:
+        result.append(s[start:next])
+        start = next + len(separator)
+        next = findSingle(s, separator, start)
+        maxCount -= 1
+    result.append(s[start:])
+    return result
+
 def parseProperties(s):
-    parts = [p.strip() for p in s.split(DefinitionSeparator)]
+    parts = [p.strip() for p in splitSingle(s, DefinitionSeparator)]
     props = dict((k.strip().lower(), v.strip())
                   for k, v in (s.split(":", 1) for s in parts))
     if "flags" in props:
@@ -144,7 +181,7 @@ def parseFlagsProperty(flags):
                 name=name)
 
 def parseDefinition(s):
-    parts = s.split(DefinitionSeparator, 1)
+    parts = splitSingle(s, DefinitionSeparator, 1)
     text = parts[0]
     if len(parts) == 2:
         explicitProps = parseProperties(parts[1])

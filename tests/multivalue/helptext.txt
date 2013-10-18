@@ -1,0 +1,4 @@
+%prog% ${[x1,y1] ...| Member: point | Default: -1,-2}$
+
+OPTIONS
+${/?}$ Show help.

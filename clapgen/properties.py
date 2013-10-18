@@ -55,12 +55,11 @@ def inferValueType(props):
     elif types:
         raise Error("%s: unable to infer correct value type, can be any of %s."
                     % (props["name"], ", ".join(types)),
-                    ", ".join(a.lineNo for a in props["arguments"]))
+                    joinLineNos(*props["arguments"]))
     else:
         raise Error("%s: unable to infer correct value type. "
                     "(String values must be enclosed by quotes, e.g. \"foo\")"
-                    % (props["name"]),
-                    ", ".join(a.lineNo for a in props["arguments"]))
+                    % (props["name"]), joinLineNos(*props["arguments"]))
 
 def inferIndexProperties(propsList):
     propsWithIndex = [p for p in propsList if "autoindex" in p]
@@ -78,7 +77,8 @@ def inferIndexProperties(propsList):
                             % (i, len(indexedProps) - 1), props["lineno"])
             elif indexedProps[i]:
                 raise Error("Two arguments can't have the same index.",
-                            indexedProps[i]["lineno"] + ", " + props["lineno"])
+                            joinLineNos(indexedProps[i]["lineno"],
+                                        props["lineno"]))
     i = 0
     for p in propsWithIndex:
         if "index" not in props:
@@ -98,7 +98,7 @@ def inferDefaultValue(props):
             value = "false"
         elif props["valuetype"] != "std::string":
             value = "0"
-    if props["type"] == "multivalue":
+    if value and props["type"] == "multivalue":
         count = min(a.minDelimiters for a in props["arguments"])
         value = "|".join([value] * (count + 1))
     return value
@@ -116,7 +116,6 @@ def minmaxCount(counts):
 def inferMemberProperties(props):
     args = props["arguments"]
 
-    minDel, maxDel = minmaxCount(a.delimiterCount for a in args)
     if args[0].flags:
         counts = list(set(a.count for a in args))
         if len(counts) == 1:
@@ -136,6 +135,7 @@ def inferMemberProperties(props):
                 hi += count[1]
             lo += count[0]
             count = lo, hi
+    minDel, maxDel = minmaxCount(a.delimiterCount for a in args)
     if count[1] == -1 or maxDel == -1:
         props["count"] = "%d..-1" % (count[0] * (minDel + 1))
     else:
@@ -165,6 +165,9 @@ def inferMemberProperties(props):
                     break
             else:
                 props["type"] = "multivalue"
+    elif props["type"] != "list" and count[1] != 1:
+        raise Error('%(name)s: type must be "list" when '
+                    'the maximum count is greater than 1.' % props)
     elif props["type"] == "multivalue":
         for lo, hi in (a.delimiterCount for a in args):
             if lo != hi:
@@ -174,9 +177,6 @@ def inferMemberProperties(props):
             if a.minDelimiters != a.maxDelimiters:
                 raise Error("%(name)s: type \"multivalue\" requires a "
                             "fixed number of delimiters." % props)
-    elif props["type"] != "list" and count[1] != 1:
-        raise Error('%(name)s: type must be "list" or "multivalue" when '
-                    'the maximum count is greater than 1.' % props)
     elif props["type"] in ("help", "info", "final"):
         if props["valuetype"] != "bool":
             raise Error("%(name)s: when type is \"%(type)s\", valuetype "
@@ -200,15 +200,14 @@ def getMemberProperties(args):
             memargs = members[name]["arguments"]
             memargs.append(arg)
             if (len(arg.flags) != 0) != (len(memargs[0].flags) != 0):
-                lineNos = ", ".join(a.lineNo for a in memargs)
                 raise Error(name + ": arguments and options can't write to "
                             "the same member. (Use the \"member\" propery to "
-                            "set a different member name)", lineNos)
+                            "set a different member name)",
+                            joinLineNos(*memargs))
             try:
                 updateProperties(members[name], arg.memberProps)
             except Error as e:
-                lineNos = ", ".join(a.lineNo for a in memargs)
-                raise Error(name + ": " + str(e), lineNos)
+                raise Error(name + ": " + str(e), joinLineNos(*memargs))
         else:
             members[name] = arg.memberProps.copy()
             members[name]["arguments"] = [arg]
@@ -221,7 +220,8 @@ def inferArgumentProperties(props):
     if "flags" not in props and "value" in props:
         raise Error("Arguments can't have the value property.")
     if "argument" in props and "value" in props:
-        raise Error("An option can't have both argument and value properties.")
+        raise Error("An option can't have both argument and "
+                    "value properties.")
     if not props.get("argument", props.get("flags")):
         props["argument"] = "VALUE"
     if not props.get("value", " "):
@@ -233,7 +233,8 @@ def inferArgumentProperties(props):
         if lo < 0:
             raise Error("Minimum DelimiterCount can't be less than zero.")
         elif hi != -1 and hi < lo:
-            raise Error("Maximum DelimiterCount can't be less than the minimum.")
+            raise Error("Maximum DelimiterCount can't be less than "
+                        "the minimum.")
     if "delimiter" not in props:
         s = props.get("value") or props.get("argument", "")
         if "," in s:
@@ -241,7 +242,7 @@ def inferArgumentProperties(props):
     if len(props.get("delimiter", " ")) != 1:
         msg = "Delimiter must be a single non-whitespace character."
         if "," in props.get("value") or props.get("argument", ""):
-            msg += " Use \"DelimiterCount: 0\" to disable the comma-delimiter."
+            msg += ' Use "DelimiterCount: 0" to disable the comma-delimiter.'
         raise Error(msg)
     if "delimiter" not in props and props.get("delimitercount", "0") != "0":
         raise Error("DelimiterCount property where there is no delimiter.")
@@ -283,6 +284,15 @@ def inferArgumentProperties(props):
     if props.get("valuetype") == "string":
         props["valuetype"] = "std::string"
 
+def joinLineNos(*args):
+    nos = set()
+    for a in args:
+        if type(a) == str:
+            nos.add(a)
+        else:
+            nos.add(a.lineNo)
+    return ", ".join(nos)
+
 def makeMembers(args):
     """makeMembers(list of Argument instances) -> list of Member instances
 
@@ -296,7 +306,7 @@ def makeMembers(args):
             inferMemberProperties(props[key])
             members[key] = Member(props[key])
         except Error as ex:
-            ex.lineNo = ", ".join(a.lineNo for a in props[key]["arguments"])
+            ex.lineNo = joinLineNos(*props[key]["arguments"])
             raise ex
     for arg in args:
         arg.member = members[arg.memberName]
