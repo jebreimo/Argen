@@ -4,11 +4,11 @@ import os
 def isMandatory(member):
     return member.isOption and member.minCount == 1 and member.type != "list"
 
-def isDefaultList(member):
-    return member.type == "list" and member.default
-
 def isTrackable(member):
-    return isMandatory(member) or isDefaultList(member)
+    return (member.isOption and
+            (member.count == (1, 1)) or
+            (member.type == "list" and member.default) or
+            (member.condition))
 
 class CppExpander(codegen.Expander):
     def __init__(self, text, opts, args, members, className="ParseArguments",
@@ -292,7 +292,8 @@ class CppExpander(codegen.Expander):
                     lines.append("if (excess != 0)")
                 else:
                     if a.member.minCount == 0 and a.member.default:
-                        lines.append("result->%(name)s.clear();" % a.member)
+                        lines.append("if (excess != 0)")
+                        lines.append("    result->%(name)s.clear();" % a.member)
                     lines.append("for (size_t i = %d; excess && i < %d; ++i)"
                              % (a.minCount, a.maxCount))
                 lines.append("{")
@@ -522,11 +523,11 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     result.[[[memberName]]] = value;
 [[[ELSE]]]
     if (!fromString(value, result.[[[memberName]]]))
-        return error("[[[name]]]", result, "invalid argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "invalid value \\"" + value + "\\".");
 [[[ENDIF]]]
 [[[IF hasValueCheck]]]
     if (!([[[valueCheck]]]))
-        return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
 [[[ENDIF]]]
     return true;
 }
@@ -539,16 +540,16 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
 [[[IF isStringMember]]]
     [[[IF hasValueCheck]]]
     if (!([[[valueCheck(value)]]]))
-        return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(value);
 [[[ELSE]]]
     [[[valueType]]] v;
     if (!fromString(value, v))
-        return error("[[[name]]]", result, "invalid argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "invalid value \\"" + value + "\\".");
     [[[IF hasValueCheck]]]
     if (!([[[valueCheck(v)]]]))
-        return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
 [[[ENDIF]]]
@@ -572,12 +573,12 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     [[[ELSE]]]
         [[[valueType]]] v;
         if (!fromString(value.substr(first, len), v))
-            return error("[[[name]]]", result, "invalid argument value \\""
+            return error("[[[name]]]", result, "invalid value \\""
                          + value.substr(first, len) + "\\".");
     [[[ENDIF]]]
     [[[IF hasValueCheck]]]
         if (!([[[valueCheck(v)]]]))
-            return error("[[[name]]]", result, "illegal argument value \\"" +
+            return error("[[[name]]]", result, "illegal value \\"" +
                          value.substr(first, len) + "\\".");
     [[[ENDIF]]]
         result.[[[memberName]]].push_back(v);
@@ -586,18 +587,18 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
         first = last + 1;
     }
     if (result.[[[memberName]]].size() != [[[minValues]]])
-        return error("[[[name]]]", result, "the option value must contain [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the argument must contain [[[minValues]]] values.");
 [[[ELIF isStringMember]]]
     if (!([[[valueCheck(value)]]]))
-        return error("[[[name]]]", result, "illegal argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
     result.[[[memberName]]].push_back(value);
 [[[ELSE]]]
     [[[valueType]]] v;
     if (!fromString(value, v))
-        return error("[[[name]]]", result, "invalid argument value \\"" + value + "\\".");
+        return error("[[[name]]]", result, "invalid value \\"" + value + "\\".");
     [[[IF hasValueCheck]]]
         if (!([[[valueCheck(value)]]]))
-            return error("[[[name]]]", result, "illegal argument value \\"" +
+            return error("[[[name]]]", result, "illegal value \\"" +
                          value.substr(first, last) + "\\".");
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
@@ -623,12 +624,12 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
 [[[ELSE]]]
         [[[valueType]]] v;
         if (!fromString(value.substr(first, len), v))
-            return error("[[[name]]]", result, "invalid argument value \\""
+            return error("[[[name]]]", result, "invalid value \\""
                          + value.substr(first, len) + "\\".");
 [[[ENDIF]]]
 [[[IF hasValueCheck]]]
             if (!([[[valueCheck(v)]]]))
-                return error("[[[name]]]", result, "illegal argument value \\"" +
+                return error("[[[name]]]", result, "illegal value \\"" +
                              value.substr(first, len) + "\\".");
 [[[ENDIF]]]
         result.[[[memberName]]].push_back(v);
@@ -638,15 +639,15 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     }
 [[[IF hasFixedNumberOfValues]]]
     if (result.[[[memberName]]].size() - prevSize != [[[minValues]]])
-        return error("[[[name]]]", result, "the option value must contain [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the argument must have [[[minValues]]] values.");
 [[[ELSE]]]
     [[[IF hasMinValues]]]
     if (result.[[[memberName]]].size() - prevSize < [[[minValues]]])
-        return error("[[[name]]]", result, "the option value must contain at least [[[minValues]]] values.");
+        return error("[[[name]]]", result, "the argument must have at least [[[minValues]]] values.");
     [[[ENDIF]]]
     [[[IF hasMaxValues]]]
     if (result.[[[memberName]]].size() - prevSize > [[[maxValues]]])
-        return error("[[[name]]]", result, "the option value can't contain more than [[[maxValues]]] values.");
+        return error("[[[name]]]", result, "the argument can't have more than [[[maxValues]]] values.");
     [[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF hasMaxCount]]]
