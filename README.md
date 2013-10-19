@@ -133,9 +133,9 @@ Reference for option and argument properties
 
     Argument: NAME
 
-*Argument* is used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
+*Argument* is primarily used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
 
-#### Example
+#### Example 1
 This creates a non-standard option "out-file" that takes an argument "FILE":
 
     ${out-file FILE|flags: out-file | argument: FILE}$  Sets the name of the output file
@@ -143,7 +143,7 @@ This creates a non-standard option "out-file" that takes an argument "FILE":
 The help text for this option will be:
 
     out-file FILE  Sets the name of the output file
-    
+
 ### Count
 
     Count: VALUE or MIN..MAX
@@ -264,14 +264,19 @@ The name of the member variable
 
     Text: OPTION-DEFINITION or ARGUMENT-DEFINITION
 
+#### Example 2:
+To create an option that is case-insensitive and accepts both a slash and a dash prefix, but is listed in the help text as just "/A".
+
+    ${/A NUM| Text: /A NUM /a -A -a | Default: 0}$ Set the alpha-level.
+
 ### Type
 
     Type: TYPE
 
 TYPE must be one of the following words:
-* *Help*: specify that this is a help option. Options automatically become help options if their `Member` property is "help" (this is for instance true if the option is `/?` or `--help`). When the generated *parse_arguments* function encounters a help-option it writes the help message to stdout and returns immediately without parsing any remaining options or arguments.
-* *Info*
-* *MultiValue*
+* `Help`: specifies that this is a help option. Options automatically become help options if their `Member` property is "help" (this is for instance true if the option is `/?` or `--help`). When the generated *parse_arguments* function encounters a help-option it writes the help message to stdout and returns immediately without parsing any remaining options or arguments.
+* `Info`: use this on options that make the program display some piece of information and ignore the requires certain options and arguments for its normal operation, but also other arguments (e.g. an option for displaying the program's version or a list of available services).
+* *MultiValue*:
 * *Value*
 * *List*    values are stored in a vector
 * *Final*   the option marks the end of all options, all remaining arguments are treated as arguments even if they start with a dash. POSIX-compliant program should make "--" the final option. There won't be a members for final options in the Arguments struct.

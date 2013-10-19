@@ -8,6 +8,7 @@ class Argument(object):
     def __init__(self, props):
         self.props = dict((k, props[k]) for k in props
                           if k not in constants.MemberProps)
+        self.argument = props.get("argument", "")
         self.flags = props["flags"].split() if "flags" in props else []
         self.value = props.get("value")
         self.member = None

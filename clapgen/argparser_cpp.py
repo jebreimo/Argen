@@ -70,6 +70,7 @@ class CppExpander(codegen.Expander):
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         self.requiresNextValue = any(o for o in opts if not o.value)
         self.requiresFromString = args or any(o for o in opts if not o.value)
+        self.hasConditions = any(m for m in members if m.condition)
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -325,6 +326,18 @@ class CppExpander(codegen.Expander):
                              '"missing mandatory option.");' % m)
         return lines
 
+    def conditions(self, params, context):
+        lines = []
+        for m in self._members:
+            if m.condition:
+                lines.append("if (result->reserved_for_internal_use->%(name)s &&"
+                             % m)
+                lines.append("    !(%(condition)s))" % m)
+                name = m.flags if m.isOption else m.name
+                lines.append('    error("%s", *result, "%s");'
+                             % (name, m.conditionMessage))
+        return lines
+
     def customIncludes(self, params, context):
         lines = []
         for inc in set(m.includeCpp for m in self._members if m.includeCpp):
@@ -427,7 +440,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]]ArgumentIterator& argIt,
 [[[|]]][[[className]]]& result[[[<]]])
 {
-[[[IF isMandatory]]]
+[[[IF isTrackable]]]
     result.reserved_for_internal_use->[[[memberName]]] = true;
 [[[ENDIF]]]
     result.[[[memberName]]].clear();
@@ -469,7 +482,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
 [[[|]]]ArgumentIterator& argIt,
 [[[|]]][[[className]]]& result[[[<]]])
 {
-[[[IF isMandatory]]]
+[[[IF isTrackable]]]
     result.reserved_for_internal_use->[[[memberName]]] = true;
 [[[ENDIF]]]
 [[[IF value]]]
@@ -685,6 +698,7 @@ class ProcessOptionExpander(codegen.Expander):
         self.hasMaxCount = self.maxCount != -1
         self.className = parent.className
         self.isMandatory = isMandatory(member)
+        self.isTrackable = isTrackable(member)
         self.functionName = parent.functionName
         self.hasDefault = member.default
 

@@ -1,0 +1,7 @@
+OPTIONS
+${-h, --help    }$ Show help
+${-l, --lines   | member: mode | value: "lines"}$
+${-p, --points  | member: mode | value: "points"}$
+${--length=NUM  | condition: $mode$ == "lines"}$
+${--diameter=NUM| condition: $mode$ == "points"
+                | conditionMessage: this option can only be used with the -p option.}$ 

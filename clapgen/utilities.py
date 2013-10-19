@@ -1,6 +1,21 @@
 """
 """
 
+def findToken(s, startToken, endToken, startIndex=0):
+    start = s.find(startToken, startIndex)
+    if start == -1:
+        return -1, -1, ""
+    end = s.find(endToken, start + len(startToken))
+    if end == -1:
+        return start, len(s), s[start + len(startToken):]
+    else:
+        return start, end + len(endToken), s[start + len(startToken):end]
+
+def verbalJoin(words):
+    if len(words) <= 1:
+        return "".join(words)
+    return ", ".join(words[:-1]) + " and " + words[-1]
+
 def parseCount(s):
     parts = s.split("..")
     if len(parts) == 1:

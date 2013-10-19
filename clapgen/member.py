@@ -16,6 +16,7 @@ class Member(object):
         self.include = props.get("include")
         self.includeCpp = props.get("includecpp")
         self.condition = props.get("condition")
+        self.conditionMessage = props.get("conditionmessage")
         self.type = props.get("type")
         if not self.type:
             self.type = "value" if self.maxCount == 1 else "list"

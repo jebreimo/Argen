@@ -103,6 +103,35 @@ def inferDefaultValue(props):
         value = "|".join([value] * (count + 1))
     return value
 
+def prepareCondition(props, members):
+    if "condition" not in props:
+        return
+    condition = props["condition"]
+    text = []
+    prevEnd = 0
+    start, end, name = utilities.findToken(condition, "$", "$")
+    references = set()
+    while start != end:
+        if name not in members:
+            raise Error('Condition references unknown member "%s"' % name,
+                        joinLineNos(*props["arguments"]))
+        text.append(condition[prevEnd:start])
+        text.append("result->")
+        text.append(name)
+        references.add(name)
+        prevEnd = end
+        start, end, name = utilities.findToken(condition, "$", "$", end)
+    text.append(condition[prevEnd:])
+    props["condition"] = "".join(text)
+    if "conditionmessage" not in props:
+        kind = "option" if props.get("arguments")[0].flags else "argument"
+        if len(references) == 0:
+            props["conditionmessage"] = "this " + kind + " can't be used here"
+        else:
+            verb = "doesn't" if len(references) == 1 else "don't"
+            props["conditionmessage"] = (utilities.verbalJoin(references) +
+                    " " + verb + " have the value this " + kind + " requires.")
+
 def minmaxCount(counts):
     mi, ma = 0, 0
     for c in counts:
@@ -304,6 +333,7 @@ def makeMembers(args):
     for key in props:
         try:
             inferMemberProperties(props[key])
+            prepareCondition(props[key], props)
             members[key] = Member(props[key])
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])

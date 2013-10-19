@@ -203,16 +203,6 @@ def parseDefinition(s):
         raise Error("Options can't have the index property.")
     return text, props
 
-def findDefinition(s, index=0):
-    start = s.find(StartDefinition, index)
-    if start == -1:
-        return None
-    end = s.find(EndDefinition, start + 2)
-    if end == -1:
-        return start, len(s), s[start + 2:]
-    else:
-        return start, end + 2, s[start + 2:end]
-
 def appendText(lst, s):
     if s:
         lst.append(s)
@@ -232,10 +222,10 @@ def parseText(text):
     argProps = []
     argLineNos = set()
     prv = (0, 0, None)
-    cur = findDefinition(text)
+    cur = utilities.findToken(text, StartDefinition, EndDefinition)
     lineNo = 1
     skippedNewlines = 0
-    while cur:
+    while cur[0] != cur[1]:
         lineNo += appendText(outText, text[prv[1]:cur[0]])
         if StartDefinition in cur[2]:
             raise Error("Definition seems to be missing a closing \"%s\""
@@ -258,7 +248,7 @@ def parseText(text):
         lineNo += cur[2].count("\n")
         argProps.append(props)
         prv = cur
-        cur = findDefinition(text, cur[1])
+        cur = utilities.findToken(text, StartDefinition, EndDefinition, cur[1])
     appendText(outText, text[prv[1]:])
     return "".join(outText), argProps, argLineNos
 

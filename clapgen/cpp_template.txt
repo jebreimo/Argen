@@ -490,6 +490,9 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     std::vector<std::string>::const_iterator it = args.begin();
 
     [[[processArguments]]]
+[[[IF hasConditions]]]
+    [[[conditions]]]
+[[[ENDIF]]]
     return [[[return_result]]];
 }
 
