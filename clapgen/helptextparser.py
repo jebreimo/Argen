@@ -1,15 +1,14 @@
 from argument import Argument
 import constants
 from error import Error
-#from member import Member
 import properties
 import utilities
 
 ArgCounter = 0
 OptCounter = 0
-StartDefinition = "${"
-EndDefinition = "}$"
-DefinitionSeparator = "|"
+StartDefinition = constants.DefaultStartDefinition
+EndDefinition = constants.DefaultEndDefinition
+DefinitionSeparator = constants.DefaultDefinitionSeparator
 
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):

@@ -1,3 +1,4 @@
+import constants
 from error import Error
 from member import Member
 import utilities
@@ -44,7 +45,7 @@ def inferValueType(props):
         argNames = set(o.argument for o in props["arguments"] if o.flags)
         if len(argNames) == 1:
             argName = list(argNames)[0]
-            if argName in ("NUM", "COUNT", "INT", "SIZE", "LEN", "LENGTH"):
+            if argName in constants.IntegerArguments:
                 return "int"
         return "std::string"
     types = set(v for v in [getValueType(s) for s in vals] if v)
@@ -103,34 +104,47 @@ def inferDefaultValue(props):
         value = "|".join([value] * (count + 1))
     return value
 
-def prepareCondition(props, members):
-    if "condition" not in props:
-        return
-    condition = props["condition"]
+def expandReferences(s):
     text = []
-    prevEnd = 0
-    start, end, name = utilities.findToken(condition, "$", "$")
     references = set()
+    prevEnd = 0
+    start, end, name = utilities.findToken(s, "$", "$")
     while start != end:
-        if name not in members:
-            raise Error('Condition references unknown member "%s"' % name,
-                        joinLineNos(*props["arguments"]))
-        text.append(condition[prevEnd:start])
+        text.append(s[prevEnd:start])
         text.append("result->")
         text.append(name)
         references.add(name)
         prevEnd = end
-        start, end, name = utilities.findToken(condition, "$", "$", end)
-    text.append(condition[prevEnd:])
-    props["condition"] = "".join(text)
+        start, end, name = utilities.findToken(s, "$", "$", end)
+    text.append(s[prevEnd:])
+    return "".join(text), references
+
+def prepareCondition(props, members):
+    if "condition" not in props:
+        return
+    props["condition"], refs = expandReferences(props["condition"])
+    for ref in refs:
+        if ref not in members:
+            raise Error('Condition references unknown member "%s"' % name)
     if "conditionmessage" not in props:
         kind = "option" if props.get("arguments")[0].flags else "argument"
-        if len(references) == 0:
+        if len(refs) == 0:
             props["conditionmessage"] = "this " + kind + " can't be used here"
         else:
-            verb = "doesn't" if len(references) == 1 else "don't"
-            props["conditionmessage"] = (utilities.verbalJoin(references) +
+            verb = "doesn't" if len(refs) == 1 else "don't"
+            props["conditionmessage"] = (utilities.verbalJoin(refs) +
                     " " + verb + " have the value this " + kind + " requires.")
+
+def prepareAction(props, members):
+    if "action" not in props:
+        return
+    text, refs = expandReferences(props["action"])
+    if text[-1] != ";":
+        text += ";"
+    props["action"] = text
+    for ref in refs:
+        if ref not in members:
+            raise Error('Action references unknown member "%s"' % name)
 
 def minmaxCount(counts):
     mi, ma = 0, 0
