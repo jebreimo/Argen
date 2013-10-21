@@ -120,8 +120,6 @@ def expandReferences(s):
     return "".join(text), references
 
 def prepareCondition(props, members):
-    if "condition" not in props:
-        return
     props["condition"], refs = expandReferences(props["condition"])
     for ref in refs:
         if ref not in members:
@@ -136,8 +134,6 @@ def prepareCondition(props, members):
                     " " + verb + " have the value this " + kind + " requires.")
 
 def prepareAction(props, members):
-    if "action" not in props:
-        return
     text, refs = expandReferences(props["action"])
     if text[-1] != ";":
         text += ";"
@@ -145,6 +141,30 @@ def prepareAction(props, members):
     for ref in refs:
         if ref not in members:
             raise Error('Action references unknown member "%s"' % name)
+
+def prepareActionsAndConditions(allMemberProps):
+    messages = {}
+    lackingMessage = []
+    for key in allMemberProps:
+        props = allMemberProps[key]
+        if "condition" in props:
+            if "conditionmessage" in props:
+                messages[props["condition"]] = props["conditionmessage"]
+            else:
+                lackingMessage.append(props)
+    for props in lackingMessage:
+        if props["condition"] in messages:
+            props["conditionmessage"] = messages[props["condition"]]
+    for key in allMemberProps:
+        props = allMemberProps[key]
+        try:
+            if "action" in props:
+                prepareAction(props, allMemberProps)
+            if "condition" in props:
+                prepareCondition(props, allMemberProps)
+        except Error as ex:
+            ex.lineNo = joinLineNos(*props[key]["arguments"])
+            raise ex
 
 def minmaxCount(counts):
     mi, ma = 0, 0
@@ -326,6 +346,8 @@ def inferArgumentProperties(props):
             raise Error("Max-count can't be 0.")
     if props.get("valuetype") == "string":
         props["valuetype"] = "std::string"
+    if "conditionmessage" in props and "condition" not in props:
+        raise Error("ConditionMessage property, but no Condition property.")
 
 def joinLineNos(*args):
     nos = set()
@@ -344,10 +366,10 @@ def makeMembers(args):
     """
     members = {}
     props = getMemberProperties(args)
+    prepareActionsAndConditions(props)
     for key in props:
         try:
             inferMemberProperties(props[key])
-            prepareCondition(props[key], props)
             members[key] = Member(props[key])
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])
