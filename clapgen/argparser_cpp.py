@@ -393,9 +393,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
         return error(flag, result, "too many values (max is [[[maxCount]]]).");
     [[[ENDIF]]]
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -434,9 +432,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
         return false;
     result.[[[memberName]]].push_back(value);
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -480,9 +476,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
     result.[[[memberName]]].push_back(value);
     [[[ENDIF]]]
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -512,9 +506,7 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
                   [[[ENDIF]]]flag, argIt, result))
         return false;
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -527,9 +519,7 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
     writeHelp();
     result.[[[memberName]]] = true;
     result.[[[functionName]]]_result = [[[className]]]::RESULT_HELP;
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return false;
 }
 """
@@ -541,9 +531,7 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
 {
     result.[[[memberName]]] = true;
     result.[[[functionName]]]_result = [[[className]]]::RESULT_INFO;
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -562,9 +550,7 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     if (!([[[valueCheck]]]))
         return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -589,9 +575,7 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -642,9 +626,7 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -696,9 +678,7 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     if (result.[[[memberName]]].size() > [[[maxCount]]])
         return error("[[[name]]]", result, "too many values (max is [[[maxCount]]]).");
 [[[ENDIF]]]
-[[[IF hasAction]]]
     [[[action]]]
-[[[ENDIF]]]
     return true;
 }
 """
@@ -733,7 +713,7 @@ class ProcessOptionExpander(codegen.Expander):
         self.isTrackable = isTrackable(member)
         self.functionName = parent.functionName
         self.hasDefault = member.default
-        self.hasAction = member.action
+        self.action = member.action
 
     def valueCheck(self, params, context):
         def _cmp(operator, lhs, rhs, parens):
