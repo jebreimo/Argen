@@ -1,7 +1,8 @@
 ArgumentProps = set(("argument", "count", "delimiter", "delimitercount",
                      "flags", "index", "member", "text", "value"))
-MemberProps = set(("action", "condition", "conditionmessage", "default", "include",
-                   "includecpp", "type", "values", "valuetype"))
+MemberProps = set(("action", "condition", "conditionmessage", "default",
+                   "include", "includecpp", "postcondition",
+                   "postconditionmessage", "type", "values", "valuetype"))
 LegalProps = set(ArgumentProps).union(MemberProps)
 LegalTypeValues = set(("final", "help", "info", "list", "multivalue", "value"))
 
