@@ -119,18 +119,18 @@ def expandReferences(s):
     text.append(s[prevEnd:])
     return "".join(text), references
 
-def prepareCondition(props, members):
-    props["condition"], refs = expandReferences(props["condition"])
+def prepareCondition(props, name, members):
+    props[name], refs = expandReferences(props[name])
     for ref in refs:
         if ref not in members:
             raise Error('Condition references unknown member "%s"' % name)
-    if "conditionmessage" not in props:
+    if name + "message" not in props:
         kind = "option" if props.get("arguments")[0].flags else "argument"
         if len(refs) == 0:
-            props["conditionmessage"] = "this " + kind + " can't be used here"
+            props[name + "message"] = "this " + kind + " can't be used here"
         else:
             verb = "doesn't" if len(refs) == 1 else "don't"
-            props["conditionmessage"] = (utilities.verbalJoin(refs) +
+            props[name + "message"] = (utilities.verbalJoin(refs) +
                     " " + verb + " have the value this " + kind + " requires.")
 
 def prepareAction(props, members):
@@ -142,26 +142,32 @@ def prepareAction(props, members):
         if ref not in members:
             raise Error('Action references unknown member "%s"' % name)
 
-def prepareActionsAndConditions(allMemberProps):
+def reuseMessages(allMemberProps, name):
     messages = {}
     lackingMessage = []
     for key in allMemberProps:
         props = allMemberProps[key]
-        if "condition" in props:
-            if "conditionmessage" in props:
-                messages[props["condition"]] = props["conditionmessage"]
+        if name in props:
+            if name + "message" in props:
+                messages[props[name]] = props[name + "message"]
             else:
                 lackingMessage.append(props)
     for props in lackingMessage:
-        if props["condition"] in messages:
-            props["conditionmessage"] = messages[props["condition"]]
+        if props[name] in messages:
+            props[name + "message"] = messages[props[name]]
+
+def prepareActionsAndConditions(allMemberProps):
+    reuseMessages(allMemberProps, "condition")
+    reuseMessages(allMemberProps, "postcondition")
     for key in allMemberProps:
         props = allMemberProps[key]
         try:
             if "action" in props:
                 prepareAction(props, allMemberProps)
             if "condition" in props:
-                prepareCondition(props, allMemberProps)
+                prepareCondition(props, "condition", allMemberProps)
+            if "postcondition" in props:
+                prepareCondition(props, "postcondition", allMemberProps)
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])
             raise ex
