@@ -12,11 +12,16 @@ class Argument(object):
         self.flags = props["flags"].split() if "flags" in props else []
         self.value = props.get("value")
         self.member = None
-        self.memberName = props["member"]
         self.memberProps = dict((k, props[k])
                                 for k in constants.MemberProps if k in props)
         self.index = int(props["index"]) if "index" in props else None
         self.name = props["name"]
+        self.variableName = props["variablename"]
+        self.action = props.get("action")
+        self.condition = props.get("condition")
+        self.conditionMessage = props.get("conditionmessage")
+        self.postCondition = props.get("postcondition")
+        self.postConditionMessage = props.get("postconditionmessage")
         self.delimiter = props.get("delimiter", "")
         self.delimiterCount = utilities.parseCount(props.get("delimitercount", "0"))
         self.minDelimiters, self.maxDelimiters = self.delimiterCount

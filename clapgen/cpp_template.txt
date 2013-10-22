@@ -348,16 +348,16 @@ namespace
             return NULL;
         return op->second;
     }
-[[[IF hasMandatoryOptions]]]
 
+[[[IF hasMandatoryOptions]]]
     bool checkMandatoryOptions([[[className]]]& result)
     {
         [[[mandatoryOptionChecks]]]
         return true;
     }
+
 [[[ENDIF]]]
 [[[IF hasMinimumListLengths]]]
-
     bool checkListLengths([[[className]]]& result)
     {
         [[[checkListLengths]]]
@@ -367,6 +367,7 @@ namespace
 [[[ENDIF]]]
     [[[implementArgumentProcessors]]]
 [[[IF hasTrackedOptions]]]
+
     std::unique_ptr<[[[className]]]>& cleanReservedInternals(
             std::unique_ptr<[[[className]]]>& result)
     {
@@ -490,8 +491,8 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     std::vector<std::string>::const_iterator it = args.begin();
 
     [[[processArguments]]]
-[[[IF hasConditions]]]
-    [[[conditions]]]
+[[[IF hasPostConditions]]]
+    [[[postConditions]]]
 [[[ENDIF]]]
     return [[[return_result]]];
 }

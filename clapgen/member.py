@@ -15,11 +15,6 @@ class Member(object):
         self.minCount, self.maxCount = self.count
         self.include = props.get("include")
         self.includeCpp = props.get("includecpp")
-        self.action = props.get("action")
-        self.condition = props.get("condition")
-        self.conditionMessage = props.get("conditionmessage")
-        self.postCondition = props.get("postcondition")
-        self.postConditionMessage = props.get("postconditionmessage")
         self.type = props.get("type")
         if not self.type:
             self.type = "value" if self.maxCount == 1 else "list"

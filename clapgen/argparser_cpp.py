@@ -8,7 +8,7 @@ def isTrackable(member):
     return (member.isOption and
             (member.count == (1, 1)) or
             (member.type == "list" and member.default) or
-            (member.condition))
+            (member.postCondition))
 
 class CppExpander(codegen.Expander):
     def __init__(self, text, opts, args, members, className="ParseArguments",
@@ -326,7 +326,7 @@ class CppExpander(codegen.Expander):
                              '"missing mandatory option.");' % m)
         return lines
 
-    def conditions(self, params, context):
+    def postConditions(self, params, context):
         lines = []
         for m in self._members:
             if m.condition:
@@ -393,6 +393,10 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
         return error(flag, result, "too many values (max is [[[maxCount]]]).");
     [[[ENDIF]]]
 [[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return true;
 }
@@ -431,6 +435,10 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
                   [[[ENDIF]]]flag, argIt, result))
         return false;
     result.[[[memberName]]].push_back(value);
+[[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
 [[[ENDIF]]]
     [[[action]]]
     return true;
@@ -476,6 +484,10 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
     result.[[[memberName]]].push_back(value);
     [[[ENDIF]]]
 [[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return true;
 }
@@ -506,6 +518,10 @@ bool process_[[[name]]]_option([[[>]]]const std::string& flag,
                   [[[ENDIF]]]flag, argIt, result))
         return false;
 [[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return true;
 }
@@ -519,6 +535,10 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
     writeHelp();
     result.[[[memberName]]] = true;
     result.[[[functionName]]]_result = [[[className]]]::RESULT_HELP;
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return false;
 }
@@ -531,6 +551,10 @@ bool process_[[[memberName]]]_option([[[>]]]const std::string& flag,
 {
     result.[[[memberName]]] = true;
     result.[[[functionName]]]_result = [[[className]]]::RESULT_INFO;
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return true;
 }
@@ -549,6 +573,10 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
 [[[IF hasValueCheck]]]
     if (!([[[valueCheck]]]))
         return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
+[[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
 [[[ENDIF]]]
     [[[action]]]
     return true;
@@ -574,6 +602,10 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
         return error("[[[name]]]", result, "illegal value \\"" + value + "\\".");
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
+[[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
 [[[ENDIF]]]
     [[[action]]]
     return true;
@@ -625,6 +657,10 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
                          value.substr(first, last) + "\\".");
     [[[ENDIF]]]
     result.[[[memberName]]].push_back(v);
+[[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
 [[[ENDIF]]]
     [[[action]]]
     return true;
@@ -678,6 +714,10 @@ bool process_[[[name]]]_argument([[[>]]]const std::string& value,
     if (result.[[[memberName]]].size() > [[[maxCount]]])
         return error("[[[name]]]", result, "too many values (max is [[[maxCount]]]).");
 [[[ENDIF]]]
+[[[IF condition]]]
+    if (!([[[condition]]]))
+        return error(flag, result, "[[[conditionMessage]]]");
+[[[ENDIF]]]
     [[[action]]]
     return true;
 }
@@ -714,6 +754,8 @@ class ProcessOptionExpander(codegen.Expander):
         self.functionName = parent.functionName
         self.hasDefault = member.default
         self.action = member.action
+        self.condition = arg.condition
+        self.conditionMessage = arg.conditionMessage
 
     def valueCheck(self, params, context):
         def _cmp(operator, lhs, rhs, parens):

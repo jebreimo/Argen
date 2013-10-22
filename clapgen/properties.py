@@ -1,3 +1,4 @@
+from argument import Argument
 import constants
 from error import Error
 from member import Member
@@ -353,7 +354,9 @@ def inferArgumentProperties(props):
     if props.get("valuetype") == "string":
         props["valuetype"] = "std::string"
     if "conditionmessage" in props and "condition" not in props:
-        raise Error("ConditionMessage property, but no Condition property.")
+        raise Error("ConditionMessage, but no Condition.")
+    if "postconditionmessage" in props and "postcondition" not in props:
+        raise Error("PostConditionMessage, but no PostCondition.")
 
 def joinLineNos(*args):
     nos = set()
@@ -364,6 +367,17 @@ def joinLineNos(*args):
             nos.add(a.lineNo)
     return ", ".join(nos)
 
+def makeArguments(allProps):
+    args = []
+    for key in allProps:
+        props = allProps[key]
+        try:
+            inferArgumentProperties(props)
+            args.append(Argument(props))
+        except Error as ex:
+            ex.lineNo = joinLineNos(*props[key]["arguments"])
+    return args
+
 def makeMembers(args):
     """makeMembers(list of Argument instances) -> list of Member instances
 
@@ -371,14 +385,15 @@ def makeMembers(args):
     of the Argument instances in args.
     """
     members = {}
-    props = getMemberProperties(args)
+    allProps = getMemberProperties(args)
     prepareActionsAndConditions(props)
     for key in props:
+        props = allProps[key]
         try:
-            inferMemberProperties(props[key])
-            members[key] = Member(props[key])
+            inferMemberProperties(props)
+            members[key] = Member(props)
         except Error as ex:
-            ex.lineNo = joinLineNos(*props[key]["arguments"])
+            ex.lineNo = joinLineNos(*props["arguments"])
             raise ex
     for arg in args:
         arg.member = members[arg.memberName]
@@ -387,10 +402,10 @@ def makeMembers(args):
 def ensureUniqueNames(args):
     names = set()
     for a in args:
-        if a.name in names:
-            name = a.name
+        if a.variableName in names:
+            name = a.variableName
             i = 1
             while name in names:
-                name = a.name + str(i)
-            a.name = name
-        names.add(a.name)
+                name = a.variableName + str(i)
+            a.variableName = name
+        names.add(a.variableName)

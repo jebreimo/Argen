@@ -1,4 +1,3 @@
-from argument import Argument
 import constants
 from error import Error
 import properties
@@ -10,6 +9,7 @@ StartDefinition = constants.DefaultStartDefinition
 EndDefinition = constants.DefaultEndDefinition
 DefinitionSeparator = constants.DefaultDefinitionSeparator
 
+        args = properties.makeArguments(argProps)
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):
         self.text = text
@@ -108,7 +108,7 @@ def splitSingle(s, separator, maxCount=-1):
     Essentially performs the same operation as
     s.split(separator, maxCount), but sequences of separators are
     left alone (e.g. the C++ logical or-operator "||" is not considered a
-    separator when separator is "|").
+    separator when the separator is "|").
     """
     result = []
     start = 0
@@ -122,9 +122,13 @@ def splitSingle(s, separator, maxCount=-1):
     return result
 
 def parseProperties(s):
+    props = {}
     parts = [p.strip() for p in splitSingle(s, DefinitionSeparator)]
-    props = dict((k.strip().lower(), v.strip())
-                  for k, v in (s.split(":", 1) for s in parts))
+    for prop in parts:
+        kv = prop.split(":", 1)
+        if len(kv) != 2:
+            raise Error("invalid property: \"%s\"" % prop)
+        props[constants.PropAliases.get(kv[0], kv[0])] = kv[1]
     if "flags" in props:
         flags = props["flags"].split()
         for f in flags:
@@ -139,13 +143,13 @@ def parseProperties(s):
 
 def parseArg(s):
     global ArgCounter
-    if s:
-        props = dict(argument=s, visible=True)
-    else:
-        props = dict(argument="arg %d" % ArgCounter, visible=False)
-    props["member"] = variableName(props["argument"])
-    props["name"] = props["member"]
-    props["autoindex"] = str(ArgCounter)
+    if not s:
+        s = "arg %d" % ArgCounter
+    props = dict(argument=s,
+                 variablename=variableName(s),
+                 name=s,
+                 autoindex=str(ArgCounter))
+    props["member"] = props["variablename"]
     ArgCounter += 1
     if s:
         if s[0] == "[":
@@ -165,8 +169,8 @@ def parseOption(s):
     name = variableNameFromFlags(flags)
     props = dict(flags=" ".join(flags),
                  member=name,
-                 name=name,
-                 visible=True)
+                 name=s,
+                 variablename=name)
     if argument:
         props["argument"] = argument
     OptCounter += 1
@@ -197,7 +201,6 @@ def parseDefinition(s):
     else:
         props = parseArg(stripped)
     props.update(explicitProps)
-    properties.inferArgumentProperties(props)
     if "index" in props and "flags" in props:
         raise Error("Options can't have the index property.")
     return text, props
@@ -255,7 +258,7 @@ def parseFile(fileName):
     try:
         text, argProps, argLineNos = parseText(open(fileName).read())
         properties.inferIndexProperties(argProps)
-        args = [Argument(p) for p in argProps]
+        args = properties.makeArguments(argProps)
         members = properties.makeMembers(args)
         for m in members:
             if m.type == "help":
@@ -272,54 +275,54 @@ def parseFile(fileName):
         ex.fileName = fileName
         raise ex
 
-if __name__ == "__main__":
-    import sys
+# if __name__ == "__main__":
+#     import sys
 
-    def test(lines, args, s):
-        try:
-            txt, argProps, argLines = parseText(s)
-            properties.inferIndexProperties(argProps)
-            arg = [Argument(p) for p in argProps]
-            args.extend(arg)
-            lines.append(txt)
-        except Error as ex:
-            print(ex)
+#     def test(lines, args, s):
+#         try:
+#             txt, argProps, argLines = parseText(s)
+#             properties.inferIndexProperties(argProps)
+#             arg = [Argument(p) for p in argProps]
+#             args.extend(arg)
+#             lines.append(txt)
+#         except Error as ex:
+#             print(ex)
 
-    def main(args):
-        args = []
-        lines = []
-        # test(lines, args, "${<file1>}$")
-        # test(lines, args, "${<file2 ...>}$")
-        # test(lines, args, "${[file3]}$")
-        # test(lines, args, "${[file4 ...]}$")
-        # test(lines, args, "${knut VALUE, finn VALUE|flags: knut finn|argument: VALUE}$")
-        # test(lines, args, "${-s TEXT| count: ..10}$\n${--special| member: s | value: \"$spec$\"}$")
-        # test(lines, args, "${-h,      --help        }$  Show help.")
-        # test(lines, args, "${-o,      --outfile=FILE}$  Output file for logging info.")
-        # test(lines, args, "${-o FILE, --outfile=FILE}$  Output file for logging info.")
-        # test(lines, args, "${-p,      --point=X,Y,Z | Default: 0.0}$  Set the point.")
-        # test(lines, args, "${-i PATH, --include=PATH| delimiter: :}$  Set paths to include.")
-        # test(lines, args, "With${| Text: --top-secret}$\nnewline")
-        # test(lines, args, "${| Text: --secret}$\nNo newline")
-        test(lines, args, "${--                     }$  End of options, remainder are arguments.")
-        # test(lines, args, "${YYYY-MM-DD| delimiter: - | Member: date}$")
-        # test(lines, args, "${HH:MM:SS| delimiter: : | Member: time}$")
-        # test(lines, args, "${<Kid yoU not>|index:3}$")
-        # test(lines, args, "${}$")
-        # test(lines, args, "${-a                     | text: -a -A -all}$  All of them")
-        # test(lines, args, "Kjell\n${|Text:--foo=N}$${|Text:--bar=N}$\nKaare")
-        # test(lines, args, "[OPTIONS]\n\t${-b}$\n\t${-c}$\n\t${-d}$")
-        # test(lines, args, "${-e=N| values: [0.0..5.0)}$  All of them")
-        # test(lines, args, "${-a --bah|flags: foot ball}$  Odd options")
-        print("\n".join(lines))
-        for arg in args:
-            print(arg, arg.props)
-        try:
-            members = properties.makeMembers(args)
-            for m in members:
-                print(m)
-        except Error as ex:
-            print(str(ex))
-        return 0
+#     def main(args):
+#         args = []
+#         lines = []
+#         # test(lines, args, "${<file1>}$")
+#         # test(lines, args, "${<file2 ...>}$")
+#         # test(lines, args, "${[file3]}$")
+#         # test(lines, args, "${[file4 ...]}$")
+#         # test(lines, args, "${knut VALUE, finn VALUE|flags: knut finn|argument: VALUE}$")
+#         # test(lines, args, "${-s TEXT| count: ..10}$\n${--special| member: s | value: \"$spec$\"}$")
+#         # test(lines, args, "${-h,      --help        }$  Show help.")
+#         # test(lines, args, "${-o,      --outfile=FILE}$  Output file for logging info.")
+#         # test(lines, args, "${-o FILE, --outfile=FILE}$  Output file for logging info.")
+#         # test(lines, args, "${-p,      --point=X,Y,Z | Default: 0.0}$  Set the point.")
+#         # test(lines, args, "${-i PATH, --include=PATH| delimiter: :}$  Set paths to include.")
+#         # test(lines, args, "With${| Text: --top-secret}$\nnewline")
+#         # test(lines, args, "${| Text: --secret}$\nNo newline")
+#         test(lines, args, "${--                     }$  End of options, remainder are arguments.")
+#         # test(lines, args, "${YYYY-MM-DD| delimiter: - | Member: date}$")
+#         # test(lines, args, "${HH:MM:SS| delimiter: : | Member: time}$")
+#         # test(lines, args, "${<Kid yoU not>|index:3}$")
+#         # test(lines, args, "${}$")
+#         # test(lines, args, "${-a                     | text: -a -A -all}$  All of them")
+#         # test(lines, args, "Kjell\n${|Text:--foo=N}$${|Text:--bar=N}$\nKaare")
+#         # test(lines, args, "[OPTIONS]\n\t${-b}$\n\t${-c}$\n\t${-d}$")
+#         # test(lines, args, "${-e=N| values: [0.0..5.0)}$  All of them")
+#         # test(lines, args, "${-a --bah|flags: foot ball}$  Odd options")
+#         print("\n".join(lines))
+#         for arg in args:
+#             print(arg, arg.props)
+#         try:
+#             members = properties.makeMembers(args)
+#             for m in members:
+#                 print(m)
+#         except Error as ex:
+#             print(str(ex))
+#         return 0
 
-    sys.exit(main(sys.argv[1:]))
+#     sys.exit(main(sys.argv[1:]))

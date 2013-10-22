@@ -15,7 +15,7 @@ class HppExpander(codegen.Expander):
             return (m.isOption and
                     (m.count == (1, 1)) or
                     (m.type == "list" and m.default) or
-                    (m.condition))
+                    (m.postCondition))
         self.hasTrackedOptions = any(m for m in members if isTrackable(m))
         self._members = members
 
