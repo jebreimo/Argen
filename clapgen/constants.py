@@ -1,18 +1,18 @@
 ArgumentProps = set(("action", "argument", "condition", "conditionmessage",
                      "count", "delimiter", "delimitercount",
-                     "flags", "index", "member", "postcondition",
-                     "postconditionmessage", "text", "value"))
-MemberProps = set(("default",
-                   "include", "includecpp", "type", "values", "valuetype"))
+                     "flags", "index", "member", "text", "value"))
+MemberProps = set(("default", "include", "includecpp", "memberaction",
+                   "membercondition",
+                   "memberconditionmessage", "type", "values", "valuetype"))
 PropAliases = {
     "cond": "condition",
     "condmessage": "conditionmessage",
     "condmsg": "conditionmessage",
     "del": "delimiter",
     "delcount": "delimitercount",
-    "postcond": "postcondition",
-    "postcondmessage": "postconditionmessage",
-    "postcondmsg": "postconditionmessage",
+    "memcond": "membercondition",
+    "memcondmessage": "memberconditionmessage",
+    "memcondmsg": "memberconditionmessage",
     "vtype": "valuetype"
 }
 LegalProps = set(ArgumentProps).union(MemberProps)

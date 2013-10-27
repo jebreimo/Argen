@@ -12,10 +12,11 @@ class HppExpander(codegen.Expander):
         self.namespace = [s for s in namespace.split("::") if s]
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         def isTrackable(m):
-            return (m.isOption and
-                    (m.count == (1, 1)) or
-                    (m.type == "list" and m.default) or
-                    (m.postCondition))
+            return ((m.isOption and
+                     (m.count == (1, 1)) or
+                     (m.type == "list" and m.default)) or
+                    (m.action) or
+                    (m.condition))
         self.hasTrackedOptions = any(m for m in members if isTrackable(m))
         self._members = members
 

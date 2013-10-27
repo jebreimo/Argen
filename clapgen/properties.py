@@ -105,14 +105,14 @@ def inferDefaultValue(props):
         value = "|".join([value] * (count + 1))
     return value
 
-def expandReferences(s):
+def expandReferences(s, operator):
     text = []
     references = set()
     prevEnd = 0
     start, end, name = utilities.findToken(s, "$", "$")
     while start != end:
         text.append(s[prevEnd:start])
-        text.append("result->")
+        text.append("result" + operator)
         text.append(name)
         references.add(name)
         prevEnd = end
@@ -120,58 +120,42 @@ def expandReferences(s):
     text.append(s[prevEnd:])
     return "".join(text), references
 
-def prepareCondition(props, name, members):
-    props[name], refs = expandReferences(props[name])
+def prepareCondition(props, name, members, operator):
+    if name not in props:
+        return
+
+    props[name], refs = expandReferences(props[name], operator)
     for ref in refs:
         if ref not in members:
-            raise Error('Condition references unknown member "%s"' % name)
+            raise Error('Condition references unknown member "%s"' % ref)
     if name + "message" not in props:
-        kind = "option" if props.get("arguments")[0].flags else "argument"
+        kind = "option" if "flags" in props else "argument"
         if len(refs) == 0:
-            props[name + "message"] = "this " + kind + " can't be used here"
+            msg = "this " + kind + " can't be used here"
         else:
             verb = "doesn't" if len(refs) == 1 else "don't"
-            props[name + "message"] = (utilities.verbalJoin(refs) +
-                    " " + verb + " have the value this " + kind + " requires.")
+            msg = (utilities.verbalJoin(refs) + " " + verb +
+                   " have the value this " + kind + " requires.")
+        props[name + "message"] = msg
 
-def prepareAction(props, members):
-    text, refs = expandReferences(props["action"])
-    if text[-1] != ";":
-        text += ";"
-    props["action"] = text
+def prepareAction(props, name, members, operator):
+    if name not in props:
+        return
+
+    text, refs = expandReferences(props["action"], operator)
     for ref in refs:
         if ref not in members:
-            raise Error('Action references unknown member "%s"' % name)
+            raise Error('Action references unknown member "%s"' % ref)
+    props["action"] = text if text[-1] == ";" else text + ";"
 
-def reuseMessages(allMemberProps, name):
-    messages = {}
-    lackingMessage = []
-    for key in allMemberProps:
-        props = allMemberProps[key]
-        if name in props:
-            if name + "message" in props:
-                messages[props[name]] = props[name + "message"]
-            else:
-                lackingMessage.append(props)
-    for props in lackingMessage:
-        if props[name] in messages:
-            props[name + "message"] = messages[props[name]]
-
-def prepareActionsAndConditions(allMemberProps):
-    reuseMessages(allMemberProps, "condition")
-    reuseMessages(allMemberProps, "postcondition")
-    for key in allMemberProps:
-        props = allMemberProps[key]
-        try:
-            if "action" in props:
-                prepareAction(props, allMemberProps)
-            if "condition" in props:
-                prepareCondition(props, "condition", allMemberProps)
-            if "postcondition" in props:
-                prepareCondition(props, "postcondition", allMemberProps)
-        except Error as ex:
-            ex.lineNo = joinLineNos(*props[key]["arguments"])
-            raise ex
+def reusePropertyCombinations(propsList, keyName, valueName):
+    values = {}
+    for props in propsList:
+        if keyName in props:
+            if valueName in props:
+                values[props[keyName]] = props[valueName]
+            elif props[keyName] in values:
+                props[valueName] = values[props[keyName]]
 
 def minmaxCount(counts):
     mi, ma = 0, 0
@@ -369,10 +353,16 @@ def joinLineNos(*args):
 
 def makeArguments(allProps):
     args = []
-    for key in allProps:
-        props = allProps[key]
+    reusePropertyCombinations(allProps, "condition", "conditionmessage")
+    reusePropertyCombinations(allProps, "membercondition", "memberconditionmessage")
+    members = [p["member"] for p in allProps]
+    for props in allProps:
         try:
             inferArgumentProperties(props)
+            prepareCondition(props, "condition", members, ".")
+            prepareCondition(props, "membercondition", members, "->")
+            prepareAction(props, "action", members, ".")
+            prepareAction(props, "memberaction", members, "->")
             args.append(Argument(props))
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])
@@ -386,8 +376,7 @@ def makeMembers(args):
     """
     members = {}
     allProps = getMemberProperties(args)
-    prepareActionsAndConditions(props)
-    for key in props:
+    for key in allProps:
         props = allProps[key]
         try:
             inferMemberProperties(props)
@@ -402,10 +391,10 @@ def makeMembers(args):
 def ensureUniqueNames(args):
     names = set()
     for a in args:
-        if a.variableName in names:
-            name = a.variableName
+        if a.memberName in names:
+            name = a.memberName
             i = 1
             while name in names:
-                name = a.variableName + str(i)
-            a.variableName = name
-        names.add(a.variableName)
+                name = a.memberName + str(i)
+            a.memberName = name
+        names.add(a.memberName)

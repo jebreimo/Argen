@@ -9,7 +9,6 @@ StartDefinition = constants.DefaultStartDefinition
 EndDefinition = constants.DefaultEndDefinition
 DefinitionSeparator = constants.DefaultDefinitionSeparator
 
-        args = properties.makeArguments(argProps)
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):
         self.text = text
@@ -69,7 +68,6 @@ def parseFlags(text):
             flag, arg = None, word
         else:
             raise Error("Invalid option: " + word)
-
         if flag:
             flags.append(flag)
         if arg:
@@ -125,10 +123,11 @@ def parseProperties(s):
     props = {}
     parts = [p.strip() for p in splitSingle(s, DefinitionSeparator)]
     for prop in parts:
-        kv = prop.split(":", 1)
+        kv = [s.strip() for s in prop.split(":", 1)]
         if len(kv) != 2:
             raise Error("invalid property: \"%s\"" % prop)
-        props[constants.PropAliases.get(kv[0], kv[0])] = kv[1]
+        key = kv[0].lower()
+        props[constants.PropAliases.get(key, key)] = kv[1]
     if "flags" in props:
         flags = props["flags"].split()
         for f in flags:
@@ -146,10 +145,10 @@ def parseArg(s):
     if not s:
         s = "arg %d" % ArgCounter
     props = dict(argument=s,
-                 variablename=variableName(s),
-                 name=s,
+                 name=variableName(s),
+                 textName=s,
                  autoindex=str(ArgCounter))
-    props["member"] = props["variablename"]
+    props["member"] = props["name"]
     ArgCounter += 1
     if s:
         if s[0] == "[":
@@ -165,23 +164,23 @@ def parseArg(s):
 
 def parseOption(s):
     global OptCounter
+    OptCounter += 1
     flags, argument = parseFlags(s)
-    name = variableNameFromFlags(flags)
     props = dict(flags=" ".join(flags),
-                 member=name,
-                 name=s,
-                 variablename=name)
+                 textName=s,
+                 name=variableNameFromFlags(flags))
+    props["member"] = props["name"]
     if argument:
         props["argument"] = argument
-    OptCounter += 1
     return props
 
 def parseFlagsProperty(flags):
     global OptCounter
-    name = variableNameFromFlags(flags.split())
     OptCounter += 1
-    return dict(member=name,
-                name=name)
+    props = dict(name=variableNameFromFlags(flags.split()),
+                 textName=flags)
+    props["member"] = props["name"]
+    return props
 
 def parseDefinition(s):
     parts = splitSingle(s, DefinitionSeparator, 1)

@@ -1,7 +1,10 @@
 OPTIONS
 ${-h, --help    }$ Show help
-${-l, --lines   | member: mode | value: "lines"}$
-${-p, --points  | member: mode | value: "points"}$
-${--length=NUM  | condition: $mode$ == "lines"}$
-${--diameter=NUM| condition: $mode$ == "points"
-                | conditionMessage: this option can only be used with the -p option.}$ 
+${-l, --lines   | member: mode | value: "lines"}$ Plot lines
+${-p, --points  | member: mode | value: "points"}$ Plot points
+${-r, --rectangles| member: mode | value: "rects"}$ Plot rectangles
+${--length=NUM  | cond: $mode$ == "lines"}$
+${--diameter=NUM| cond: $mode$ == "points"
+                | condMsg: this option must be preceded by the -p option.}$ 
+${--elvation=NUM| cond: $mode$ == "points"}$ 
+${--width=NUM| action: $mode$ = "rects"}$ 
