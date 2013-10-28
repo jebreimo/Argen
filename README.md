@@ -94,6 +94,11 @@ Run the command with options and arguments:
     Messages:
       Hello world!
 
+FAQ
+---
+
+### How can I use || (i.e. or) in my conditions?
+
 Reference for clapgen options
 -----------------------------
 ### --align=NUM
@@ -129,13 +134,19 @@ Include a main-function in the source file to test the argument parser.
 Reference for option and argument properties
 --------------------------------------------
 
+### Action
+
+    Action: C++-CODE
+
+The action is performed once for each time the option or argument is encountered. It is executed after the member has been assigned a value.
+
 ### Argument
 
     Argument: NAME
 
 *Argument* is primarily used in combination with the *Flags* property to specify that an option requires an argument. Unlike *Text*, it's not possible to specify option arguments with *Flags* property's value, hence this property.
 
-#### Example 1
+#### Example
 This creates a non-standard option "out-file" that takes an argument "FILE":
 
     ${out-file FILE|flags: out-file | argument: FILE}$  Sets the name of the output file
@@ -144,20 +155,40 @@ The help text for this option will be:
 
     out-file FILE  Sets the name of the output file
 
+### Condition
+
+    Condition: C++-CONDITION
+
+The "Condition" property is an extra check that is performed after the option or argument has been assigned its value.
+ 
+#### Example
+
+    ${-l, --lines           | member: mode | value: "lines"}$
+    ${-r, --rectangles      | member: mode | value: "rectangles"}$
+    ${-c, --circles         | member: mode | value: "circles"}$
+    ${-d NUM, --diameter=NUM| condition: $mode$ == "circles"}$
+    ${-l NUM, --length=NUM  | condition: $mode$ == "lines" || $mode$ == "rectangles"}$
+    ${-w NUM, --width=NUM   | condition: $mode$ == "rectangles"}$
+
+### ConditionMessage
+
+    ConditionMessage: TEXT
+
 ### Count
 
     Count: VALUE or MIN..MAX
 
 Determines the number of values the member for an option or argument can hold. If the maximum count is greater than one, the member becomes a vector of *ValueType*. The count-value should be either a single integer (setting the minimum and maximum to the same value) or two integers separated by two dots (i.e. minimum..maximum). The default for options is 0..1 and for arguments it's 1. When using the two dots it's actually possible to leave out one or both integers. If the first integer is left out, the minimum becomes 0. If the second integer is left out, there is no upper limit to the number of values.
 
-#### Example
-
+#### Example 1
     ${-a VALUE --alpha=VALUE | count: 1 }$ A mandatory option
 
+#### Example 2
     ${-b FILE --bravo=FILE | count: 0..}$ A list with 0 or more values.
 
 The above line adds a member named "bravo" of type `std::vector\<std::string\>` to the generated struct.
 
+#### Example 3
     ${-c NUM --charlie=NUM | count: 3..5}$ An option that must be given 3 to 5 times.
 
 ### Default
@@ -259,6 +290,14 @@ The zero-based index of the argument. This property allows out-of-order definiti
     Member: NAME
 
 The name of the member variable
+
+### PostCondition
+
+    PostCondition: C++-CONDITION
+
+### PostConditionMessage
+
+    PostConditionMessage: TEXT
 
 ### Text
 

@@ -9,7 +9,6 @@ StartDefinition = constants.DefaultStartDefinition
 EndDefinition = constants.DefaultEndDefinition
 DefinitionSeparator = constants.DefaultDefinitionSeparator
 
-        args = properties.makeArguments(argProps)
 class ParserResult:
     def __init__(self, text, args, members, argLineNos):
         self.text = text
@@ -125,10 +124,11 @@ def parseProperties(s):
     props = {}
     parts = [p.strip() for p in splitSingle(s, DefinitionSeparator)]
     for prop in parts:
-        kv = prop.split(":", 1)
+        kv = [s.strip() for s in prop.split(":", 1)]
         if len(kv) != 2:
             raise Error("invalid property: \"%s\"" % prop)
-        props[constants.PropAliases.get(kv[0], kv[0])] = kv[1]
+        key = kv[0].lower()
+        props[constants.PropAliases.get(key, key)] = kv[1]
     if "flags" in props:
         flags = props["flags"].split()
         for f in flags:
@@ -146,10 +146,9 @@ def parseArg(s):
     if not s:
         s = "arg %d" % ArgCounter
     props = dict(argument=s,
-                 variablename=variableName(s),
+                 member=variableName(s),
                  name=s,
                  autoindex=str(ArgCounter))
-    props["member"] = props["variablename"]
     ArgCounter += 1
     if s:
         if s[0] == "[":
@@ -166,11 +165,9 @@ def parseArg(s):
 def parseOption(s):
     global OptCounter
     flags, argument = parseFlags(s)
-    name = variableNameFromFlags(flags)
     props = dict(flags=" ".join(flags),
-                 member=name,
                  name=s,
-                 variablename=name)
+                 member=variableNameFromFlags(flags))
     if argument:
         props["argument"] = argument
     OptCounter += 1

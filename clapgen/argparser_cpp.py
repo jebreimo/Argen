@@ -5,10 +5,11 @@ def isMandatory(member):
     return member.isOption and member.minCount == 1 and member.type != "list"
 
 def isTrackable(member):
-    return (member.isOption and
-            (member.count == (1, 1)) or
-            (member.type == "list" and member.default) or
-            (member.postCondition))
+    return ((member.isOption and
+             (member.count == (1, 1)) or
+             (member.type == "list" and member.default)) or
+            (member.action) or
+            (member.condition))
 
 class CppExpander(codegen.Expander):
     def __init__(self, text, opts, args, members, className="ParseArguments",
@@ -70,7 +71,8 @@ class CppExpander(codegen.Expander):
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         self.requiresNextValue = any(o for o in opts if not o.value)
         self.requiresFromString = args or any(o for o in opts if not o.value)
-        self.hasConditions = any(m for m in members if m.condition)
+        self.hasMemberConditionsOrActions = any(m for m in members
+                                                if m.condition)
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -326,17 +328,28 @@ class CppExpander(codegen.Expander):
                              '"missing mandatory option.");' % m)
         return lines
 
-    def postConditions(self, params, context):
-        lines = []
+    def memberConditionsAndActions(self, params, context):
+        conds = []
+        actions = []
         for m in self._members:
             if m.condition:
-                lines.append("if (result->reserved_for_internal_use->%(name)s &&"
+                conds.append("if (result->reserved_for_internal_use->%(name)s &&"
                              % m)
-                lines.append("    !(%(condition)s))" % m)
+                conds.append("    !(%(condition)s))" % m)
                 name = m.flags if m.isOption else m.name
-                lines.append('    error("%s", *result, "%s");'
+                conds.append('    error("%s", *result, "%s");'
                              % (name, m.conditionMessage))
-        return lines
+        for m in self._members:
+            if m.action:
+                actions.append("if (result->reserved_for_internal_use->"
+                               "%(name)s)" % m)
+                lines.append("   %(action)s))" % m)
+                    name = m.flags if m.isOption else m.name
+                    lines.append('        error("%s", *result, "%s");'
+                                 % (name, m.conditionMessage))
+                if m.condition:
+                    lines.append("}")
+        return lines + conds
 
     def customIncludes(self, params, context):
         lines = []

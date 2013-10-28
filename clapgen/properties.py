@@ -143,11 +143,11 @@ def prepareAction(props, members):
         if ref not in members:
             raise Error('Action references unknown member "%s"' % name)
 
-def reuseMessages(allMemberProps, name):
+def reuseConditionMessages(allProps, name):
     messages = {}
     lackingMessage = []
-    for key in allMemberProps:
-        props = allMemberProps[key]
+    for key in allProps:
+        props = allProps[key]
         if name in props:
             if name + "message" in props:
                 messages[props[name]] = props[name + "message"]
@@ -157,21 +157,30 @@ def reuseMessages(allMemberProps, name):
         if props[name] in messages:
             props[name + "message"] = messages[props[name]]
 
-def prepareActionsAndConditions(allMemberProps):
-    reuseMessages(allMemberProps, "condition")
-    reuseMessages(allMemberProps, "postcondition")
-    for key in allMemberProps:
-        props = allMemberProps[key]
+def prepareActionsAndConditions(objs, members):
+    for key in allProps:
+        props = allProps[key]
         try:
             if "action" in props:
-                prepareAction(props, allMemberProps)
+                prepareAction(props, allProps)
             if "condition" in props:
-                prepareCondition(props, "condition", allMemberProps)
-            if "postcondition" in props:
-                prepareCondition(props, "postcondition", allMemberProps)
+                prepareCondition(props, "condition", allProps)
+            if "memberaction" in props:
+                prepareCondition(props, "membercondition", allProps)
+            if "membercondition" in props:
+                prepareCondition(props, "membercondition", allProps)
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])
             raise ex
+
+def reusePropertyCombinations(propsList, keyName, valueName):
+    values = {}
+    for props in propsList:
+        if keyName in props:
+            if valueName in props:
+                values[props[keyName]] = props[valueName]
+            elif props[keyName] in values:
+                props[valueName] = values[props[keyName]]
 
 def minmaxCount(counts):
     mi, ma = 0, 0
@@ -369,8 +378,9 @@ def joinLineNos(*args):
 
 def makeArguments(allProps):
     args = []
-    for key in allProps:
-        props = allProps[key]
+    reusePropertyCombinations(allProps, "condition", "conditionmessage")
+    reusePropertyCombinations(allProps, "membercondition", "memberconditionmessage")
+    for props in allProps:
         try:
             inferArgumentProperties(props)
             args.append(Argument(props))
@@ -386,8 +396,7 @@ def makeMembers(args):
     """
     members = {}
     allProps = getMemberProperties(args)
-    prepareActionsAndConditions(props)
-    for key in props:
+    for key in allProps:
         props = allProps[key]
         try:
             inferMemberProperties(props)
@@ -402,10 +411,10 @@ def makeMembers(args):
 def ensureUniqueNames(args):
     names = set()
     for a in args:
-        if a.variableName in names:
-            name = a.variableName
+        if a.memberName in names:
+            name = a.memberName
             i = 1
             while name in names:
-                name = a.variableName + str(i)
-            a.variableName = name
-        names.add(a.variableName)
+                name = a.memberName + str(i)
+            a.memberName = name
+        names.add(a.memberName)
