@@ -41,7 +41,7 @@ namespace
 
     void writeHelp()
     {
-        std::string s = "%prog%";
+        std::string s = "$prog$";
         auto first = begin(helpText);
         while (first != end(helpText))
         {

@@ -1,5 +1,5 @@
 USAGE
-%prog% [options] <n> <test name> <out-file>
+$prog$ [options] <n> <test name> <out-file>
 
 Executes unit tests.
 

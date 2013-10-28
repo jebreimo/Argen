@@ -1,4 +1,4 @@
-Usage: %prog% [options] @[[name ...]]@
+Usage: $prog$ [options] @[[name ...]]@
 
 This program demonstrates that other parenthesis than ${ and }$ can be used.
 
