@@ -68,7 +68,6 @@ def parseFlags(text):
             flag, arg = None, word
         else:
             raise Error("Invalid option: " + word)
-
         if flag:
             flags.append(flag)
         if arg:
@@ -146,9 +145,10 @@ def parseArg(s):
     if not s:
         s = "arg %d" % ArgCounter
     props = dict(argument=s,
-                 member=variableName(s),
-                 name=s,
+                 name=variableName(s),
+                 textName=s,
                  autoindex=str(ArgCounter))
+    props["member"] = props["name"]
     ArgCounter += 1
     if s:
         if s[0] == "[":
@@ -164,21 +164,23 @@ def parseArg(s):
 
 def parseOption(s):
     global OptCounter
+    OptCounter += 1
     flags, argument = parseFlags(s)
     props = dict(flags=" ".join(flags),
-                 name=s,
-                 member=variableNameFromFlags(flags))
+                 textName=s,
+                 name=variableNameFromFlags(flags))
+    props["member"] = props["name"]
     if argument:
         props["argument"] = argument
-    OptCounter += 1
     return props
 
 def parseFlagsProperty(flags):
     global OptCounter
-    name = variableNameFromFlags(flags.split())
     OptCounter += 1
-    return dict(member=name,
-                name=name)
+    props = dict(name=variableNameFromFlags(flags.split()),
+                 textName=flags)
+    props["member"] = props["name"]
+    return props
 
 def parseDefinition(s):
     parts = splitSingle(s, DefinitionSeparator, 1)

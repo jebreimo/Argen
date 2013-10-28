@@ -71,7 +71,7 @@ class CppExpander(codegen.Expander):
         self.hasInfoOptions = any(m for m in members if m.type == "info")
         self.requiresNextValue = any(o for o in opts if not o.value)
         self.requiresFromString = args or any(o for o in opts if not o.value)
-        self.hasMemberConditionsOrActions = any(m for m in members
+        self.hasMemberActionsOrConditions = any(m for m in members
                                                 if m.condition)
 
     def __argumentCount(self):
@@ -333,8 +333,8 @@ class CppExpander(codegen.Expander):
         actions = []
         for m in self._members:
             if m.condition:
-                conds.append("if (result->reserved_for_internal_use->%(name)s &&"
-                             % m)
+                conds.append("if (result->reserved_for_internal_use->"
+                             "%(name)s &&" % m)
                 conds.append("    !(%(condition)s))" % m)
                 name = m.flags if m.isOption else m.name
                 conds.append('    error("%s", *result, "%s");'
@@ -344,11 +344,6 @@ class CppExpander(codegen.Expander):
                 actions.append("if (result->reserved_for_internal_use->"
                                "%(name)s)" % m)
                 lines.append("   %(action)s))" % m)
-                    name = m.flags if m.isOption else m.name
-                    lines.append('        error("%s", *result, "%s");'
-                                 % (name, m.conditionMessage))
-                if m.condition:
-                    lines.append("}")
         return lines + conds
 
     def customIncludes(self, params, context):
@@ -766,7 +761,7 @@ class ProcessOptionExpander(codegen.Expander):
         self.isTrackable = isTrackable(member)
         self.functionName = parent.functionName
         self.hasDefault = member.default
-        self.action = member.action
+        self.action = arg.action
         self.condition = arg.condition
         self.conditionMessage = arg.conditionMessage
 
