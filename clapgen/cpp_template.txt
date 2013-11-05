@@ -226,19 +226,6 @@ namespace
     }
 
 [[[ENDIF]]]
-    template <typename T>
-    std::string toString(const T& value)
-    {
-        std::ostringstream stream;
-        stream << value;
-        return stream.str();
-    }
-
-    std::string toString(const std::string& value)
-    {
-        return value;
-    }
-
     bool error(const std::string& flag,
                [[[className]]]& result,
                const std::string& errorMsg)

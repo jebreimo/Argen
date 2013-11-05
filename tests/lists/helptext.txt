@@ -1,0 +1,2 @@
+${-h, --help}$
+${-a NUM, --alpha=NUM| Count:2..8}$

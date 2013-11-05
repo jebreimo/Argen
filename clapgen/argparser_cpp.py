@@ -239,7 +239,7 @@ class CppExpander(codegen.Expander):
                 words.append('    return error("%(flags)s", result, ' %m)
                 words.append('                 "too few values (received " +' % m)
                 words.append('                 '
-                             'toString(result.%(name)s.size()) + '
+                             'std::to_string((unsigned long long)result.%(name)s.size()) + '
                              '", requires %(minCount)d).");' % m)
         return words
 
