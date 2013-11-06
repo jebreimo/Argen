@@ -218,7 +218,10 @@ class TemplateProcessor:
             self.curline = []
             self.column = 0
             for line in lines[1:-1]:
-                self.lines.append(align + line)
+                if line:
+                    self.lines.append(align + line)
+                else:
+                    self.lines.append("")
             self._addText(align + lines[-1])
 
     def _addText(self, text):
