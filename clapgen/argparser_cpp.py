@@ -69,10 +69,10 @@ class CppExpander(codegen.Expander):
         self.hasDelimitedValuesWithoutCheck = any(o for o in opts
                 if not o.value and o.delimiter and not o.member.values)
         self.hasInfoOptions = any(m for m in members if m.type == "info")
-        self.requiresNextValue = any(o for o in opts if not o.value)
+        self.requiresNextValue = any(o for o in opts if not o.value or o.member.type == "final")
         self.requiresFromString = args or any(o for o in opts if not o.value)
         self.hasMemberActionsOrConditions = any(m for m in members
-                                                if m.condition)
+                                                if m.condition or m.action)
 
     def __argumentCount(self):
         minc, maxc = 0, 0
@@ -244,8 +244,12 @@ class CppExpander(codegen.Expander):
         return words
 
     def implementArgumentProcessors(self, params, context):
-        def isSimple(m):
-            return m.valueType == "std::string" and not m.values
+        def isSimple(a):
+            if a.condition or a.action:
+                return False
+            m = a.member
+            return (m.valueType == "std::string" and not m.values and
+                    not m.condition and not m.action)
         lines = []
         for a in self._args:
             m = a.member
@@ -254,24 +258,28 @@ class CppExpander(codegen.Expander):
                 lines.extend(codegen.makeLines(processMultivalueArgumentTemplate, poe))
             elif m.type == "list" and a.delimiter:
                 lines.extend(codegen.makeLines(processMultivalueListArgumentTemplate, poe))
-            elif m.type == "list" and not isSimple(m):
+            elif m.type == "list" and not isSimple(a):
                 lines.extend(codegen.makeLines(processListArgumentTemplate, poe))
-            elif not isSimple(m):
+            elif not isSimple(a):
                 lines.extend(codegen.makeLines(processArgumentTemplate, poe))
         return lines
 
     def __processArgument(self, arg):
-        def isSimple(m):
-            return m.valueType == "std::string" and not m.values
+        def isSimple(a):
+            if a.condition or a.action:
+                return False
+            m = a.member
+            return (m.valueType == "std::string" and not m.values and
+                    not m.condition and not m.action)
         lines = []
         a, m = arg, arg.member
-        if m.type == "multivalue" and not a.delimiter and isSimple(m):
+        if m.type == "multivalue" and not a.delimiter and isSimple(a):
             if m.default:
                 lines.append("result->%s.clear();" % m.name)
             lines.append("result->%s.push_back(*it++);" % m.name)
-        elif m.type == "list" and not a.delimiter and isSimple(m):
+        elif m.type == "list" and not a.delimiter and isSimple(a):
             lines.append("result->%s.push_back(*it++);" % m.name)
-        elif m.type == "value" and isSimple(m):
+        elif m.type == "value" and isSimple(a):
             lines.append("result->%s = *it++;" % m.name)
         else:
             lines.append("if (!process_%s_argument(*it++, *result))"

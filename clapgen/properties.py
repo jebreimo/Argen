@@ -36,7 +36,7 @@ def getValueType(s):
 def inferValueType(props):
     vals = []
     if "default" in props:
-        vals.append(props["default"].split("|")[0])
+        vals.extend(props["default"].split("|"))
     if "values" in props:
         vals.extend(utilities.translateToSpace(
                 props["values"].replace("..", " "),
@@ -132,6 +132,11 @@ def prepareCondition(props, name, members, operator):
         kind = "option" if "flags" in props else "argument"
         if len(refs) == 0:
             msg = "this " + kind + " can't be used here"
+        elif len(refs) == 1 and props["member"] in refs:
+            if "value" in props:
+                msg = "illegal option"
+            else:
+                msg = "illegal value"
         else:
             verb = "doesn't" if len(refs) == 1 else "don't"
             msg = (utilities.verbalJoin(refs) + " " + verb +
