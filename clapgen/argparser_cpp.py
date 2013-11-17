@@ -69,7 +69,8 @@ class CppExpander(codegen.Expander):
         self.hasDelimitedValuesWithoutCheck = any(o for o in opts
                 if not o.value and o.delimiter and not o.member.values)
         self.hasInfoOptions = any(m for m in members if m.type == "info")
-        self.requiresNextValue = any(o for o in opts if not o.value or o.member.type == "final")
+        self.requiresNextValue = any(o for o in opts if not o.value or
+                                     o.member.type == "final")
         self.requiresFromString = args or any(o for o in opts if not o.value)
         self.hasMemberActionsOrConditions = any(m for m in members
                                                 if m.condition or m.action)
@@ -235,12 +236,13 @@ class CppExpander(codegen.Expander):
         words = []
         for m in self._members:
             if m.isOption and m.type == "list" and m.minCount != 0:
-                words.append("if (result.%(name)s.size() < %(minCount)d)" % m)
-                words.append('    return error("%(flags)s", result, ' %m)
-                words.append('                 "too few values (received " +' % m)
-                words.append('                 '
-                             'std::to_string((unsigned long long)result.%(name)s.size()) + '
-                             '", requires %(minCount)d).");' % m)
+                words.extend([
+                    "if (result.%(name)s.size() < %(minCount)d)" % m,
+                    '    return error("%(flags)s", result, ' % m,
+                    '                 "too few values (received " +' % m,
+                    '                 std::to_string((unsigned long long)'
+                    'result.%(name)s.size()) + ", requires %(minCount)d).");'
+                    % m])
         return words
 
     def implementArgumentProcessors(self, params, context):
