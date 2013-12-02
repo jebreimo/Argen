@@ -38,9 +38,8 @@ def formatText(text, definitionLineNos, width, definitionIndent):
 
 def makeArgParser():
     ap = argparse.ArgumentParser(description='Process some integers.')
-    ap.add_argument("-w", "--width", metavar="N", type=int,
-                    dest="width", default=79,
-                    help='line width for word wrapping (default is 79)')
+    ap.add_argument("helpfile", metavar="text file",
+                    help="a text file containing the help text")
     ap.add_argument("-i", "--indent", metavar="N", type=int,
                     dest="indent", default=-1,
                     help="indentation width when option help text is word-wrapped")
@@ -56,26 +55,28 @@ def makeArgParser():
     ap.add_argument("--hpp", metavar="HPP",
                     dest="hpp", default="h",
                     help="the extension of the generated header file (default is h)")
-    ap.add_argument("--namespace", metavar="NAME",
-                    dest="namespace", default="",
-                    help="the namespace of the generated functions and classes")
     ap.add_argument("--function", metavar="NAME",
                     dest="functionName", default="parse_arguments",
                     help="the name of the generated function (default is parse_arguments)")
-    ap.add_argument("--debug",
-                    dest="listProperties", action="store_const",
-                    const=True, default=False,
-                    help="list the parser result without generating files")
+    ap.add_argument("--namespace", metavar="NAME",
+                    dest="namespace", default="",
+                    help="the namespace of the generated functions and classes")
+    ap.add_argument("--parenthesis", metavar="PARENS",
+                    dest="parenthesis", default="",
+                    help="Set the parenthesis used to enclose the "
+                         "definitions and separate properties from each "
+                         "other in the help file. (Defalut is \"${ | }$\"")
     ap.add_argument("--test",
                     dest="includeTest", action="store_const",
                     const=True, default=False,
                     help="Include a main-function the source file")
-    ap.add_argument("--parenthesis", metavar="PARENS",
-                    dest="parenthesis", default="",
-                    help="Set the parenthesis used to enclose the definitions "
-                         "and separate properties from each other in the help file.")
-    ap.add_argument("helpfile", metavar="text file",
-                    help="a text file containing the help text")
+    ap.add_argument("--width", metavar="N", type=int,
+                    dest="width", default=79,
+                    help='line width for help text word wrapping (default is 79)')
+    ap.add_argument("--debug",
+                    dest="listProperties", action="store_const",
+                    const=True, default=False,
+                    help="list the parser result without generating files")
     return ap
 
 

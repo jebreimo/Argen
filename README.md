@@ -100,18 +100,25 @@ FAQ
 ### How can I use || (i.e. or) in my conditions?
 
 Reference for clapgen options
------------------------------
+=============================
+
+Options for formatting the help text
+------------------------------------
+
 ### --align=NUM
 Set the width of the initial whitespace when the help text for an option is split across multiple lines. clapgen normally detects this width automatically, but it sometimes gets it wrong, and then the correct value can be set with this option.
+
+### --width=NUM
+Set the line width.
+
+Options for setting the names of files, functions and classes
+-------------------------------------------------------------
 
 ### --class=NAME
 Set the name of the generated class to NAME. The default is "Arguments".
 
 ### --cpp=SUFFIX
 Set the file name suffix for the generated source file. The default is "cpp".
-
-### --debug
-Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
 
 ### --file=NAME
 Set the name of the generated header and source files. The default is "ParseArguments".
@@ -125,6 +132,12 @@ Set the file name suffix for the generated header file. The default is "hpp".
 ### --namespace=NAME
 Set the namespace for the generated code. Multi-level namespaces are specified using `::` to separate each name (e.g. `--namespace=jeb::application`)
 
+Miscellaneous options
+---------------------
+
+### --debug
+Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
+
 ### --parenthesis=PARENS
 This option should only be used if the actual help text must contain either `${` or `$}`. The option sets the sequence of characters that marks the start and end of an argument or option definition. The PARENS value must consist of both the start and the end sequence, separated by a single space. As space is also used to separate arguments it's necessary to enclose the entire option in double-quotes (e.g. `clapgen "--parenthesis=@< >@" ...`).
 
@@ -132,7 +145,7 @@ This option should only be used if the actual help text must contain either `${`
 Include a main-function in the source file to test the argument parser.
 
 Reference for option and argument properties
---------------------------------------------
+============================================
 
 ### Action
 

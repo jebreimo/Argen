@@ -356,6 +356,29 @@ def joinLineNos(*args):
             nos.add(a.lineNo)
     return ", ".join(nos)
 
+def isShortOption(s):
+    return len(s) == 2 and not s[0].isalnum()
+
+def hasCaseSensitiveShortOptions(args):
+    cases = set()
+    for a in args:
+        if not a.flags:
+            continue
+        for f in a.flags:
+            if (len(f) == 1 or isShortOption(f)) and f[-1].isalpha():
+                cases.add(f.islower())
+    return len(cases) != 1
+
+def addOpositeCaseFlags(args):
+    for a in args:
+        if not a.flags:
+            continue
+        newFlags = []
+        for f in a.flags:
+            if (len(f) == 1 or isShortOption(f)) and f[-1].isalpha():
+                newFlags.append(f.swapcase())
+        a.flags.extend(newFlags)
+
 def makeArguments(allProps):
     args = []
     reusePropertyCombinations(allProps, "condition", "conditionmessage")
@@ -371,6 +394,8 @@ def makeArguments(allProps):
             args.append(Argument(props))
         except Error as ex:
             ex.lineNo = joinLineNos(*props[key]["arguments"])
+    if not hasCaseSensitiveShortOptions(args):
+        addOpositeCaseFlags(args)
     return args
 
 def makeMembers(args):
