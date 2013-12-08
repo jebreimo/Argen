@@ -1,3 +1,8 @@
+""" properties.py has all the functions for deducing missing properties
+    of the options and arguments.
+
+    The interface are the two functions makeArguments and makeMembers.
+"""
 from argument import Argument
 import constants
 from error import Error
