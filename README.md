@@ -1,4 +1,4 @@
-CLAPGen - Generates C++ code for parsing for options and arguments
+Argen - Generates C++ code for parsing for options and arguments
 ==================================================================
 
 An easy to use, yet very sophisticated generator of command line argument parsers for C++ programs.
@@ -53,12 +53,12 @@ And a C++ file main.cpp:
         return 0;
     }
 
-Run it through clapgen:
+Run it through argen:
 
     $ ls
     helptext.txt    main.cpp
-    $ clapgen helptext.txt
-    clapgen: generated ParseArguments.h and ParseArguments.cpp
+    $ argen helptext.txt
+    argen: generated ParseArguments.h and ParseArguments.cpp
     $ ls
     helptext.txt    main.cpp    ParseArguments.h    ParseArguments.cpp
 
@@ -99,14 +99,14 @@ FAQ
 
 ### How can I use || (i.e. or) in my conditions?
 
-Reference for clapgen options
+Reference for argen options
 =============================
 
 Options for formatting the help text
 ------------------------------------
 
 ### --align=NUM
-Set the width of the initial whitespace when the help text for an option is split across multiple lines. clapgen normally detects this width automatically, but it sometimes gets it wrong, and then the correct value can be set with this option.
+Set the width of the initial whitespace when the help text for an option is split across multiple lines. argen normally detects this width automatically, but it sometimes gets it wrong, and then the correct value can be set with this option.
 
 ### --width=NUM
 Set the line width.
@@ -139,7 +139,7 @@ Miscellaneous options
 Parses the help text file and dumps the internal structures to stdout. This option is only for debugging the deducted property values.
 
 ### --parenthesis=PARENS
-This option should only be used if the actual help text must contain either `${` or `$}`. The option sets the sequence of characters that marks the start and end of an argument or option definition. The PARENS value must consist of both the start and the end sequence, separated by a single space. As space is also used to separate arguments it's necessary to enclose the entire option in double-quotes (e.g. `clapgen "--parenthesis=@< >@" ...`).
+This option should only be used if the actual help text must contain either `${` or `$}`. The option sets the sequence of characters that marks the start and end of an argument or option definition. The PARENS value must consist of both the start and the end sequence, separated by a single space. As space is also used to separate arguments it's necessary to enclose the entire option in double-quotes (e.g. `argen "--parenthesis=@< >@" ...`).
 
 ### --test
 Include a main-function in the source file to test the argument parser.
@@ -349,9 +349,9 @@ The legal values for the argument or option. The same set of legal values applie
 
     ValueType: TYPE
 
-This is the type of the values of the option or argument. clapgen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
+This is the type of the values of the option or argument. argen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
 #### Requirements for custom types:
 * There must be a -input-operator (`>>`) for streams.
 * Unless *Default* is specified it must have a default-constructor.
 * If the *Values* property is used it must support the `==` operator if *Values* contains any single values, and the `<` operator if it contains any ranges.
-* If clapgen is run with the --test option there must also be a output-operator (`<<`) for streams.
+* If argen is run with the --test option there must also be a output-operator (`<<`) for streams.

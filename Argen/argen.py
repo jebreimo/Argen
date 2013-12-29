@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-    clapgen - Command Line Argument Parser GENerator
+    argen - Command Line Argument Parser GENerator
 """
 import argparse
 import os
