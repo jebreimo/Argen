@@ -440,7 +440,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     {
         std::cerr << "Error: incorrect number of arguments (expected [[[minArguments]]], "
                   << " but received " << args.size() << ")\n"
-                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.";
+                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
@@ -451,7 +451,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     {
         std::cerr << "Error: too few arguments (expected at least [[[minArguments]]], "
                   << " but received " << args.size() << ")\n"
-                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.";
+                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
@@ -461,7 +461,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     {
         std::cerr << "Error: too many arguments (expected at most [[[maxArguments]]], but received "
                   << args.size() << ")\n"
-                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.";
+                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
