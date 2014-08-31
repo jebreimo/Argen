@@ -18,8 +18,8 @@ PropAliases = {
 LegalProps = set(ArgumentProps).union(MemberProps)
 LegalTypeValues = set(("final", "help", "info", "list", "multivalue", "value"))
 
-DefaultStartDefinition = "${"
-DefaultEndDefinition = "}$"
+DefaultStartDefinition = "{{"
+DefaultEndDefinition = "}}"
 DefaultDefinitionSeparator = "|"
 
 IntegerArguments = set(("NUM", "COUNT", "INT", "SIZE", "LEN", "LENGTH"))
