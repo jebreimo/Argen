@@ -219,12 +219,6 @@ namespace
         return !stream.fail();
     }
 
-    bool fromString(const std::string& s, std::string& value)
-    {
-        value = s;
-        return true;
-    }
-
 [[[ENDIF]]]
     bool error(const std::string& flag,
                [[[className]]]& result,
@@ -473,8 +467,8 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     }
     [[[ENDIF]]]
 
-[[[ENDIF]]]
     size_t excess = args.size() - [[[minArguments]]];
+[[[ENDIF]]]
     std::vector<std::string>::const_iterator it = args.begin();
 
     [[[processArguments]]]
