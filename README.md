@@ -349,7 +349,7 @@ The legal values for the argument or option. The same set of legal values applie
 
     ValueType: TYPE
 
-This is the type of the values of the option or argument. argen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the bool, integer or floating point types, or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
+This is the type of the values of the option or argument. argen doesn't enforce any restrictions on the types, however the generated code is unlikely to compile unless the type is among the numeric types (bool, int, double etc.) or std::string. If the type or typedef used isn't defined in `<cstddef>` or `<string>`,  it is necessary to customize the generated file. Strings must be of type "string" or "std::string", in the former case the type is silently translated to "std::string". See the *Include* property to see how to include the file defining a custom type.
 #### Requirements for custom types:
 * There must be a -input-operator (`>>`) for streams.
 * Unless *Default* is specified it must have a default-constructor.
