@@ -295,7 +295,7 @@ class CppExpander(codegen.Expander):
             if a.minCount == 1:
                 lines.extend(self.__processArgument(a))
             elif a.minCount > 1:
-                lines.append("for (size_t i = 0; i != %(minCount)d; ++i)" % a)
+                lines.append("for (size_t i = 0; i < %(minCount)d; ++i)" % a)
                 lines.append("{")
                 lines.extend("    " + s for s in self.__processArgument(a))
                 lines.append("}")
@@ -307,8 +307,11 @@ class CppExpander(codegen.Expander):
                     if a.member.minCount == 0 and a.member.default:
                         lines.append("if (excess != 0)")
                         lines.append("    result->%(name)s.clear();" % a.member)
-                    lines.append("for (size_t i = %d; excess && i < %d; ++i)"
-                             % (a.minCount, a.maxCount))
+                    if a.maxCount != -1:
+                        lines.append("for (size_t i = %d; excess && i < %d; ++i)"
+                                     % (a.minCount, a.maxCount))
+                    else:
+                        lines.append("while (excess)")
                 lines.append("{")
                 lines.extend("    " + s for s in self.__processArgument(a))
                 lines.extend(["    --excess;", "}"])
