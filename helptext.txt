@@ -4,13 +4,13 @@ $prog$ [options] <n> <test name> <out-file>
 Executes unit tests.
 
 ARGUMENTS
-${| valuetype: int | values: -10..0 2 3 5 7 11 13 17 19}$
-${<test name> | count: 2..4 | values: "p1" "p2" "p3" "p4"}$
+{{| valuetype: int | values: -10..0 2 3 5 7 11 13 17 19}}
+{{<test name> | count: 2..4 | values: "p1" "p2" "p3" "p4"}}
     The name of the test or tests that will be run. All tests are run if no test names are given. If the --exclude option is used, all tests except the given ones are run.
 
     Tests are typically arranged in a two-level hierarchy with a parent and several child-tests. To disable a parent test and all its children, just enter the name of the parent. To disable a spesific child enter the names of both the parent and the child, separated with a single "/".
-${<the-list>|delimiter: :}$
-${<out-file>}$
+{{<the-list>|delimiter: :}}
+{{<out-file>}}
     The name of the file that some kind of output will be written to. This is a text file.
 
     Here's a blackslash: \
@@ -20,41 +20,41 @@ ${<out-file>}$
         * fem og seks
 
 GENERAL OPTIONS
-  ${-e, --exclude           }$  Exclude the tests whose names appear after the options and run everything else. This is the opposite of the default behavior.
-  ${-h, --help              }$  Show program help.
-  ${-l FILE, --log-file=FILE}$  Redirect all the output the tests normally write to stdout or stderr to a file named FILE instead. (This does not affect the test reports).
-  ${-q, --quiet             | member: verbose | value: false}$  Don't display extra information while running tests. (Opposite of -v.)
-  ${-v, --verbose           }$  Display extra information while running tests.
-  ${--version               | type: info}$
-  ${--info                  | type: info}$
-  ${--version2              | member: version | type: info}$
+  {{-e, --exclude           }}  Exclude the tests whose names appear after the options and run everything else. This is the opposite of the default behavior.
+  {{-h, --help              }}  Show program help.
+  {{-l FILE, --log-file=FILE}}  Redirect all the output the tests normally write to stdout or stderr to a file named FILE instead. (This does not affect the test reports).
+  {{-q, --quiet             | member: verbose | value: false}}  Don't display extra information while running tests. (Opposite of -v.)
+  {{-v, --verbose           }}  Display extra information while running tests.
+  {{--version               | type: info}}
+  {{--info                  | type: info}}
+  {{--version2              | member: version | type: info}}
 
 REPORT OPTIONS
-  ${--junit                 }$  Produce a test report in the JUnit XML format.
-  ${--text                  }$  Produce a plain text test report that only list failed tests. This is the default.
-  ${--fulltext              }$  Produce a plain text test report that lists all tests.
-  ${-f FILE, --file=FILE    | count: 1}$  The name of the report file. If multiple report files are produced, FILE will have the suitable file type extension appended to it (txt, xml etc.). Test reports are written to stdout if this option isn't used.
-  ${--host=HOST             }$  Set the host name. This option has no effect on tests, it is only used in the export.
+  {{--junit                 }}  Produce a test report in the JUnit XML format.
+  {{--text                  }}  Produce a plain text test report that only list failed tests. This is the default.
+  {{--fulltext              }}  Produce a plain text test report that lists all tests.
+  {{-f FILE, --file=FILE    | count: 1}}  The name of the report file. If multiple report files are produced, FILE will have the suitable file type extension appended to it (txt, xml etc.). Test reports are written to stdout if this option isn't used.
+  {{--host=HOST             }}  Set the host name. This option has no effect on tests, it is only used in the export.
 
 OTHER OPTIONS
-  ${--ting                  | value: 10.0 | count: 1}$  Text
-  ${--tang=N                | member:ting | count: 1}$  Text
-  ${-@                      | member: at | value: 2,5,3 | default: 0,2,4}$  Text
-  ${--flag                  | default: true}$  Text
-  ${--size=ROWSxCOLS        | delimiter: x | default: 800x600}$
-  ${--cuboid=LENxWIDxHEI    | delimiter: x | values: -1000..1000 | count:1}$
-  ${--rect=LENxWID          | delimiter: x | member: cuboid}$
-  ${--line=LEN              | member: cuboid}$
-  ${--antiflag              | member: flag | value: false}$
-  ${-p N, --percentage=N    | valuetype: int | values: 0..100 200..| default: 50}$
-  ${-s TEXT                 | count: ..10 | default: "Kjakan Gundersen"}$
-  ${--special               | member: s | value: "$spec$"}$
-  ${-n X,Y                  | valuetype: double | values: -9999 -1000..-500 -100..-10 -5 0 5 10..100 500..1000 2000..}$
-  ${-m NUM, --month=NUM     | valuetype: unsigned | values: 1..12 | count: 3}$
-  ${--string=STR            | default: "Two words"}$
-  ${--kjell                 | valuetype:int}$  Option that specify non-boolean type, but no argument or value
-  ${--                      }$  End of options
-  ${-i PATH, --include=PATH | count: 0.. | delimiter: : | default: "foo":"bar":"baz"}$
-  ${--sysinclude            | member: include | value: "foo":"bar":"baz" | delimiter: :}$
-  ${--stygg=N               | valueType: uint64_t | include: <cstdint>}$
-Another option (${-z}$) is the zombie-option.
+  {{--ting                  | value: 10.0 | count: 1}}  Text
+  {{--tang=N                | member:ting | count: 1}}  Text
+  {{-@                      | member: at | value: 2,5,3 | default: 0,2,4}}  Text
+  {{--flag                  | default: true}}  Text
+  {{--size=ROWSxCOLS        | delimiter: x | default: 800x600}}
+  {{--cuboid=LENxWIDxHEI    | delimiter: x | values: -1000..1000 | count:1}}
+  {{--rect=LENxWID          | delimiter: x | member: cuboid}}
+  {{--line=LEN              | member: cuboid}}
+  {{--antiflag              | member: flag | value: false}}
+  {{-p N, --percentage=N    | valuetype: int | values: 0..100 200..| default: 50}}
+  {{-s TEXT                 | count: ..10 | default: "Kjakan Gundersen"}}
+  {{--special               | member: s | value: "$spec$"}}
+  {{-n X,Y                  | valuetype: double | values: -9999 -1000..-500 -100..-10 -5 0 5 10..100 500..1000 2000..}}
+  {{-m NUM, --month=NUM     | valuetype: unsigned | values: 1..12 | count: 3}}
+  {{--string=STR            | default: "Two words"}}
+  {{--kjell                 | valuetype:int}}  Option that specify non-boolean type, but no argument or value
+  {{--                      }}  End of options
+  {{-i PATH, --include=PATH | count: 0.. | delimiter: : | default: "foo":"bar":"baz"}}
+  {{--sysinclude            | member: include | value: "foo":"bar":"baz" | delimiter: :}}
+  {{--stygg=N               | valueType: uint64_t | include: <cstdint>}}
+Another option ({{-z}}) is the zombie-option.
