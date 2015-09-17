@@ -326,7 +326,7 @@ namespace
                 std::end(optionProcessors),
                 [&](const OptionProcessor& op) {return op.first == flag;});
         if (op == std::end(optionProcessors))
-            return NULL;
+            return nullptr;
         return op->second;
     }
 
