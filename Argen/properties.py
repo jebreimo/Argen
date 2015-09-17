@@ -168,14 +168,16 @@ def reusePropertyCombinations(propsList, keyName, valueName):
                 props[valueName] = values[props[keyName]]
 
 def minmaxCount(counts):
-    mi, ma = 0, 0
+    counts = list(counts)
+    if not counts:
+        return 0, 0
+    ma = 0
     for c in counts:
         if c[1] == -1:
             ma = -1
         elif ma != -1:
             ma = max(c[1], ma)
-        mi = min(c[0], mi)
-    return mi, ma
+    return min(c[0] for c in counts), ma
 
 def inferMemberProperties(props):
     args = props["arguments"]
@@ -251,7 +253,10 @@ def inferMemberProperties(props):
             raise Error("options of type \"%(type)s\" cant have "
                         "the \"values\" property." % props)
     if "default" not in props:
-        props["default"] = inferDefaultValue(props)
+        if not minDel and (props["type"] != "list" or count[0] != 0):
+            props["default"] = inferDefaultValue(props)
+        else:
+            props["default"] = None
     elif props["default"] and count[0] != 0:
         raise Error("%(name)s: can't have default value when minimum count "
                     "is non-zero." % props)
