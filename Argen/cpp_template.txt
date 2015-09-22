@@ -438,9 +438,11 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
 [[[IF hasFixedNumberOfArguments]]]
     if (args.size() != [[[minArguments]]])
     {
-        std::cerr << "Error: incorrect number of arguments (expected [[[minArguments]]], "
-                  << " but received " << args.size() << ")\n"
-                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
+        std::cerr << "Error: incorrect number of arguments";
+        if (args.size() != 0)
+            std::cerr << "(expected [[[minArguments]]], but received "
+                      << args.size() << ")";
+        std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
@@ -449,9 +451,11 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     [[[IF hasMinArguments]]]
     if (args.size() < [[[minArguments]]])
     {
-        std::cerr << "Error: too few arguments (expected at least [[[minArguments]]], "
-                  << " but received " << args.size() << ")\n"
-                  << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
+        std::cerr << "Error: too few arguments";
+        if (args.size() != 0)
+            std::cerr << "(expected at least [[[minArguments]]], "
+                      << "but received " << args.size() << ")";
+        std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
