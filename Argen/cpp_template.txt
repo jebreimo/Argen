@@ -368,10 +368,6 @@ namespace
     [[[multiValueInitialization]]]
 }
 
-[[[className]]]::~[[[className]]]()
-{
-}
-
 std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
 {
     if (argc == 0)

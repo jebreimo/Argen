@@ -31,9 +31,6 @@ struct [[[className]]]
     /** @brief Assigns the default values to all members.
       */
     [[[className]]]();
-    /** @brief Assigns the default values to all members.
-      */
-    ~[[[className]]]();
 
     [[[members]]]
 

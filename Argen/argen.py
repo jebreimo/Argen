@@ -37,7 +37,7 @@ def formatText(text, definitionLineNos, width, definitionIndent):
     return "\n".join(result)
 
 def makeArgParser():
-    ap = argparse.ArgumentParser(description='Process some integers.')
+    ap = argparse.ArgumentParser(description='Generates a C++ argument parser.')
     ap.add_argument("helpfile", metavar="text file",
                     help="a text file containing the help text")
     ap.add_argument("-i", "--indent", metavar="N", type=int,
