@@ -324,7 +324,7 @@ namespace
         const OptionProcessor* op = std::find_if(
                 std::begin(optionProcessors),
                 std::end(optionProcessors),
-                [&](const OptionProcessor& op) {return op.first == flag;});
+                [&](const OptionProcessor& o) {return o.first == flag;});
         if (op == std::end(optionProcessors))
             return nullptr;
         return op->second;
@@ -372,10 +372,15 @@ namespace
 {
 }
 
-std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
+[[[className]]]::operator bool() const
+{
+    return [[[functionName]]]_result == RESULT_OK;
+}
+
+[[[className]]] [[[functionName]]](int argc, char* argv[])
 {
     if (argc == 0)
-        return std::unique_ptr<[[[className]]]>();
+        return [[[className]]]();
 
     size_t pos = std::string(argv[0]).find_last_of("/\\");
     if (pos == std::string::npos)
@@ -383,10 +388,10 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     else
         programName = &argv[0][pos + 1];
 
-    std::unique_ptr<[[[className]]]> result(new [[[className]]]);
+    [[[className]]] result;
 [[[IF hasTrackedOptions]]]
     TrackedOptions trackedOptions;
-    result->reserved_for_internal_use = &trackedOptions;
+    result.reserved_for_internal_use = &trackedOptions;
 [[[ENDIF]]]
     std::vector<std::string> args;
 
@@ -397,7 +402,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         ProcessOptionFunc func = findOptionProcessor(arg);
         if (func)
         {
-            if (!func(arg, argIt, *result))
+            if (!func(arg, argIt, result))
                 return [[[return_result]]];
         }
 [[[IF hasFinalOption]]]
@@ -410,7 +415,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
 [[[IF unknownOptionCheck]]]
         else if ([[[unknownOptionCheck]]](arg.c_str()))
         {
-            error(arg, *result, "unknown option.");
+            error(arg, result, "unknown option.");
             return [[[return_result]]];
         }
 [[[ENDIF]]]
@@ -421,17 +426,17 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
     }
 
 [[[IF hasInfoOptions]]]
-    if (result->[[[functionName]]]_result == [[[className]]]::RESULT_INFO)
+    if (result.[[[functionName]]]_result == [[[className]]]::RESULT_INFO)
         return [[[return_result]]];
 
 [[[ENDIF]]]
 [[[IF hasMandatoryOptions]]]
-    if (!checkMandatoryOptions(*result))
+    if (!checkMandatoryOptions(result))
         return [[[return_result]]];
 
 [[[ENDIF]]]
 [[[IF hasMinimumListLengths]]]
-    if (!checkListLengths(*result))
+    if (!checkListLengths(result))
         return [[[return_result]]];
 
 [[[ENDIF]]]
@@ -443,7 +448,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
             std::cerr << "(expected [[[minArguments]]], but received "
                       << args.size() << ")";
         std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
+        result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
 
@@ -456,7 +461,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
             std::cerr << "(expected at least [[[minArguments]]], "
                       << "but received " << args.size() << ")";
         std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
+        result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
     [[[ENDIF]]]
@@ -466,7 +471,7 @@ std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[])
         std::cerr << "Error: too many arguments (expected at most [[[maxArguments]]], but received "
                   << args.size() << ")\n"
                   << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
-        result->[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
+        result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
         return [[[return_result]]];
     }
 
@@ -500,12 +505,12 @@ void printAllValues(It begin, It end)
 }
 
 #define PRINT_VALUE(member) \
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " "<< args->member << "\n"
+    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " "<< args.member << "\n"
 #define PRINT_STRING(member) \
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " \"" << args->member << "\"\n"
+    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " \"" << args.member << "\"\n"
 #define PRINT_LIST(member) \
     std::cout << std::setw([[[memberWidth]]]) << #member ":" << " {"; \
-    printAllValues(begin(args->member), end(args->member)); \
+    printAllValues(begin(args.member), end(args.member)); \
     std::cout << "}\n"
 
 int main(int argc, char* argv[])
@@ -517,7 +522,7 @@ int main(int argc, char* argv[])
 
     std::cout << "\n============================== Parser output "
                     "=============================\n";
-    std::unique_ptr<[[[qualifiedClassName]]]> args = [[[qualifiedFunctionName]]](argc, argv);
+    auto args = [[[qualifiedFunctionName]]](argc, argv);
 
     std::cout << "\n================================= Values "
                     "=================================\n";

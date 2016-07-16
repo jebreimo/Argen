@@ -28,12 +28,16 @@ struct TrackedOptions;
   */
 struct [[[className]]]
 {
-    /** @brief Assigns the default values to all members.
+    /** @brief Assigns default values to all members.
       */
     [[[className]]]();
-    /** @brief Assigns the default values to all members.
+    /** @brief Assigns default values to all members.
       */
     ~[[[className]]]();
+
+    /** @brief Returns true if [[[functionName]]]_result is RESULT_OK, otherwise false.
+      */
+    explicit operator bool() const;
 
     [[[members]]]
 
@@ -89,7 +93,7 @@ struct [[[className]]]
   *     accordance with the parsed arguments. If @a argc is 0 the
   *     returned value is a nullptr.
   */
-std::unique_ptr<[[[className]]]> [[[functionName]]](int argc, char* argv[]);
+[[[className]]] [[[functionName]]](int argc, char* argv[]);
 
 [[[IF namespace]]]
 [[[endNamespace]]]
