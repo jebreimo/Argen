@@ -31,9 +31,6 @@ struct [[[className]]]
     /** @brief Assigns default values to all members.
       */
     [[[className]]]();
-    /** @brief Assigns default values to all members.
-      */
-    ~[[[className]]]();
 
     /** @brief Returns true if [[[functionName]]]_result is RESULT_OK, otherwise false.
       */

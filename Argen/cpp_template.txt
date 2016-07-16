@@ -368,10 +368,6 @@ namespace
     [[[multiValueInitialization]]]
 }
 
-[[[className]]]::~[[[className]]]()
-{
-}
-
 [[[className]]]::operator bool() const
 {
     return [[[functionName]]]_result == RESULT_OK;
