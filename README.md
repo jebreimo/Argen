@@ -253,7 +253,7 @@ Here the mandatory argument must contain 2 to 5 delimiters (i.e. 3 to 6 values):
 
     Flags: NAME ...
 
-Explicitly set the flags for an option. The automatic detection of options and arguments require that options consist of at least two characters and start with a dash `-` or a slash `/`. To create other options - for instance a single-character option - it's necessary to use this property. If there are multiple flags for the same option the flags must separated by whitespace. It's not possible specify the option argument with the Flags property, to do so the `Argument` option must also be used.
+Explicitly set the flags for an option. The automatic detection of options and arguments require that options consist of at least two characters and start with a dash `-` or a slash `/`. To create other options - for instance a single-character option - it's necessary to use this property. If there are multiple flags for the same option the flags must separated by whitespace. It's not possible specify the option argument with the Flags property; to do so use the `Argument` option.
 
 #### Examples
 
