@@ -349,15 +349,11 @@ namespace
     [[[implementArgumentProcessors]]]
 [[[IF hasTrackedOptions]]]
 
-    std::unique_ptr<[[[className]]]>& cleanReservedInternals(
-            std::unique_ptr<[[[className]]]>& result)
+    [[[className]]]& cleanReservedInternals([[[className]]]>& result)
     {
-        result->reserved_for_internal_use = nullptr;
+        result.reserved_for_internal_use = nullptr;
         return result;
     }
-    [[[SET return_result=std::move(cleanReservedInternals(result))]]]
-[[[ELSE]]]
-    [[[SET return_result=result]]]
 [[[ENDIF]]]
 }
 
@@ -373,7 +369,7 @@ namespace
     return [[[functionName]]]_result == RESULT_OK;
 }
 
-[[[className]]] [[[functionName]]](int argc, char* argv[])
+[[[className]]] [[[functionName]]](int argc, char* argv[], bool autoExit)
 {
     if (argc == 0)
         return [[[className]]]();
@@ -399,7 +395,11 @@ namespace
         if (func)
         {
             if (!func(arg, argIt, result))
-                return [[[return_result]]];
+            {
+                if (autoExit)
+                    exit(result.parse_arguments_result);
+                return result;
+            }
         }
 [[[IF hasFinalOption]]]
         else if ([[[checkFinalOption]]])
@@ -412,7 +412,9 @@ namespace
         else if ([[[unknownOptionCheck]]](arg.c_str()))
         {
             error(arg, result, "unknown option.");
-            return [[[return_result]]];
+            if (autoExit)
+                exit(result.parse_arguments_result);
+            return result;
         }
 [[[ENDIF]]]
         else
@@ -423,17 +425,25 @@ namespace
 
 [[[IF hasInfoOptions]]]
     if (result.[[[functionName]]]_result == [[[className]]]::RESULT_INFO)
-        return [[[return_result]]];
+        return result;
 
 [[[ENDIF]]]
 [[[IF hasMandatoryOptions]]]
     if (!checkMandatoryOptions(result))
-        return [[[return_result]]];
+    {
+        if (autoExit)
+            exit(result.parse_arguments_result);
+        return result;
+    }
 
 [[[ENDIF]]]
 [[[IF hasMinimumListLengths]]]
     if (!checkListLengths(result))
-        return [[[return_result]]];
+    {
+        if (autoExit)
+            exit(result.parse_arguments_result);
+        return result;
+    }
 
 [[[ENDIF]]]
 [[[IF hasFixedNumberOfArguments]]]
@@ -445,7 +455,9 @@ namespace
                       << args.size() << ")";
         std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return [[[return_result]]];
+        if (autoExit)
+            exit(result.parse_arguments_result);
+        return result;
     }
 
 [[[ELSE]]]
@@ -458,7 +470,9 @@ namespace
                       << "but received " << args.size() << ")";
         std::cerr << ".\nRun \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return [[[return_result]]];
+        if (autoExit)
+            exit(result.parse_arguments_result);
+        return result;
     }
     [[[ENDIF]]]
     [[[IF hasMaxArguments]]]
@@ -468,7 +482,9 @@ namespace
                   << args.size() << ")\n"
                   << "Run \"" << programName << " [[[helpFlag]]]\" for help.\n";
         result.[[[functionName]]]_result = [[[className]]]::RESULT_ERROR;
-        return [[[return_result]]];
+        if (autoExit)
+            exit(result.parse_arguments_result);
+        return result;
     }
 
     [[[ENDIF]]]
@@ -478,9 +494,9 @@ namespace
 
     [[[processArguments]]]
 [[[IF hasMemberActionsOrConditions]]]
-    [[[memberConditionsAndConditions]]]
+    [[[memberConditionsAndActions]]]
 [[[ENDIF]]]
-    return [[[return_result]]];
+    return result;
 }
 
 [[[IF namespace]]]
@@ -518,7 +534,7 @@ int main(int argc, char* argv[])
 
     std::cout << "\n============================== Parser output "
                     "=============================\n";
-    auto args = [[[qualifiedFunctionName]]](argc, argv);
+    auto args = [[[qualifiedFunctionName]]](argc, argv, false);
 
     std::cout << "\n================================= Values "
                     "=================================\n";

@@ -90,7 +90,7 @@ struct [[[className]]]
   *     accordance with the parsed arguments. If @a argc is 0 the
   *     returned value is a nullptr.
   */
-[[[className]]] [[[functionName]]](int argc, char* argv[]);
+[[[className]]] [[[functionName]]](int argc, char* argv[], bool autoExit = true);
 
 [[[IF namespace]]]
 [[[endNamespace]]]

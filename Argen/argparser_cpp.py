@@ -277,14 +277,14 @@ class CppExpander(codegen.Expander):
         a, m = arg, arg.member
         if m.type == "multivalue" and not a.delimiter and isSimple(a):
             if m.default:
-                lines.append("result->%s.clear();" % m.name)
-            lines.append("result->%s.push_back(*it++);" % m.name)
+                lines.append("result.%s.clear();" % m.name)
+            lines.append("result.%s.push_back(*it++);" % m.name)
         elif m.type == "list" and not a.delimiter and isSimple(a):
-            lines.append("result->%s.push_back(*it++);" % m.name)
+            lines.append("result.%s.push_back(*it++);" % m.name)
         elif m.type == "value" and isSimple(a):
-            lines.append("result->%s = *it++;" % m.name)
+            lines.append("result.%s = *it++;" % m.name)
         else:
-            lines.append("if (!process_%s_argument(*it++, *result))"
+            lines.append("if (!process_%s_argument(*it++, result))"
                          % a.name)
             lines.append("    return result;")
         return lines
@@ -306,7 +306,7 @@ class CppExpander(codegen.Expander):
                 else:
                     if a.member.minCount == 0 and a.member.default:
                         lines.append("if (excess != 0)")
-                        lines.append("    result->%(name)s.clear();" % a.member)
+                        lines.append("    result.%(name)s.clear();" % a.member)
                     if a.maxCount != -1:
                         lines.append("for (size_t i = %d; excess && i < %d; ++i)"
                                      % (a.minCount, a.maxCount))

@@ -65,7 +65,7 @@ def makeArgParser():
                     dest="parenthesis", default="",
                     help="Set the parenthesis used to enclose the "
                          "definitions and separate properties from each "
-                         "other in the help file. (Defalut is \"${ | }$\"")
+                         "other in the help file. (Defalut is \"{{ | }}\"")
     ap.add_argument("--test",
                     dest="includeTest", action="store_const",
                     const=True, default=False,
