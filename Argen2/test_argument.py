@@ -59,13 +59,9 @@ def test_parse_metavar_three_files():
 
 
 def test_parse_flags():
-    props = argument.parse_flags("-r MIN-MAX --range=MIN-MAX",
-                                 None,
-                                 argument.DEFAULT_METAVAR_TYPES)
-    assert props["separator"] == "-"
-    assert props["type"] == "std::string"
-    assert props["separator_count"] == "1"
+    props = argument.parse_flags("-r MIN-MAX --range=MIN-MAX")
     assert props["flags"] == "-r --range"
+    assert props["meta_variable"] == "MIN-MAX"
 
 
 def test_get_argument_metavar_and_count():
@@ -92,5 +88,5 @@ def test_make_member_name():
 
 def test_parse_argument_text():
     arg = argument.Argument("-")
-    props = argument.parse_argument_text(arg, argument.DEFAULT_METAVAR_TYPES)
+    props = argument.parse_argument_text(arg)
     assert props["flags"] == "-"
