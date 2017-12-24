@@ -39,3 +39,71 @@ class Argument(object):
         else:
             return "argument(%s)" % self.memberName
 
+class Argument2(object):
+    def __init__(self):
+        self.action = ""
+        self.explicitAction = False
+        self.argument = ""
+        self.explicitArgument = False
+        self.condition = ""
+        self.explicitCondition = False
+        self.conditionMessage = ""
+        self.explicitConditionMessage = False
+        self.count = ""
+        self.explicitCount = False
+        self.delimiter = ""
+        self.explicitDelimiter = False
+        self.delimiterCount = ""
+        self.explicitDelimiterCount = False
+        self.flags = ""
+        self.explicitFlags = False
+        self.index = ""
+        self.explicitIndex = False
+        self.lineNo = ""
+        self.memberName = ""
+        self.explicitMemberName = False
+        self.text = ""
+        self.explicitText = False
+        self.value = ""
+        self.explicitValue = False
+
+    def update(self, values, explicit = True):
+        for key in values:
+            if key == "action":
+                self.action = values[key]
+                self.explicitAction = explicit
+            elif key == "argument":
+                self.argument = values[key]
+                self.explicitArgument = explicit
+            elif key == "condition":
+                self.condition = values[key]
+                self.explicitCondition = explicit
+            elif key == "conditionMessage":
+                self.conditionMessage = values[key]
+                self.explicitConditionMessage = explicit
+            elif key == "count":
+                self.count = values[key]
+                self.explicitCount = explicit
+            elif key == "delimiter":
+                self.delimiter = values[key]
+                self.explicitDelimiter = explicit
+            elif key == "delimiterCount":
+                self.delimiterCount = values[key]
+                self.explicitDelimiterCount = explicit
+            elif key == "flags":
+                self.flags = values[key]
+                self.explicitFlags = explicit
+            elif key == "index":
+                self.index = values[key]
+                self.explicitIndex = explicit
+            elif key == "lineNo":
+                self.lineNo = values[key]
+            elif key == "memberName":
+                self.memberName = values[key]
+                self.explicitMemberName = explicit
+            elif key == "text":
+                self.text = values[key]
+                self.explicitText = explicit
+            elif key == "value":
+                self.value = values[key]
+                self.explicitValue = explicit

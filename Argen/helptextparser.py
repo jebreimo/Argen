@@ -239,9 +239,9 @@ def parseText(text):
             raise ex
         if txt and isStartOfLine(outText):
             argLineNos.add(lineNo - skippedNewlines - 1)
-        if ((not txt) and
-                (not outText or outText[-1][-1] == "\n") and
-                (cur[1] != len(text) and text[cur[1]] == "\n")):
+        if ((not txt)
+                and (not outText or outText[-1][-1] == "\n")
+                and (cur[1] != len(text) and text[cur[1]] == "\n")):
             lineNo += 1
             skippedNewlines += 1
             cur = cur[0], cur[1] + 1, cur[2]

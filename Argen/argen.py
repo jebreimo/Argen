@@ -39,7 +39,7 @@ def formatText(text, definitionLineNos, width, definitionIndent):
 def makeArgParser():
     ap = argparse.ArgumentParser(description='Generates a C++ argument parser.')
     ap.add_argument("helpfile", metavar="text file",
-                    help="a text file containing the help text")
+                    help="one or more text files defining the help text")
     ap.add_argument("-i", "--indent", metavar="N", type=int,
                     dest="indent", default=-1,
                     help="indentation width when option help text is word-wrapped")
@@ -128,9 +128,9 @@ def main(args):
             else:
                 print("Invalid parenthesis: " + args.parenthesis)
                 print("The parenthesis string must consist of the opening "
-                      " parenthesis (defaults is \"${\"), the property "
+                      " parenthesis (defaults is \"{{\"), the property "
                       " separator (default is \"|\") and the closing "
-                      " parenthesis (default is \"}$\")separated by a space "
+                      " parenthesis (default is \"}}\")separated by a space "
                       " character. The space character must either be "
                       " escaped or the entire option must be enclosed in "
                       " quotes. For instance to produce the default "
