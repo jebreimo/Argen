@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
-#############################################################################
+# ===========================================================================
 # Copyright © 2017 Jan Erik Breimo. All rights reserved.
 # Created by Jan Erik Breimo on 2017-11-25.
 #
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
-#############################################################################
+# ===========================================================================
 from helpfileerror import HelpFileError
+
 
 def find_variable(text, startPos, syntax):
     start = text.find(syntax.variable_start, startPos)

@@ -57,7 +57,7 @@ OTHER OPTIONS
   {{--                      }}  End of options
   {{-i PATH, --include=PATH | count: 0.. | separator: : | default: "foo":"bar":"baz"}}
   {{--sysinclude            | member: include | value: "foo":"bar":"baz" | separator: :}}
-  {{--stygg=N               | type: uint64_t }}
+  {{--stygg=N -@            | type: uint64_t }}
   {{-                       }} Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 

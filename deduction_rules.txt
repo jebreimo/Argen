@@ -1,0 +1,47 @@
+text: from the displayed text unless given
+flags: from text
+meta_variable: from text
+separator: meta_variable
+separator_count: meta_variable and separator
+count: from flags or text
+index: from position in file
+member_name: argument_type, longest name among flags or meta_variable
+value: argument_type, type
+argument_type: flags, count
+
+action
+callback
+
+
+type: default, value, values, meta_variable
+default: type
+values: type
+
+
+member_action
+member_callback
+
+
+Argument properties
+-------------------
+action
+argument_type
+callback
+count
+flags
+index
+member_name
+meta_variable
+separator
+separator_count
+text
+value
+
+Member properties
+-----------------
+default
+member_action
+member_callback
+values
+value_type
+container_type

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#############################################################################
+# ===========================================================================
 # Copyright © 2017 Jan Erik Breimo. All rights reserved.
 # Created by Jan Erik Breimo on 2017-10-22.
 #
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
-#############################################################################
+# ===========================================================================
 import argparse
 import sys
 
@@ -16,6 +16,8 @@ from sections import read_sections
 from parse_help_text import parse_help_text
 from replace_variables import replace_variables
 from session import Session
+import text_deductions
+import member_name_deduction
 
 
 def tokenize_setting(line):
@@ -135,6 +137,45 @@ def make_argument_parser():
     return ap
 
 
+def update_properties(arg, props):
+    for key in props:
+        if key not in arg.properties:
+            arg.properties[key] = props[key]
+
+
+def make_deductions(session):
+    generated_names = set()
+    for arg in session.arguments:
+        props = text_deductions.parse_argument_text(arg)
+        update_properties(arg, props)
+        props = dict(member_name=member_name_deduction.deduce_member_name(arg, generated_names))
+        update_properties(arg, props)
+
+
+def find_duplicated_flags(args):
+    visited_flags = {}
+    for arg in args:
+        flags = arg.properties.get("flags")
+        if flags:
+            for flag in flags.split():
+                if flag not in visited_flags:
+                    visited_flags[flag] = {arg}
+                else:
+                    visited_flags[flag].add(arg)
+    conflicts = {}
+    for flag in visited_flags:
+        if len(visited_flags[flag]) != 1:
+            conflicts[flag] = visited_flags[flag]
+    return conflicts
+
+
+def list_conflicting_flags(conflicting_flags):
+    for flag in conflicting_flags:
+        print("Error: the flag '%s' is defined by multiple options:")
+        for a in conflicting_flags[flag]:
+            print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
+
+
 def main():
     args = make_argument_parser().parse_args()
     session = Session()
@@ -143,15 +184,14 @@ def main():
     sections = []
     for file_name in args.helpfiles:
         print(file_name)
-        newSections = read_sections(file_name, syntax)
-        sections.extend(newSections)
-        parse_sections(newSections, session)
-    for arg in session.arguments:
-        deducedProps = argument.parse_argument_text(arg)
-        arg.deduce_properties = deducedProps
-        for key in deducedProps:
-            if key not in arg.properties:
-                arg.properties[key] = deducedProps[key]
+        new_sections = read_sections(file_name, syntax)
+        sections.extend(new_sections)
+        parse_sections(new_sections, session)
+    make_deductions(session)
+    conflicting_flags = find_duplicated_flags(session.arguments)
+    if conflicting_flags:
+        list_conflicting_flags(conflicting_flags)
+        return 10
     for section in sections:
         print(section)
     for variable in session.variables:

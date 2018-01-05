@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#############################################################################
+# ===========================================================================
 # Copyright © 2017 Jan Erik Breimo. All rights reserved.
 # Created by Jan Erik Breimo on 2017-10-22.
 #
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
-#############################################################################
+# ===========================================================================
 from helpfileerror import HelpFileError
 
 # Section types: Text, Define, Header, Source, Options, ErrorText
