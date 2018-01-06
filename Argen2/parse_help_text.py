@@ -27,41 +27,44 @@ def parse_argument(text, syntax):
     parts = text.split(syntax.argument_separator)
     properties = {}
     for part in parts[1:]:
-        subParts = part.split(":", 1)
-        if len(subParts) != 2:
+        subparts = part.split(":", 1)
+        if len(subparts) != 2:
             raise HelpFileError('Invalid property: "%s".' % part)
-        name = subParts[0].strip()
-        value = subParts[1].strip()
-        propertyName = name.lower()
-        propertyName = PROPERTY_ALIASES.get(propertyName, propertyName)
-        if propertyName not in LEGAL_PROPERTIES:
+        name = subparts[0].strip()
+        value = subparts[1].strip()
+        property_name = name.lower()
+        property_name = PROPERTY_ALIASES.get(property_name, property_name)
+        if property_name not in LEGAL_PROPERTIES:
             raise HelpFileError('Unknown property: "%s".' % name)
-        properties[propertyName] = value
-    argument = Argument(parts[0], properties)
-    return argument
+        properties[property_name] = value
+    return Argument(parts[0], properties)
 
 
-def parse_help_text_impl(text, session):
-    fromPos = 0
-    outText = []
+def parse_help_text_impl(text, session, file_name, line_number):
+    from_pos = 0
+    out_text = []
     syntax = session.syntax
     try:
         while True:
-            argRange = find_argument(text, fromPos, syntax)
-            if not argRange:
-                outText.append(text[fromPos:])
+            arg_range = find_argument(text, from_pos, syntax)
+            if not arg_range:
+                out_text.append(text[from_pos:])
                 break
-            toPos = argRange[0]
-            outText.append(text[fromPos:toPos])
-            argStart = toPos + len(syntax.argument_start)
-            argEnd = argRange[1] - len(syntax.argument_end)
-            argument = parse_argument(text[argStart:argEnd], syntax)
-            outText.append(argument.raw_text)
+            to_pos = arg_range[0]
+            out_text.append(text[from_pos:to_pos])
+            arg_start = to_pos + len(syntax.argument_start)
+            arg_end = arg_range[1] - len(syntax.argument_end)
+            argument = parse_argument(text[arg_start:arg_end], syntax)
+            argument.file_name = file_name
+            line_number += text.count("\n", from_pos, arg_range[0])
+            argument.line_number = line_number
+            line_number += text.count("\n", arg_range[0], arg_range[1])
+            out_text.append(argument.raw_text)
             session.arguments.append(argument)
-            fromPos = argRange[1]
-        return "".join(outText)
+            from_pos = arg_range[1]
+        return "".join(out_text)
     except HelpFileError as ex:
-        ex.line_number = text[:toPos].count("\n")
+        ex.line_number = text[:to_pos].count("\n")
         raise
 
 
@@ -75,7 +78,8 @@ def parse_help_text(section, session):
             ex.line_number = section.line_number + i + 1
             raise
     try:
-        return parse_help_text_impl("".join(lines), session)
+        return parse_help_text_impl("".join(lines), session,
+                                    section.file_name, section.line_number)
     except HelpFileError as ex:
         ex.file_name = section.file_name
         raise
