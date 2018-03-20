@@ -11,6 +11,7 @@ import argparse
 import sys
 
 import argument
+import member
 from helpfileerror import HelpFileError
 from sections import read_sections
 from parse_help_text import parse_help_text
@@ -176,6 +177,74 @@ def list_conflicting_flags(conflicting_flags):
             print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
 
 
+def get_arguments_by_member_name(arguments):
+    member_arguments = {}
+    for arg in arguments:
+        member_name = arg.properties["member_name"]
+        if member_name not in member_arguments:
+            member_arguments[member_name] = [arg]
+        else:
+            member_arguments[member_name].append(arg)
+    return member_arguments
+
+
+def make_members(member_arguments):
+    members = []
+    conflicts = []
+    for member_name in member_arguments:
+        args = member_arguments[member_name]
+        member_props = {}
+        if len(args) <= 1:
+            for prop_name in argument.MEMBER_PROPERTIES:
+                prev_arg = None
+                prev_value = None
+                for arg in args:
+                    value = arg.properties.get(prop_name)
+                    if value is not None:
+                        if prev_arg and value != prev_value:
+                            conflicts.append(dict(property=prop_name,
+                                                  values=[value, prev_value],
+                                                  arguments=[arg, prev_arg]))
+                        else:
+                            prev_arg, prev_value = arg, value
+                if prev_value:
+                    member_props[prop_name] = prev_value
+        m = member.Member(member_name, member_props)
+        members.append(m)
+        for arg in args:
+            arg.member = m
+    return members, conflicts
+
+
+def print_error(file_name, line_number, message):
+    if file_name and line_number:
+        print(f"{file_name}:{line_number}: {message}", file=sys.stderr)
+    elif file_name:
+        print(f"{file_name}: {message}", file=sys.stderr)
+    elif line_number:
+        print(f"line {line_number}: {message}", file=sys.stderr)
+    else:
+        print(message, file=sys.stderr)
+
+
+def print_member_property_conflicts(conflicts):
+    for conflict in conflicts:
+        arg1, arg2 = conflict["arguments"]
+        name = conflict["property"]
+        value1, value2 = conflict["values"]
+        if arg2.file_name:
+            other_pos = "%s:%d" % (arg2.file_name, arg2.line_number)
+        else:
+            other_pos = "line %d" % arg2.line_number
+        print_error(arg1.file_name, arg1.line_number,
+                    f"The value of property {name} ({value1}) conflicts with"
+                    + f"the value given at {other_pos} ({value2}).")
+
+
+# def make_members(member_arguments):
+#     for member_name in member_arguments:
+
+
 def main():
     args = make_argument_parser().parse_args()
     session = Session()
@@ -191,7 +260,13 @@ def main():
     conflicting_flags = find_duplicated_flags(session.arguments)
     if conflicting_flags:
         list_conflicting_flags(conflicting_flags)
-        return 10
+        return 1
+    member_arguments = get_arguments_by_member_name(session.arguments)
+    members, conflicts = make_members(member_arguments)
+    if conflicts:
+        print_member_property_conflicts(conflicts)
+        return 1
+
     for section in sections:
         print(section)
     for variable in session.variables:

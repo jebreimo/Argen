@@ -29,8 +29,7 @@ def test_get_longest_flags():
 def test_deduce_member_name():
     s = {"foo", "foo_1"}
     a = argument.Argument("", dict(flags="--foo"))
-    assert mnd.deduce_member_name(a, s) == "foo_2"
-    assert "foo_2" in s
+    assert mnd.deduce_member_name(a, s) == "foo"
 
 
 def test_deduce_member_name_2():
@@ -45,3 +44,10 @@ def test_deduce_member_name_3():
     a = argument.Argument("", dict(flags="-"))
     assert mnd.deduce_member_name(a, s) == "unnamed"
     assert "unnamed" in s
+
+
+def test_deduce_member_name_4():
+    s = {"foo", "foo_1"}
+    a = argument.Argument("", dict(meta_variable="foo"))
+    assert mnd.deduce_member_name(a, s) == "foo_2"
+    assert "foo_2" in s

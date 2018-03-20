@@ -6,18 +6,17 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-from helpfileerror import HelpFileError
 
 
-ARGUMENT_PROPERTIES = {"action", "argument_type", "callback", "count", "flags",
-                       "index", "member_name", "meta_variable", "separator",
-                       "separator_count", "text", "value"}
+ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index", "inline",
+                       "member_name", "meta_variable", "operation",
+                       "post_operation", "separator", "separator_count",
+                       "text", "value", "values"}
 
-MEMBER_PROPERTIES = {"default", "member_action", "member_callback", "values",
-                     "type"}
+MEMBER_PROPERTIES = {"default", "member_inline", "member_callback", "type"}
 
 _REVERSE_PROPERTY_ALIASES = {
-    "action": ["act"],
+    "operation": ["op"],
     "argument": ["arg"],
     "argument_type": ["argtype", "arg_type", "argumenttype"],
     "callback": ["call"],
@@ -26,8 +25,8 @@ _REVERSE_PROPERTY_ALIASES = {
     "separator": ["sep"],
     "separator_count": ["sepcount", "sep_count", "separatorcount"],
     "value": ["val"],
-    "member_action": ["memact", "mem_act", "memaction", "mem_action",
-                      "memberaction"],
+    "member_inline": ["meminline", "mem_inline", "meminline", "mem_inline",
+                      "memberinline"],
     "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",
                         "membercallback"],
     "values": ["vals"]
@@ -40,7 +39,6 @@ for key in _REVERSE_PROPERTY_ALIASES:
 
 LEGAL_PROPERTIES = set(ARGUMENT_PROPERTIES).union(MEMBER_PROPERTIES)
 
-
 DEFAULT_METAVAR_TYPES = {
     "num": "int",
     "number": "int",
@@ -50,16 +48,19 @@ DEFAULT_METAVAR_TYPES = {
     "ratio": "double"
 }
 
+LEGAL_OPERATIONS = {
+    "none",
+    "set_value",
+    "add_value",
+    "add_values",
+    "set_constant",
+    "add_constant"
+}
 
-LEGAL_ARGUMENT_TYPES = {
-    "final",
-    "help",
-    "info",
-    "list",
-    "multivalue",
-    "multivaluelist"
-    "value",
-    "callback"
+LEGAL_POST_OPERATIONS = {
+    "none",
+    "stop",
+    "final"
 }
 
 

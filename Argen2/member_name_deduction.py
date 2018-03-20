@@ -29,8 +29,6 @@ def make_member_name(raw_name):
     return "".join(chars)
 
 
-# TODO look for duplicate flags
-
 def find_first_identifier_char(s):
     for i, c in enumerate(s):
         if c.isalnum() or c == "_":
@@ -50,6 +48,17 @@ def get_longest_flag(flags):
     return longest
 
 
+def make_unique_name(name, taken_names):
+    if name not in taken_names:
+        return name
+    i = 2
+    while True:
+        nname = "%s_%d" % (name, i)
+        if nname not in taken_names:
+            return nname
+        i += 1
+
+
 def deduce_member_name(arg, generated_names):
     """
     :param arg: Argument
@@ -59,20 +68,17 @@ def deduce_member_name(arg, generated_names):
     assert isinstance(generated_names, type(set()))
     if "member_name" in arg.given_properties:
         return arg.properties["member_name"]
+    allow_duplicates = False
     if arg.properties.get("flags"):
         name = make_member_name(get_longest_flag(arg.properties["flags"]))
+        allow_duplicates = True
     elif arg.properties.get("meta_variable"):
         name = make_member_name(arg.properties["meta_variable"])
     else:
         name = None
     if not name:
         name = "unnamed"
-    if name in generated_names:
-        i = 1
-        nname = "%s_%d" % (name, i)
-        while nname in generated_names:
-            i += 1
-            nname = "%s_%d" % (name, i)
-        name = nname
+    if not allow_duplicates:
+        name = make_unique_name(name, generated_names)
     generated_names.add(name)
     return name

@@ -8,11 +8,11 @@
 # ===========================================================================
 
 class HelpFileError(Exception):
-    def __init__(self, message=""):
+    def __init__(self, message="", line_number=-1, file_name=""):
         super().__init__()
         self.message = message
-        self.line_number = -1
-        self.file_name = ""
+        self.line_number = line_number
+        self.file_name = file_name
 
     def __str__(self):
         if self.file_name and self.line_number >= 0:
