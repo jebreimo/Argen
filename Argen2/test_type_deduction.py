@@ -10,53 +10,56 @@ import type_deduction as td
 
 
 def test_get_int_type():
-    assert(td.get_int_type("0") == "int")
-    assert(td.get_int_type("10L") == "long")
-    assert(td.get_int_type("10Lu") == "unsigned long")
-    assert(td.get_int_type("10Ull") == "unsigned long long")
-    assert(td.get_int_type("0x56") == "int")
-    assert(td.get_int_type("-0x56") == "int")
-    assert(td.get_int_type("-0x56ll") == "long long")
-    assert(td.get_int_type("0078") == "int")
-    assert(td.get_int_type("0B10101") == "int")
+    assert(td.get_int_type("0").type_category == "number")
+    assert(td.get_int_type("10L").specific_type == "long")
+    assert(td.get_int_type("10Lu").specific_type == "unsigned long")
+    assert(td.get_int_type("10Ull").specific_type == "unsigned long long")
+    assert(td.get_int_type("0x56").type_category == "integer")
+    assert(td.get_int_type("-0x56").type_category == "integer")
+    assert(td.get_int_type("-0x56ll").specific_type == "long long")
+    assert(td.get_int_type("0078").type_category == "integer")
+    assert(td.get_int_type("0B10101").type_category == "integer")
     assert(td.get_int_type("B10101") is None)
     assert(td.get_int_type("-B10101") is None)
-    assert(td.get_int_type("-10'000'000") == "int")
-    assert(td.get_int_type("10'000'000u") == "unsigned")
+    assert(td.get_int_type("-10'000'000").type_category == "number")
+    assert(td.get_int_type("10'000'000u").specific_type == "unsigned")
 
 
 def test_get_float_type():
     assert(td.get_float_type("123") is None)
-    assert(td.get_float_type("123.1") == "double")
-    assert(td.get_float_type("123.") == "double")
-    assert(td.get_float_type("123.e+3") == "double")
-    assert(td.get_float_type("123E-3") == "double")
-    assert(td.get_float_type("123'456.1") == "double")
-    assert(td.get_float_type("123.1e10") == "double")
-    assert(td.get_float_type("123.1f") == "float")
-    assert(td.get_float_type("123.1e3L") == "long double")
+    assert(td.get_float_type("123.1").type_category == "real")
+    assert(td.get_float_type("123.").type_category == "real")
+    assert(td.get_float_type("123.e+3").type_category == "real")
+    assert(td.get_float_type("123E-3").type_category == "real")
+    assert(td.get_float_type("123'456.1").type_category == "real")
+    assert(td.get_float_type("123.1e10").type_category == "real")
+    assert(td.get_float_type("123.1f").specific_type == "float")
+    assert(td.get_float_type("123.1e3L").specific_type == "long double")
     assert(td.get_float_type("123.1e+") is None)
     assert(td.get_float_type(".1") is None)
 
 
 def test_get_class_name_parenthesis():
-    assert(td.get_class_name_parenthesis("foo(23, 56") == "foo")
+    assert(td.get_class_name_parenthesis("foo(23, 56").specific_type == "foo")
     assert(td.get_class_name_parenthesis("{foo(23, 56}") is None)
-    assert(td.get_class_name_parenthesis("(Object*)nullptr") == "Object*")
+    assert(td.get_class_name_parenthesis("(Object*)nullptr").specific_type == "Object*")
 
 
 def test_get_class_name_braces():
-    assert(td.get_class_name_braces("std::vector<int>{1, 2, 3}") == "std::vector<int>")
+    assert(td.get_class_name_braces("std::vector<int>{1, 2, 3}").specific_type == "std::vector<int>")
 
 
 def test_get_value_type():
-    assert(td.get_value_type('"foo"') == "std::string")
-    assert(td.get_value_type("'\x0A'") == "char")
-    assert(td.get_value_type("12'345'678") == "int")
-    assert(td.get_value_type("12'345.678") == "double")
-    assert(td.get_value_type("INT32_MIN") == "int32_t")
-    assert(td.get_value_type("std::vector<int>()") == "std::vector<int>")
-    assert(td.get_value_type('{"ABC", UINT64_MAX}') == "std::tuple<std::string, uint64_t>")
+    assert(td.get_value_type('"foo"').type_category == "string")
+    assert(td.get_value_type("'\x0A'").specific_type == "char")
+    assert(td.get_value_type("12'345'678").type_category == "number")
+    assert(td.get_value_type("12'345.678").type_category == "real")
+    assert(td.get_value_type("INT32_MIN").specific_type == "int32_t")
+    assert(td.get_value_type("std::vector<int>()").specific_type == "std::vector<int>")
+    typ = td.get_value_type('{"ABC", UINT64_MAX}')
+    assert(len(typ.subtypes) == 2)
+    assert(typ.subtypes[0].type_category == "string")
+    assert(typ.subtypes[1].specific_type == "uint64_t")
 
 
 def test_find_char():

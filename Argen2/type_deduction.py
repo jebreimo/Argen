@@ -47,6 +47,32 @@ MINMAX_CONSTANTS = {"CHAR": "char",
                     "LDBL_TRUE": "long double"}
 
 
+class DeducedType:
+    def __init__(self):
+        self.specific_type = None
+        self.type_category = None
+        self.subtypes = []
+        self.source = None
+
+    @staticmethod
+    def specific(typ):
+        dt = DeducedType()
+        dt.specific_type = typ
+        return dt
+
+    @staticmethod
+    def category(typ):
+        dt = DeducedType()
+        dt.type_category = typ
+        return dt
+
+    @staticmethod
+    def subtypes(subtypes):
+        dt = DeducedType()
+        dt.subtypes = subtypes
+        return dt
+
+
 def get_int_type(s):
     if not s:
         return None
@@ -56,10 +82,12 @@ def get_int_type(s):
         i += 1
         if i == n:
             return None
+    category = "number"
     if s[i] == '0':
         i += 1
         if i == n:
-            return "int"
+            return DeducedType.category(category)
+        category = "integer"
         if s[i] in "xXbB":
             i += 1
     elif not s[i].isdigit():
@@ -67,10 +95,10 @@ def get_int_type(s):
     while i != n and s[i] in LEGAL_INT_CHARS:
         i += 1
     if i == n:
-        return "int"
+        return DeducedType.category(category)
     suffix = s[i:].lower()
     if suffix in INT_SUFFIXES:
-        return INT_SUFFIXES[suffix]
+        return DeducedType.specific(INT_SUFFIXES[suffix])
     return None
 
 
@@ -96,7 +124,7 @@ def get_float_type(s):
         while i != n and s[i] in LEGAL_FLOAT_CHARS:
             i += 1
         if i == n:
-            return "double"
+            return DeducedType.category("real")
     # Exponent part
     if s[i] in "eE":
         i += 1
@@ -109,10 +137,10 @@ def get_float_type(s):
         while i != n and s[i] in LEGAL_FLOAT_CHARS:
             i += 1
         if i == n:
-            return "double"
+            return DeducedType.category("real")
     suffix = s[i:].lower()
     if suffix in FLOAT_SUFFIXES:
-        return FLOAT_SUFFIXES[suffix]
+        return DeducedType.specific(FLOAT_SUFFIXES[suffix])
     return None
 
 
@@ -123,17 +151,17 @@ def get_class_name_parenthesis(s):
     if pos == 0:
         end_pos = s.find(")")
         if end_pos != -1:
-            return s[pos+1:end_pos].strip()
+            return DeducedType.specific(s[pos+1:end_pos].strip())
         else:
             return None
-    return s[:pos].strip()
+    return DeducedType.specific(s[:pos].strip())
 
 
 def get_class_name_braces(s):
     pos = s.find("{")
     if pos < 1 or 0 <= s.find("{") < pos:
         return None
-    return s[:pos].strip()
+    return DeducedType.specific(s[:pos].strip())
 
 
 def find_unescaped_char(s, chr, start_pos):
@@ -197,11 +225,11 @@ def get_value_type(s):
     if not s:
         return None
     if s in ("true", "false"):
-        return "bool"
+        return DeducedType.specific("bool")
     elif len(s) > 1 and s[0] == '"' and s[-1] == '"':
-        return "std::string"
+        return DeducedType.category("string")
     elif len(s) > 1 and s[0] == "'" and s[-1] == "'":
-        return "char"
+        return DeducedType.specific("char")
     value_type = get_int_type(s)
     if value_type:
         return value_type
@@ -215,24 +243,28 @@ def get_value_type(s):
     if value_type:
         return value_type
     if s.endswith("_MIN") or s.endswith("_MAX"):
-        value_type = MINMAX_CONSTANTS.get(s[:-4])
+        value_type = DeducedType.specific(MINMAX_CONSTANTS.get(s[:-4]))
         if value_type:
             return value_type
     tuple_parts = get_tuple_parts(s)
     if tuple_parts is not None:
         types = [get_value_type(part) for part in tuple_parts]
         if None not in types:
-            return "std::tuple<%s>" % ", ".join(types)
+            return DeducedType.subtypes(types)
     return None
 
 
 def deduce_type(member):
     if member.properties.get("type"):
         return member.properties["type"]
+    deduced_types = []
     default = member.properties.get("default")
     default_type = get_value_type(default)
     if default_type:
-        return default_type
+        default_type.source = "default"
+        deduced_types.append(default_type)
+    # for
+    return None
 
 
 def deduce_types(members):
