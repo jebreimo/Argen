@@ -9,13 +9,15 @@
 from helpfileerror import HelpFileError
 from replace_variables import replace_variables
 from argument import Argument, LEGAL_PROPERTIES, PROPERTY_ALIASES
+from parser_tools import split_and_unescape_text, find_next_separator
 
 
 def find_argument(text, start_pos, syntax):
     start = text.find(syntax.argument_start, start_pos)
     if start < 0:
         return None
-    end = text.find(syntax.variable_end, start + len(syntax.argument_start))
+    end = find_next_separator(text, start + len(syntax.argument_start),
+                              syntax.argument_end)
     if end < 0:
         ex = HelpFileError("Argument has no end tag.")
         ex.line_number = text[:start].count("\n")
@@ -24,7 +26,7 @@ def find_argument(text, start_pos, syntax):
 
 
 def parse_argument(text, syntax):
-    parts = text.split(syntax.argument_separator)
+    parts = split_and_unescape_text(text, syntax.argument_separator)
     properties = {}
     for part in parts[1:]:
         subparts = part.split(":", 1)
@@ -41,7 +43,7 @@ def parse_argument(text, syntax):
 
 
 def parse_help_text_impl(text, session, file_name, line_number):
-    from_pos = 0
+    from_pos = to_pos = 0
     out_text = []
     syntax = session.syntax
     try:
