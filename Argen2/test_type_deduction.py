@@ -70,4 +70,20 @@ def test_deduce_type_from_values_part():
     assert td.deduce_type_from_values_part("-10..20", syntax).type_name == "number"
     assert td.deduce_type_from_values_part("-10..20.5", syntax).type_name == "real"
     assert td.deduce_type_from_values_part("Foo(2), Foo(3), Foo(5)", syntax).type_name == "Foo"
-    # types = td.deduce_type_from_values_part("{1, 2, \"g\"}, {3, 4, \"h\"}")
+    typ = td.deduce_type_from_values_part("{1, 2, \"g\"}, {3, 4.0f, \"h\"}", syntax)
+    assert typ.confidence == td.DeducedType.COMPOSITE
+    assert len(typ.subtypes) == 3
+    assert typ.subtypes[0].type_name == "number"
+    assert typ.subtypes[1].type_name == "float"
+    assert typ.subtypes[2].type_name == "string"
+
+
+def test_deduce_type_from_values():
+    syntax = hfs.HelpFileSyntax()
+    typ = td.deduce_type_from_values("0..10, 99 $ 'a', 'b' $ 1UL, 5", syntax)
+    assert typ.confidence == td.DeducedType.COMPOSITE
+    assert len(typ.subtypes) == 3
+    assert typ.type_name == "tuple"
+    assert typ.subtypes[0].type_name == "number"
+    assert typ.subtypes[1].type_name == "char"
+    assert typ.subtypes[2].type_name == "unsigned long"

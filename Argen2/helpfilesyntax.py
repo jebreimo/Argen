@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 
+
 class HelpFileSyntax:
     def __init__(self):
         self.section_prefix = "$$$"

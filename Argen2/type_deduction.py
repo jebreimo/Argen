@@ -102,11 +102,7 @@ def join_deduced_types(deduced_type1, deduced_type2):
     if deduced_type1 == deduced_type2:
         return deduced_type1
     if deduced_type1.confidence != deduced_type2.confidence:
-        if deduced_type2 < deduced_type1:
-            deduced_type1, deduced_type2 = deduced_type2, deduced_type1
-        if deduced_type2.confidence == DeducedType.COMPOSITE:
-            return None
-        return deduced_type1
+        return min(deduced_type1, deduced_type2)
     if deduced_type1.confidence == DeducedType.CATEGORY:
         category = most_specific_type_category(deduced_type1.type_name,
                                                deduced_type2.type_name)
@@ -117,13 +113,15 @@ def join_deduced_types(deduced_type1, deduced_type2):
         return None
     if len(deduced_type1.subtypes) != len(deduced_type2.subtypes):
         return None
+    type_name = most_specific_type_category(deduced_type1.type_name,
+                                            deduced_type2.type_name)
     subtypes = []
     for subtype1, subtype2 in zip(deduced_type1.subtypes, deduced_type2.subtypes):
         subtype = join_deduced_types(subtype1, subtype2)
         if not subtype:
             return None
         subtypes.append(subtype)
-    return DeducedType(DeducedType.COMPOSITE, None, subtypes)
+    return DeducedType(DeducedType.COMPOSITE, type_name, subtypes)
 
 
 def get_int_type(s):
@@ -252,6 +250,17 @@ def get_tuple_parts(s):
     return parts
 
 
+def has_common_type(deduced_types):
+    if not deduced_types:
+        return False
+    common_type = deduced_types[0]
+    for i in range(1, len(deduced_types)):
+        common_type = join_deduced_types(common_type, deduced_types[i])
+        if not common_type:
+            return False
+    return common_type is not None
+
+
 def get_value_type(s):
     if not s:
         return None
@@ -281,13 +290,16 @@ def get_value_type(s):
     if tuple_parts is not None:
         types = [get_value_type(part) for part in tuple_parts]
         if None not in types:
-            return DeducedType(DeducedType.COMPOSITE, None, types)
+            if has_common_type(types):
+                return DeducedType(DeducedType.COMPOSITE, "any", types)
+            else:
+                return DeducedType(DeducedType.COMPOSITE, "tuple", types)
     return None
 
 
 def deduce_type_from_values_part(text, syntax):
     values = []
-    for part in [t.strip() for t in text.split(syntax.value_separator)]:
+    for part in [t.strip() for t in parser_tools.split_text(text, syntax.value_separator)]:
         values.extend(t for t in (t.strip() for t in part.split(syntax.range_separator)) if t)
     value_types = []
     for value in values:
@@ -308,24 +320,34 @@ def deduce_type_from_values(text, syntax):
     parts = parser_tools.split_and_unescape_text(text, syntax.values_entry_separator)
     types = []
     for part in parts:
-        part_type = deduce_type_from_values_part(part)
+        part_type = deduce_type_from_values_part(part, syntax)
         if not part_type:
             return None
         types.append(part_type)
-    return types
+    if not types:
+        return None
+    if has_common_type(types):
+        return DeducedType(DeducedType.COMPOSITE, "any", types)
+    return DeducedType(DeducedType.COMPOSITE, "tuple", types)
 
 
-def deduce_type(member):
+def deduce_type(member, syntax):
     if member.properties.get("type"):
-        return member.properties["type"]
+        member.type = member.properties["type"]
+        return member.type
     deduced_types = []
-    default = member.properties.get("default")
-    default_type = get_value_type(default)
+    default_type = get_value_type(member.properties.get("default"))
     if default_type:
         default_type.source = "default"
         deduced_types.append(default_type)
-    # Metavar
+    for argument in member.arguments:
+        if "values" in argument.given_properties:
+            typ = deduce_type_from_values(argument.given_properties["values"],
+                                          syntax)
+            if typ:
+                deduced_types.append(typ)
     # Legal values
+    # Metavar
     # Operation
     return None
 
