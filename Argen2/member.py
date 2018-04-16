@@ -13,8 +13,15 @@ class Member:
         self.name = name
         self.arguments = []
         self.given_properties = properties
-        self.properties = properties.copy()
-        self.type = None
-        self.default = None
-        self.member_action = None
-        self.member_callback = None
+        # self.properties = properties.copy()
+        self.type = properties.get("type")
+        self.default = properties.get("default")
+        self.member_action = properties.get("member_action")
+        self.member_callback = properties.get("member_callback")
+
+    def __str__(self):
+        values = self.__dict__
+        keys = [k for k in values.keys() if k != "arguments"]
+        keys.sort()
+        kvs = ("%s: %s" % (k, values[k]) for k in keys if values[k] is not None)
+        return "%s\n    %s" % (self.name, "\n    ".join(kvs))

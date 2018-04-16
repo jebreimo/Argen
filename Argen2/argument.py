@@ -6,85 +6,56 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-
-
-ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index", "inline",
-                       "member_name", "meta_variable", "operation",
-                       "post_operation", "separator", "separator_count",
-                       "text", "value", "values"}
-
-MEMBER_PROPERTIES = {"default", "member_inline", "member_callback", "type"}
-
-_REVERSE_PROPERTY_ALIASES = {
-    "operation": ["op"],
-    "argument": ["arg"],
-    "argument_type": ["argtype", "arg_type", "argumenttype"],
-    "callback": ["call"],
-    "member_name": ["mem", "member", "membername"],
-    "meta_variable": ["metavar", "metavariable"],
-    "separator": ["sep"],
-    "separator_count": ["sepcount", "sep_count", "separatorcount"],
-    "value": ["val"],
-    "member_inline": ["meminline", "mem_inline", "meminline", "mem_inline",
-                      "memberinline"],
-    "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",
-                        "membercallback"],
-    "values": ["vals"]
-}
-
-PROPERTY_ALIASES = {}
-for key in _REVERSE_PROPERTY_ALIASES:
-    for value in _REVERSE_PROPERTY_ALIASES[key]:
-        PROPERTY_ALIASES[value] = key
-
-LEGAL_PROPERTIES = set(ARGUMENT_PROPERTIES).union(MEMBER_PROPERTIES)
-
-DEFAULT_METAVAR_TYPES = {
-    "num": "int",
-    "number": "int",
-    "real": "double",
-    "float": "double",
-    "hex": "int",
-    "ratio": "double"
-}
-
-LEGAL_OPERATIONS = {
-    "none",
-    "set_value",
-    "add_value",
-    "add_values",
-    "set_constant",
-    "add_constant"
-}
-
-LEGAL_POST_OPERATIONS = {
-    "none",
-    "stop",
-    "final"
-}
+import properties
 
 
 class Argument:
     argument_counter = 0
-    option_counter = 0
 
     def __init__(self, raw_text, properties=None):
+        if properties is None:
+            properties = {}
+
+        self.auto_index = Argument.argument_counter
+        Argument.argument_counter += 1
+
         self.line_number = -1
         self.file_name = ""
         self.raw_text = raw_text
-        self.properties = properties if properties else {}
-        self.text = self.properties.get("text", raw_text)
-        self.given_properties = dict(self.properties)
-        self.deduced_properties = {}
-        self.separator = None
+        # self.properties = properties if properties else {}
+        self.given_properties = dict(properties)
+        # self.deduced_properties = {}
+
+        self.callback = properties.get("callback")
+        self.count = None
+        if "flags" in properties:
+            self.flags = properties["flags"].split()
+        else:
+            self.flags = None
+        if "index" in properties:
+            self.index = int(properties.get("index"))
+        else:
+            self.index = None
+        self.inline = properties.get("inline")
+        self.member_name = properties.get("member_name")
+        self.metavar = properties.get("argument")
+        self.operation = properties.get("operation")
+        self.post_operation = properties.get("post_operation")
+        self.separator = properties.get("separator")
+        self.separator_count = None
+        self.text = properties.get("text", raw_text)
+
+        self.member = None
 
     def __str__(self):
-        kvs = ("%s: %s" % (k, self.properties[k]) for k in self.properties)
-        return "%s\n    %s" % (self.text, "\n    ".join(kvs))
+        vals = self.__dict__
+        keys = list(vals.keys())
+        keys.sort()
+        kvs = ("%s: %s" % (k, vals[k]) for k in keys if vals[k] is not None)
+        return "%s\n    %s" % (self.raw_text, "\n    ".join(kvs))
 
-    # def set_properties(self, properties, override=False):
-    #     if (not self.separator or override) and "separator" in properties:
-    #         self.separator = properties["separator"]
+    def is_option(self):
+        return len(self.flags) != 0
 
 
 def find_metavar_separator(text):
@@ -142,7 +113,9 @@ def determine_metavar_type(names, metavar_types):
         return "std::string"
 
 
-def parse_metavar(text, separator=None, metavar_types=DEFAULT_METAVAR_TYPES):
+def parse_metavar(text,
+                  separator=None,
+                  metavar_types=properties.DEFAULT_METAVAR_TYPES):
     names, separator, has_ellipsis = tokenize_metavar(text, separator)
     properties = {"type": determine_metavar_type(names, metavar_types),
                   "meta_variable": text}
@@ -166,4 +139,3 @@ def parse_metavar(text, separator=None, metavar_types=DEFAULT_METAVAR_TYPES):
 #         if key != "metavar" and aprops[key] != bprops[key]:
 #             return False
 #     return True
-

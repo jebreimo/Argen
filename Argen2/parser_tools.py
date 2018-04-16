@@ -8,22 +8,22 @@
 # ===========================================================================
 
 
-def find_unescaped_char(s, chr, start_pos):
+def find_unescaped_char(s, char, start_pos):
     escape = False
     for i in range(start_pos, len(s)):
         if escape:
             escape = False
         elif s[i] == '\\':
             escape = True
-        elif s[i] == chr:
+        elif s[i] == char:
             return i
     return -1
 
 
-def find_char(s, chr, start_pos):
+def find_char(s, char, start_pos):
     i = start_pos
     while i < len(s):
-        if s[i] == chr:
+        if s[i] == char:
             return i
         if s[i] == "(":
             i = find_char(s, ")", i + 1)

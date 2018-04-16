@@ -8,7 +8,8 @@
 # ===========================================================================
 from helpfileerror import HelpFileError
 from replace_variables import replace_variables
-from argument import Argument, LEGAL_PROPERTIES, PROPERTY_ALIASES
+from argument import Argument
+from properties import LEGAL_PROPERTIES, PROPERTY_ALIASES
 from parser_tools import split_and_unescape_text, find_next_separator
 
 

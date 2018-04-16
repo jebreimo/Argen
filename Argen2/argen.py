@@ -10,34 +10,34 @@
 import argparse
 import sys
 
-import argument
-import member
 from helpfileerror import HelpFileError
 from sections import read_sections
 from parse_help_text import parse_help_text
 from replace_variables import replace_variables
 from session import Session
-import text_deductions
-import member_name_deduction
+import deduce_flags_and_metavars as dfam
+import deduce_help_option as dho
+import deduce_member_names as dmn
+import make_members as mm
 
 
 def tokenize_setting(line):
     parts = line.split("=", 1)
     if len(parts) != 2:
         raise HelpFileError("Incorrect setting: %s" % line)
-    leftSide = parts[0].split()
-    if len(leftSide) == 1:
-        name = leftSide[0]
-        isSetting = True
-    elif len(leftSide) == 2 and leftSide[0] == "set":
-        name = leftSide[1]
-        isSetting = False
+    left_side = parts[0].split()
+    if len(left_side) == 1:
+        name = left_side[0]
+        is_setting = True
+    elif len(left_side) == 2 and left_side[0] == "set":
+        name = left_side[1]
+        is_setting = False
     else:
         raise HelpFileError("Incorrect option name: %s" % parts[0])
     value = parts[1].strip()
     if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
         value = value[1:-1]
-    return name, value, isSetting
+    return name, value, is_setting
 
 
 def parse_settings(section, session):
@@ -46,8 +46,8 @@ def parse_settings(section, session):
             line = replace_variables(line, session)
             line = line.strip()
             if line:
-                name, value, isSetting = tokenize_setting(line)
-                if not isSetting:
+                name, value, is_setting = tokenize_setting(line)
+                if not is_setting:
                     session.variables[name] = value
                 else:
                     session.set_setting(name, value)
@@ -138,19 +138,25 @@ def make_argument_parser():
     return ap
 
 
-def update_properties(arg, props):
-    for key in props:
-        if key not in arg.properties:
-            arg.properties[key] = props[key]
+def update_properties(existing_properties, new_properties):
+    for key in new_properties:
+        if key not in existing_properties:
+            existing_properties[key] = new_properties[key]
 
 
 def make_deductions(session):
-    generated_names = set()
-    for arg in session.arguments:
-        props = text_deductions.parse_argument_text(arg)
-        update_properties(arg, props)
-        props = dict(member_name=member_name_deduction.deduce_member_name(arg, generated_names))
-        update_properties(arg, props)
+    affected, conflicts = dfam.deduce_flags_and_metavars(session.arguments)
+    if conflicts:
+        pass
+    affected, conflicts = dmn.deduce_member_names(session.arguments)
+    if conflicts:
+        pass
+    members, conflicts = mm.make_members(session.arguments)
+    if conflicts:
+        pass
+    affected, conflicts = dho.deduce_help_option(session.arguments)
+    if conflicts:
+        pass
 
 
 def find_duplicated_flags(args):
@@ -175,45 +181,6 @@ def list_conflicting_flags(conflicting_flags):
         print("Error: the flag '%s' is defined by multiple options:")
         for a in conflicting_flags[flag]:
             print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
-
-
-def get_arguments_by_member_name(arguments):
-    member_arguments = {}
-    for arg in arguments:
-        member_name = arg.properties["member_name"]
-        if member_name not in member_arguments:
-            member_arguments[member_name] = [arg]
-        else:
-            member_arguments[member_name].append(arg)
-    return member_arguments
-
-
-def make_members(member_arguments):
-    members = []
-    conflicts = []
-    for member_name in member_arguments:
-        args = member_arguments[member_name]
-        member_props = {}
-        if len(args) <= 1:
-            for prop_name in argument.MEMBER_PROPERTIES:
-                prev_arg = None
-                prev_value = None
-                for arg in args:
-                    value = arg.properties.get(prop_name)
-                    if value is not None:
-                        if prev_arg and value != prev_value:
-                            conflicts.append(dict(property=prop_name,
-                                                  values=[value, prev_value],
-                                                  arguments=[arg, prev_arg]))
-                        else:
-                            prev_arg, prev_value = arg, value
-                if prev_value:
-                    member_props[prop_name] = prev_value
-        m = member.Member(member_name, member_props)
-        members.append(m)
-        for arg in args:
-            arg.member = m
-    return members, conflicts
 
 
 def print_error(file_name, line_number, message):
@@ -241,10 +208,6 @@ def print_member_property_conflicts(conflicts):
                     + f"the value given at {other_pos} ({value2}).")
 
 
-# def make_members(member_arguments):
-#     for member_name in member_arguments:
-
-
 def main():
     args = make_argument_parser().parse_args()
     session = Session()
@@ -257,15 +220,15 @@ def main():
         sections.extend(new_sections)
         parse_sections(new_sections, session)
     make_deductions(session)
-    conflicting_flags = find_duplicated_flags(session.arguments)
-    if conflicting_flags:
-        list_conflicting_flags(conflicting_flags)
-        return 1
-    member_arguments = get_arguments_by_member_name(session.arguments)
-    members, conflicts = make_members(member_arguments)
-    if conflicts:
-        print_member_property_conflicts(conflicts)
-        return 1
+    # conflicting_flags = find_duplicated_flags(session.arguments)
+    # if conflicting_flags:
+    #     list_conflicting_flags(conflicting_flags)
+    #     return 1
+    # member_arguments = get_arguments_by_member_name(session.arguments)
+    # members, conflicts = make_members(member_arguments)
+    # if conflicts:
+    #     print_member_property_conflicts(conflicts)
+    #     return 1
 
     for section in sections:
         print(section)

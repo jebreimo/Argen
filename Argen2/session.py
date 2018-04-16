@@ -9,18 +9,18 @@
 import datetime
 import os
 
-import argument
+import properties
 from helpfileerror import HelpFileError
 from helpfilesyntax import HelpFileSyntax
 
 
 def make_default_variables():
     today = datetime.date.today()
-    vars = dict(YEAR=str(today.year),
-                MONTH="%02d" % today.month,
-                DAY="%02d" % today.day)
-    vars.update(dict(os.environ))
-    return vars
+    variables = dict(YEAR=str(today.year),
+                     MONTH="%02d" % today.month,
+                     DAY="%02d" % today.day)
+    variables.update(dict(os.environ))
+    return variables
 
 
 def parse_bool(value):
@@ -49,8 +49,9 @@ class Session:
         self.syntax = HelpFileSyntax()
         self.help_text = ""
         self.error_text = ""
-        self.metavar_types = dict(argument.DEFAULT_METAVAR_TYPES)
+        self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.arguments = []
+        self.detect_separators = False
 
     def set_setting(self, name, value):
         if name == "ArgumentPrefix":
@@ -87,3 +88,5 @@ class Session:
             self.line_width = int(value)
         elif name == "Test":
             self.add_test = parse_bool(value)
+        elif name == "DetectSeparators":
+            self.detect_separators = parse_bool(value)

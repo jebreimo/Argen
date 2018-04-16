@@ -331,6 +331,17 @@ def deduce_type_from_values(text, syntax):
     return DeducedType(DeducedType.COMPOSITE, "tuple", types)
 
 
+OPERATION_DEDUCED_TYPES = {
+    "set_value": DeducedType(DeducedType.CATEGORY, "any"),
+    "add_value": DeducedType(DeducedType.COMPOSITE, "list",
+                             DeducedType(DeducedType.CATEGORY, "any")),
+    "add_values": DeducedType(DeducedType.COMPOSITE, "list",
+                              DeducedType(DeducedType.CATEGORY, "any")),
+    "set_constant": DeducedType(DeducedType.CATEGORY, "any"),
+    "add_constant": DeducedType(DeducedType.COMPOSITE, "list",
+                                DeducedType(DeducedType.CATEGORY, "any"))
+}
+
 def deduce_type(member, syntax):
     if member.properties.get("type"):
         member.type = member.properties["type"]
@@ -345,7 +356,21 @@ def deduce_type(member, syntax):
             typ = deduce_type_from_values(argument.given_properties["values"],
                                           syntax)
             if typ:
+                typ.source = "values"
                 deduced_types.append(typ)
+        if "value" in argument.given_properties:
+            typ = get_value_type(argument.given_properties["value"], syntax)
+            if typ:
+                typ.source = "value"
+                deduced_types.append(typ)
+        if "operation" in argument.given_properties:
+            op = argument.given_properties["operation"]
+            if op in OPERATION_DEDUCED_TYPES:
+                deduced_types.append(typ)
+        if "count" in argument.given_properties:
+            pass
+        if "separator_count" in argument.given_properties:
+            pass
     # Legal values
     # Metavar
     # Operation
