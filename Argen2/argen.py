@@ -17,6 +17,7 @@ from replace_variables import replace_variables
 from session import Session
 import deduce_flags_and_metavars as dfam
 import deduce_help_option as dho
+import deduce_indices as di
 import deduce_member_names as dmn
 import make_members as mm
 
@@ -69,40 +70,40 @@ def parse_definition(section, session):
     session.variables[section.parameter] = "".join(lines)
 
 
-def parse_section(section, session):
-    pass
-
-
-def deduce_missing_option_values(options):
-    pass
-
-
-def deduce_missing_argument_values(arguments):
-    pass
-
-
-def create_arguments(arguments):
-    pass
-
-
-def create_options(options):
-    pass
-
-
-def create_argument_members(arguments):
-    pass
-
-
-def create_option_members(options):
-    pass
-
-
-def create_code_properties(arguments, options, members):
-    pass
-
-
-def create_code(codeProperties, arguments, options, members):
-    pass
+# def parse_section(section, session):
+#     pass
+#
+#
+# def deduce_missing_option_values(options):
+#     pass
+#
+#
+# def deduce_missing_argument_values(arguments):
+#     pass
+#
+#
+# def create_arguments(arguments):
+#     pass
+#
+#
+# def create_options(options):
+#     pass
+#
+#
+# def create_argument_members(arguments):
+#     pass
+#
+#
+# def create_option_members(options):
+#     pass
+#
+#
+# def create_code_properties(arguments, options, members):
+#     pass
+#
+#
+# def create_code(codeProperties, arguments, options, members):
+#     pass
 
 
 def parse_sections(sections, session):
@@ -152,6 +153,9 @@ def make_deductions(session):
     if conflicts:
         pass
     members, conflicts = mm.make_members(session.arguments)
+    if conflicts:
+        pass
+    affected, conflicts = di.deduce_indices(session.arguments)
     if conflicts:
         pass
     affected, conflicts = dho.deduce_help_option(session.arguments)

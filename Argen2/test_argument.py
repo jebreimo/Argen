@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import argument as a
+import properties as p
 
 
 def test_find_metavar_separator():
@@ -24,7 +25,7 @@ def test_find_metavar_separator():
 def test_determine_metavar_type():
     f = lambda s: a.determine_metavar_type(
                     s.split(),
-                    a.DEFAULT_METAVAR_TYPES)
+                    p.DEFAULT_METAVAR_TYPES)
     assert f("FLOAT") == "double"
     assert f("NUM1 NUM2") == "int"
     assert f("HEX1 HEX2") == "int"

@@ -73,10 +73,15 @@ def get_flags_and_arguments(text):
 
 def deduce_flags_and_metavars(arguments):
     affected = []
+    conflicts = []
     for arg in arguments:
         if arg.metavar == "":
             arg.metavar = None
         if arg.flags is None and arg.metavar is None:
             arg.flags, arg.metavar = get_flags_and_arguments(arg.text)
-            affected.append(arg)
-    return affected, None
+            if arg.flags or arg.metavar:
+                affected.append(arg)
+            else:
+                conflicts.append(dict(message="Unable to determine flags or variable for argument.",
+                                      arguments=[arg]))
+    return affected, conflicts

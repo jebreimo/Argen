@@ -9,8 +9,15 @@
 import properties
 
 
+def get_int_property(dict, key):
+    if key in dict:
+        return int(dict.get(key))
+    else:
+        return None
+
+
 class Argument:
-    argument_counter = 0
+    argument_counter = 1
 
     def __init__(self, raw_text, properties=None):
         if properties is None:
@@ -32,17 +39,14 @@ class Argument:
             self.flags = properties["flags"].split()
         else:
             self.flags = None
-        if "index" in properties:
-            self.index = int(properties.get("index"))
-        else:
-            self.index = None
+        self.index = get_int_property(properties, "index")
         self.inline = properties.get("inline")
         self.member_name = properties.get("member_name")
         self.metavar = properties.get("argument")
         self.operation = properties.get("operation")
         self.post_operation = properties.get("post_operation")
         self.separator = properties.get("separator")
-        self.separator_count = None
+        self.separator_count = get_int_property(properties, "separator_count")
         self.text = properties.get("text", raw_text)
 
         self.member = None

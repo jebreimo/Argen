@@ -4,18 +4,18 @@ argument
 //    * from text
     * [WARNING] if operation is set_value, add_value, add_values, type isn't bool and value is None
 
-callback
-    * show_help if flags contains -h --help or /?
+// callback
+//     * show_help if flags contains -h --help or /?
 
 count
     * 0..1 if operation is set_value
     * 0.. if add_value or add_values
 
-flags
-    x* from text
+// flags
+//     * from text
 
-index
-    * from order in the file, but explicit indexes first
+// index
+//     * from order in the file, but explicit indexes first
 
 [inline]
 
@@ -28,7 +28,7 @@ operation
     * add_value if type is list
 
 post_operation
-    * stop if callback is show_help
+//     * abort if callback is show_help
     * final if flag is --
 
 separator
