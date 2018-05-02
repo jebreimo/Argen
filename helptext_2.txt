@@ -51,7 +51,7 @@ OTHER OPTIONS
   {{-s TEXT                 | count: ..10 | default: "Kjakan Gundersen"}}
   {{--special               | member: s | value: "$spec$"}}
   {{-n X,Y                  | type: double | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
-  {{-p X,Y,Z                | type: double | values: -1000..1000 $ -1000..1000 $ 0..500}}
+  {{-p X,Y,Z                | type: double | values: -1000..1000 : -1000..1000 : 0..500}}
   {{-m NUM, --month=NUM     | type: unsigned | values: 1..12 | count: 3}}
   {{--string=STR            | default: "Two words"}}
   {{--kjell                 | type:int}}  Option that specify non-boolean type, but no argument or value
@@ -59,7 +59,7 @@ OTHER OPTIONS
   {{-i PATH, --include=PATH | count: 0.. | separator: : | default: "foo":"bar":"baz"}}
   {{--sysinclude            | member: include | value: "foo":"bar":"baz" | separator: :}}
   {{--stygg=N               | type: uint64_t }}
-  {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" $ 0..100}}
+  {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
   {{-                       }} Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 

@@ -343,34 +343,35 @@ OPERATION_DEDUCED_TYPES = {
 }
 
 def deduce_type(member, syntax):
-    if member.properties.get("type"):
-        member.type = member.properties["type"]
+    if member.type:
+        member.type = member.type
         return member.type
     deduced_types = []
-    default_type = get_value_type(member.properties.get("default"))
-    if default_type:
-        default_type.source = "default"
-        deduced_types.append(default_type)
+    if member.default:
+        default_type = get_value_type(member.default)
+        if default_type:
+            default_type.source = "default"
+            deduced_types.append(default_type)
     for argument in member.arguments:
-        if "values" in argument.given_properties:
-            typ = deduce_type_from_values(argument.given_properties["values"],
+        if argument.valid_values:
+            typ = deduce_type_from_values(argument.valid_values,
                                           syntax)
             if typ:
                 typ.source = "values"
                 deduced_types.append(typ)
-        if "value" in argument.given_properties:
-            typ = get_value_type(argument.given_properties["value"], syntax)
+        if argument.value:
+            typ = get_value_type(argument.value, syntax)
             if typ:
                 typ.source = "value"
                 deduced_types.append(typ)
-        if "operation" in argument.given_properties:
-            op = argument.given_properties["operation"]
+        if argument.operation:
+            op = argument.operation
             if op in OPERATION_DEDUCED_TYPES:
                 deduced_types.append(typ)
-        if "count" in argument.given_properties:
-            pass
-        if "separator_count" in argument.given_properties:
-            pass
+        # if "count" in argument.given_properties:
+        #     pass
+        # if "separator_count" in argument.given_properties:
+        #     pass
     # Legal values
     # Metavar
     # Operation

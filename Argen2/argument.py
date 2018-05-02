@@ -7,13 +7,53 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import properties
+import parser_tools
 
 
 def get_int_property(dict, key):
-    if key in dict:
-        return int(dict.get(key))
+    value = dict.get(key)
+    if value:
+        return int(value)
     else:
         return None
+
+
+def get_int_range(text):
+    if not text:
+        return None
+    from_to = parser_tools.split_text(text, "..")
+    if len(from_to) == 2:
+        a, b = from_to[0].strip(), from_to[1].strip()
+        if a or b:
+            return (int(a) if a else None), (int(b) if b else None)
+        else:
+            return None
+    else:
+        a = int(text.strip())
+        return a, a
+
+
+def get_int_range_property(dict, key):
+    return get_int_range(dict.get(key))
+
+
+def parse_valid_values(text):
+    if not text:
+        return None
+    result = []
+    parts = parser_tools.split_text(text, ":")
+    for part in parts:
+        values = []
+        subparts = parser_tools.split_text(part, ",")
+        for subpart in subparts:
+            from_to = parser_tools.split_text(subpart, "..")
+            if len(from_to) == 2:
+                values.append((from_to[0].strip(), from_to[1].strip()))
+            else:
+                subpart = subpart.strip()
+                values.append((subpart, subpart))
+        result.append(values)
+    return result
 
 
 class Argument:
@@ -31,10 +71,9 @@ class Argument:
         self.raw_text = raw_text
         # self.properties = properties if properties else {}
         self.given_properties = dict(properties)
-        # self.deduced_properties = {}
 
         self.callback = properties.get("callback")
-        self.count = None
+        self.count = get_int_range_property(properties, "count")
         if "flags" in properties:
             self.flags = properties["flags"].split()
         else:
@@ -46,8 +85,10 @@ class Argument:
         self.operation = properties.get("operation")
         self.post_operation = properties.get("post_operation")
         self.separator = properties.get("separator")
-        self.separator_count = get_int_property(properties, "separator_count")
+        self.separator_count = get_int_range_property(properties, "separator_count")
         self.text = properties.get("text", raw_text)
+        self.valid_values = parse_valid_values(properties.get("valid_values"))
+        self.value = properties.get("value")
 
         self.member = None
 
@@ -60,78 +101,6 @@ class Argument:
 
     def is_option(self):
         return len(self.flags) != 0
-
-
-def find_metavar_separator(text):
-    candidates = {}
-    for i, ch in enumerate(text if not text.endswith("...") else text[:-3]):
-        if ch == "x" or not ch.isalnum():
-            if ch in candidates:
-                candidates[ch].append(i)
-            else:
-                candidates[ch] = [i]
-    for c in candidates:
-        if c == "x":
-            def check_text(s):
-                return s.isalnum() and s.isupper()
-        else:
-            def check_text(s):
-                return s.isalnum()
-        m = 0
-        for n in candidates[c]:
-            if m == n or not check_text(text[m:n]) or n == len(text) - 1:
-                break
-            m = n + 1
-        else:
-            return c
-    return None
-
-
-def tokenize_metavar(text, separator):
-    has_ellipsis = text.endswith("...")
-    if separator is None:
-        separator = find_metavar_separator(text)
-    if separator:
-        names = text.split(separator)
-    else:
-        names = [text]
-    if has_ellipsis:
-        if names[-1] == "...":
-            del names[-1]
-        else:
-            names[-1] = names[-1][:-3]
-    return names, separator, has_ellipsis
-
-
-def determine_metavar_type(names, metavar_types):
-    types = set()
-    for name in names:
-        if name in metavar_types:
-            types.add(metavar_types[name])
-        else:
-            name = name.strip("0123456789").lower()
-            types.add(metavar_types.get(name, "std::string"))
-    if len(types) == 1:
-        return types.pop()
-    else:
-        return "std::string"
-
-
-def parse_metavar(text,
-                  separator=None,
-                  metavar_types=properties.DEFAULT_METAVAR_TYPES):
-    names, separator, has_ellipsis = tokenize_metavar(text, separator)
-    properties = {"type": determine_metavar_type(names, metavar_types),
-                  "meta_variable": text}
-    if separator:
-        properties["separator"] = separator
-        if has_ellipsis or len(names) == 1:
-            properties["separator_count"] = "0..."
-        else:
-            properties["separator_count"] = str(len(names) - 1)
-    else:
-        properties["separator_count"] = "0"
-    return properties
 
 
 # def compare_metavar_properties(aprops, bprops):

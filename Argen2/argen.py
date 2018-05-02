@@ -19,6 +19,7 @@ import deduce_flags_and_metavars as dfam
 import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
+import deduce_separators as ds
 import make_members as mm
 
 
@@ -152,6 +153,10 @@ def make_deductions(session):
     affected, conflicts = dmn.deduce_member_names(session.arguments)
     if conflicts:
         pass
+    if session.detect_separators:
+        affected, conflicts = ds.deduce_separators(session.arguments)
+        if conflicts:
+            pass
     members, conflicts = mm.make_members(session.arguments)
     if conflicts:
         pass

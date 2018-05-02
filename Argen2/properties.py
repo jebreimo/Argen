@@ -9,8 +9,8 @@
 
 ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
                        "inline", "member_name", "operation", "post_operation",
-                       "separator", "separator_count", "text", "value",
-                       "values", "variable"}
+                       "separator", "separator_count", "text", "valid_values",
+                       "value", "variable"}
 
 MEMBER_PROPERTIES = {"default", "member_inline", "member_callback", "type"}
 
@@ -24,6 +24,7 @@ _REVERSE_PROPERTY_ALIASES = {
                       "memberinline"],
     "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",
                         "membercallback"],
+    "valid_values": ["validvalues", "values"],
     "variable": ["var"]
 }
 
