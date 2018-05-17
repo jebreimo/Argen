@@ -32,3 +32,11 @@ def test_find_char():
     assert pt.find_char('Class(1, 2)("1,3"), 123', ",", 0) == 18
     assert pt.find_char("1, 2, 34, 5", ",", 5) == 8
     assert pt.find_char("It's lovely '-' - p", '-', 0) == 16
+
+
+def test_find_last_not_of():
+    assert pt.find_last_not_of("ABC...", ".") == 2
+    assert pt.find_last_not_of("...", ".") == -1
+    assert pt.find_last_not_of("", ".") == -1
+    assert pt.find_last_not_of(None, ".") == -1
+    assert pt.find_last_not_of("ABC", ".") == 2

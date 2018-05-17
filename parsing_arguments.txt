@@ -1,0 +1,47 @@
+Tokens
+------
+<
+>
+[
+]
+<whitespace>
+..*
+*
+
+States
+------
+empty
+inside < – empty
+inside < – contents
+inside < – contents with whitespace
+inside [ – empty
+inside [ – contents
+inside [ – contents with whitespace
+inside [ – contents with whitespace and ellipsis
+inside normal – contents
+inside normal – contents with whitespace
+inside normal – contents with whitespace and ellipsis
+
+
+
+Arguments, separators, separator count and count
+-------------------------------------
+value -> <value>
+<value>
+[value]
+value ... -> <value> ...
+<value> ...
+[value] ...
+[value...] -> [value...]
+[value ...] -> [value] ...
+value [value] -> <value> [value]
+<value> [value]
+value [value ...] -> <value> [value] ...
+<value> [value ...] -> <value> [value] ...
+value [value] ... -> <value [value]> ...
+value [value] value -> <value> [value] <value>
+value [value] [value] -> <value> [value] [value]
+
+HH:MM:SS [HH:MM:SS] ...
+POINT 0 ... POINT n -> <POINT 0> ... <POINT n>
+filename[.png]

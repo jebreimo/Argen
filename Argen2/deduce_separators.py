@@ -6,6 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
+import parser_tools
 
 
 def find_metavar_separator(text):
@@ -51,18 +52,177 @@ def deduce_separators(arguments):
     return affected, None
 
 
+def find_final_ellipsis(text):
+    start = parser_tools.find_last_not_of(text, ".")
+    if len(text) - start + 1 >= 2:
+        return start + 1
+    return -1
+
+
 def tokenize_metavar(text, separator):
-    has_ellipsis = text.endswith("...")
-    if separator:
-        names = text.split(separator)
+    final_char = find_final_ellipsis(text)
+    if final_char == -1:
+        end = len(text)
+    elif final_char != 0 and text[final_char - 1] == separator:
+        end = final_char - 1
     else:
-        names = [text]
-    if has_ellipsis:
-        if names[-1] == "...":
-            del names[-1]
+        end = final_char
+    tokens = parser_tools.split_text(text[:end], separator)
+    if final_char != -1:
+        tokens.append("...")
+    return tokens
+
+
+def find_end_of_argument_token(text, start):
+    end = len(text)
+    if start >= end:
+        return end
+    if text[start].isspace():
+        i = start + 1
+        while i < end and text[i].isspace():
+            i += 1
+        return i
+    if text[start] in "<[]>":
+        return start + 1
+    i = start
+    while i < end:
+        if text[i].isspace() or text[i] in "<[]>":
+            return i
+        i += 1
+    return i
+
+
+def is_ellipsis(text):
+    return len(text) >= 2 and parser_tools.find_first_not_of(text, ".") == -1
+
+
+class NormalizeArgumentStateMachine:
+    def __init__(self):
+        self.state = ""
+        self.tokens = []
+        self.current_token = []
+        self.space = ""
+        self.ellipsis = None
+
+
+    def _add_ellipsis(self):
+        if self.ellipsis:
+            self.current_token.extend(self.ellipsis)
+            self.ellipsis = None
+
+    def _add_space(self):
+        self._add_ellipsis()
+        if self.space:
+            self.current_token.append(self.space)
+            self.space = ""
+
+    def _clear_space(self):
+        self.ellipsis = None
+        self.space = ""
+
+    def _complete_current_token(self):
+        self.tokens.append("".join(self.current_token))
+        self.current_token = []
+        self.state = ""
+
+    def add_token(self, token):
+        if token.isspace():
+            if self.state:
+                self.space = token
+        elif token == "<":
+            if not self.state:
+                self.current_token.append(token)
+                self.state = "<"
+            else:
+                self._add_space()
+                self.current_token.append(token)
+        elif token == ">":
+            if self.state == "<":
+                self._clear_space()
+                self.current_token.append(token)
+                self._complete_current_token()
+            elif self.state:
+                self._add_space()
+                self.current_token.append(token)
+            else:
+                self.current_token.extend(("<", token))
+                self.state = "t"
+        elif token == "[":
+            if not self.state:
+                self.current_token.append(token)
+                self.state = "["
+            elif self.space and self.state == "t":
+                self.current_token.append(">")
+                self._complete_current_token()
+                self._clear_space()
+                self.current_token = [token]
+                self.state = "["
+            else:
+                self._add_space()
+                self.current_token.append(token)
+        elif token == "]":
+            if self.state == "[":
+                self.current_token.append(token)
+                self._complete_current_token()
+                if self.ellipsis:
+                    self.tokens.append("...")
+                self._clear_space()
+            elif self.state:
+                self._add_space()
+                self.current_token.append(token)
+            else:
+                self.current_token.extend(("<", token))
+                self.state = "t"
+        elif is_ellipsis(token):
+            if self.state == "[":
+                self._add_ellipsis()
+                if self.space:
+                    self.ellipsis = (self.space, token)
+                else:
+                    self.ellipsis = (token,)
+            elif self.state == "<":
+                self.current_token.append(token)
+            elif self.state == "t":
+                self._clear_space()
+                self.current_token.append(">")
+                self._complete_current_token()
+                self.tokens.append("...")
+                self.state = ""
+            else:
+                self.tokens.append("...")
         else:
-            names[-1] = names[-1][:-3]
-    return names, separator, has_ellipsis
+            if not self.state:
+                self.state = "t"
+                self.current_token = ["<", token]
+            else:
+                self._add_space()
+                self.current_token.append(token)
+
+    def get_tokens(self):
+        if self.state:
+            if self.state in "<t" and self.current_token[-1] != ">":
+                self.current_token.append(">")
+            elif self.state == "[" and self.current_token[-1] != "]":
+                self.current_token.append("]")
+            self._complete_current_token()
+            if self.ellipsis:
+                self.tokens.append("...")
+                self.ellipsis = None
+        return self.tokens
+
+
+def normalize_argument_metavar(text):
+    if not text:
+        return []
+    sm = NormalizeArgumentStateMachine()
+    i = 0
+    while True:
+        j = find_end_of_argument_token(text, i)
+        if j == i:
+            break
+        sm.add_token(text[i:j])
+        i = j
+    return sm.get_tokens()
 
 
 def determine_metavar_type(names, metavar_types):
@@ -96,6 +256,7 @@ def determine_metavar_type(names, metavar_types):
 
 
 def deduce_separator_counts(arguments):
+    affected = []
     for arg in arguments:
-        if arg.separator_count is not None and arg.metavar and arg.separator:
+        if arg.separator_count is None and arg.metavar and arg.separator:
             pass

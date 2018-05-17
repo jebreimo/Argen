@@ -62,14 +62,10 @@ default
 type
     * from default
     * from value
-    * from values
+    * from valid_values
     * from count (list if count is/can be greater than one)
-    * from separator_count (list or tuple is greater than zero)
+    * from separator_count (list or tuple if it's greater than zero)
     * from operation (list if add_value or add_values)
-
-
-
-
 
 
 

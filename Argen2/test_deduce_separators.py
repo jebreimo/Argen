@@ -19,3 +19,21 @@ def test_find_metavar_separator():
     assert ds.find_metavar_separator("AB+CD...") == "+"
     assert ds.find_metavar_separator("AB+CD+...") == "+"
     assert ds.find_metavar_separator("AB+...") == "+"
+
+
+def test_tokenize_metavar():
+    assert ds.tokenize_metavar("PATH:PATH:...", ":") == ["PATH", "PATH", "..."]
+    assert ds.tokenize_metavar("PATH...", ":") == ["PATH", "..."]
+    assert ds.tokenize_metavar("PATH...", ":") == ["PATH", "..."]
+    #assert ds.tokenize_metavar("[FILE ...]", " ") == ["[FILE ...]"]
+
+
+def test_normalize_argument_metavar():
+    assert ds.normalize_argument_metavar("[abc ...]") == ["[abc]", "..."]
+    assert ds.normalize_argument_metavar("first ... last") == ["<first>", "...", "<last>"]
+    assert ds.normalize_argument_metavar("file name[.jpg]") == ["<file name[.jpg]>"]
+    assert ds.normalize_argument_metavar("first [second ...]") == ["<first>", "[second]", "..."]
+    assert ds.normalize_argument_metavar("a first [a second] [a third]") == ["<a first>", "[a second]", "[a third]"]
+    assert ds.normalize_argument_metavar("a first [a second] a third") == ["<a first>", "[a second]", "<a third>"]
+    assert ds.normalize_argument_metavar("<a first> <a second> [a third]") == ["<a first>", "<a second>", "[a third]"]
+    assert ds.normalize_argument_metavar("<a first> [a second] [a third]") == ["<a first>", "[a second]", "[a third]"]

@@ -29,6 +29,8 @@ def find_char(s, char, start_pos):
             i = find_char(s, ")", i + 1)
         elif s[i] == "{":
             i = find_char(s, "}", i + 1)
+        elif s[i] == "[":
+            i = find_char(s, "]", i + 1)
         elif s[i] == '"':
             i = find_unescaped_char(s, '"', i + 1)
         elif s[i] == "'":
@@ -62,6 +64,33 @@ def find_next_separator(text, start_pos, separator):
             start_pos += 2 * len(separator)
         else:
             start_pos += 1
+
+
+def find_first_not_of(text, char, start=0):
+    if not text:
+        return -1
+    for i in range(start, len(text)):
+        if text[i] != char:
+            return i
+    return -1
+
+
+def find_last_not_of(text, char):
+    if not text:
+        return -1
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] != char:
+            break
+    else:
+        i = -1
+    return i
+
+
+# def find_next_ellipsis(text, start_pos):
+#     while True:
+#         start_pos = find_char(text, ".", start_pos)
+#         if start_pos < 0:
+#             return -1, 0
 
 
 def split_text(text, separator):
