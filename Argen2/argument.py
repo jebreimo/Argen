@@ -90,6 +90,7 @@ class Argument:
         self.valid_values = parse_valid_values(properties.get("valid_values"))
         self.value = properties.get("value")
 
+        self.arguments = None
         self.member = None
 
     def __str__(self):

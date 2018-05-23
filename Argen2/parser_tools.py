@@ -86,11 +86,19 @@ def find_last_not_of(text, char):
     return i
 
 
-# def find_next_ellipsis(text, start_pos):
-#     while True:
-#         start_pos = find_char(text, ".", start_pos)
-#         if start_pos < 0:
-#             return -1, 0
+def is_ellipsis(text):
+    return len(text) >= 2 and find_first_not_of(text, ".") == -1
+
+
+def find_all(text, substr):
+    result = []
+    i = 0
+    while True:
+        i = text.find(text, substr, i)
+        if i == -1:
+            return result
+        result.append(i)
+        i = i + len(substr)
 
 
 def split_text(text, separator):

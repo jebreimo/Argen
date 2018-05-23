@@ -15,11 +15,12 @@ from sections import read_sections
 from parse_help_text import parse_help_text
 from replace_variables import replace_variables
 from session import Session
+import deduce_arguments as da
 import deduce_flags_and_metavars as dfam
 import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
-import deduce_separators as ds
+import deduce_separator_counts as ds
 import make_members as mm
 
 
@@ -150,13 +151,11 @@ def make_deductions(session):
     affected, conflicts = dfam.deduce_flags_and_metavars(session.arguments)
     if conflicts:
         pass
+    affected = da.deduce_arguments(session.arguments)
     affected, conflicts = dmn.deduce_member_names(session.arguments)
     if conflicts:
         pass
-    if session.detect_separators:
-        affected, conflicts = ds.deduce_separators(session.arguments)
-        if conflicts:
-            pass
+    affected = ds.deduce_separator_counts(session.arguments)
     members, conflicts = mm.make_members(session.arguments)
     if conflicts:
         pass

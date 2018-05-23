@@ -84,6 +84,10 @@ class DeducedType:
         return self.source < other.source
 
 
+class DeducedType2:
+    def __init__(self):
+        self.category = None
+
 def most_specific_type_category(category1, category2):
     if category1 == category2:
         return category1
@@ -153,96 +157,96 @@ def get_int_type(s):
     return None
 
 
-def get_float_type(s):
-    if not s:
+def get_float_type(text):
+    if not text:
         return None
-    n = len(s)
+    n = len(text)
     i = 0
     # Integer part
-    if s[i] in "+-":
+    if text[i] in "+-":
         i += 1
         if i == n:
             return None
-    if not s[i].isdigit():
+    if not text[i].isdigit():
         return None
-    while i != n and s[i] in LEGAL_FLOAT_CHARS:
+    while i != n and text[i] in LEGAL_FLOAT_CHARS:
         i += 1
-    if i == n or s[i] not in ".eE":
+    if i == n or text[i] not in ".eE":
         return None
     # Fraction part
-    if s[i] == ".":
+    if text[i] == ".":
         i += 1
-        while i != n and s[i] in LEGAL_FLOAT_CHARS:
+        while i != n and text[i] in LEGAL_FLOAT_CHARS:
             i += 1
         if i == n:
             return DeducedType(DeducedType.CATEGORY, "real")
     # Exponent part
-    if s[i] in "eE":
+    if text[i] in "eE":
         i += 1
         if i == n:
             return None
-        if s[i] in "+-":
+        if text[i] in "+-":
             i += 1
-            if i == n or not s[i].isdigit():
+            if i == n or not text[i].isdigit():
                 return None
-        while i != n and s[i] in LEGAL_FLOAT_CHARS:
+        while i != n and text[i] in LEGAL_FLOAT_CHARS:
             i += 1
         if i == n:
             return DeducedType(DeducedType.CATEGORY, "real")
-    suffix = s[i:].lower()
+    suffix = text[i:].lower()
     if suffix in FLOAT_SUFFIXES:
         return DeducedType(DeducedType.SPECIFIC, FLOAT_SUFFIXES[suffix])
     return None
 
 
-def looks_like_type_name(s):
-    for c in s:
+def looks_like_type_name(text):
+    for c in text:
         if not (c.isidentifier() or c in " *&<>:"):
             return False
     return True
 
 
-def get_class_name_parenthesis(s):
-    pos = s.find("(")
-    if pos == -1 or 0 <= s.find("{") < pos:
+def get_class_name_parenthesis(text):
+    pos = text.find("(")
+    if pos == -1 or 0 <= text.find("{") < pos:
         return None
     if pos == 0:
-        end_pos = s.find(")")
-        if end_pos not in (-1, len(s) - 1) and looks_like_type_name(s[pos+1:end_pos]):
-            return DeducedType(DeducedType.EXPLICIT, s[pos+1:end_pos].strip())
+        end_pos = text.find(")")
+        if end_pos not in (-1, len(text) - 1) and looks_like_type_name(text[pos + 1:end_pos]):
+            return DeducedType(DeducedType.EXPLICIT, text[pos + 1:end_pos].strip())
         else:
             return None
-    return DeducedType(DeducedType.EXPLICIT, s[:pos].strip())
+    return DeducedType(DeducedType.EXPLICIT, text[:pos].strip())
 
 
-def get_class_name_braces(s):
-    pos = s.find("{")
-    if pos <= 0 or 0 <= s.find("(") < pos:
+def get_class_name_braces(text):
+    pos = text.find("{")
+    if pos <= 0 or 0 <= text.find("(") < pos:
         return None
-    return DeducedType(DeducedType.EXPLICIT, s[:pos].strip())
+    return DeducedType(DeducedType.EXPLICIT, text[:pos].strip())
 
 
-def find_end_of_whitespace(s, start_pos):
-    for i in range(start_pos, len(s)):
-        if not s[i].isspace():
+def find_end_of_whitespace(text, start_pos):
+    for i in range(start_pos, len(text)):
+        if not text[i].isspace():
             return i
     return -1
 
 
-def get_tuple_parts(s):
-    if not s or s[0] != "{" or s[-1] != "}":
+def get_tuple_parts(text):
+    if not text or text[0] != "{" or text[-1] != "}":
         return None
-    s = s[1:-1].strip()
+    text = text[1:-1].strip()
     parts = []
     start_pos = 0
     while True:
-        end_pos = parser_tools.find_char(s, ",", start_pos)
+        end_pos = parser_tools.find_char(text, ",", start_pos)
         if end_pos == -1:
-            part = s[start_pos:].strip()
+            part = text[start_pos:].strip()
             if part:
                 parts.append(part)
             break
-        part = s[start_pos:end_pos].strip()
+        part = text[start_pos:end_pos].strip()
         if not part:
             return None
         parts.append(part)
@@ -261,32 +265,34 @@ def has_common_type(deduced_types):
     return common_type is not None
 
 
-def get_value_type(s):
-    if not s:
+def get_value_type(text):
+    if not text:
         return None
-    if s in ("true", "false"):
+    if text in ("true", "false"):
         return DeducedType(DeducedType.SPECIFIC, "bool")
-    elif len(s) > 1 and s[0] == '"' and s[-1] == '"':
-        return DeducedType(DeducedType.CATEGORY, "string")
-    elif len(s) > 1 and s[0] == "'" and s[-1] == "'":
+    elif len(text) > 1 and text[0] == "'" and text[-1] == "'":
         return DeducedType(DeducedType.SPECIFIC, "char")
-    value_type = get_int_type(s)
+    elif len(text) > 1 and text[-1] == '"' \
+            and (text[0] == '"' or text[:3] == 'u8"'):
+        return DeducedType(DeducedType.CATEGORY, "string")
+    value_type = get_int_type(text)
     if value_type:
         return value_type
-    value_type = get_float_type(s)
+    value_type = get_float_type(text)
     if value_type:
         return value_type
-    value_type = get_class_name_parenthesis(s)
+    value_type = get_class_name_parenthesis(text)
     if value_type:
         return value_type
-    value_type = get_class_name_braces(s)
+    value_type = get_class_name_braces(text)
     if value_type:
         return value_type
-    if s.endswith("_MIN") or s.endswith("_MAX"):
-        value_type = DeducedType(DeducedType.SPECIFIC, MINMAX_CONSTANTS.get(s[:-4]))
+    if text.endswith("_MIN") or text.endswith("_MAX"):
+        value_type = DeducedType(DeducedType.SPECIFIC,
+                                 MINMAX_CONSTANTS.get(text[:-4]))
         if value_type:
             return value_type
-    tuple_parts = get_tuple_parts(s)
+    tuple_parts = get_tuple_parts(text)
     if tuple_parts is not None:
         types = [get_value_type(part) for part in tuple_parts]
         if None not in types:
@@ -342,32 +348,33 @@ OPERATION_DEDUCED_TYPES = {
                                 DeducedType(DeducedType.CATEGORY, "any"))
 }
 
+
 def deduce_type(member, syntax):
     if member.type:
-        member.type = member.type
-        return member.type
+        return None
     deduced_types = []
     if member.default:
         default_type = get_value_type(member.default)
         if default_type:
             default_type.source = "default"
             deduced_types.append(default_type)
-    for argument in member.arguments:
-        if argument.valid_values:
-            typ = deduce_type_from_values(argument.valid_values,
-                                          syntax)
-            if typ:
-                typ.source = "values"
-                deduced_types.append(typ)
-        if argument.value:
-            typ = get_value_type(argument.value, syntax)
-            if typ:
-                typ.source = "value"
-                deduced_types.append(typ)
-        if argument.operation:
-            op = argument.operation
-            if op in OPERATION_DEDUCED_TYPES:
-                deduced_types.append(typ)
+    # for argument in member.arguments:
+    #     if argument.valid_values:
+    #         typ = deduce_type_from_values(argument.valid_values,
+    #                                       syntax)
+    #         if typ:
+    #             typ.source = "values"
+    #             deduced_types.append(typ)
+    #     if argument.value:
+    #         typ = get_value_type(argument.value, syntax)
+    #         if typ:
+    #             typ.source = "value"
+    #             deduced_types.append(typ)
+    #     if argument.operation:
+    #         op = argument.operation
+    #         if op in OPERATION_DEDUCED_TYPES:
+    #             deduced_types.append(typ)
+
         # if "count" in argument.given_properties:
         #     pass
         # if "separator_count" in argument.given_properties:
@@ -378,6 +385,6 @@ def deduce_type(member, syntax):
     return None
 
 
-def deduce_types(members):
+def deduce_types(members, syntax):
     for member in members:
-        deduce_type(member)
+        deduce_type(member, syntax)
