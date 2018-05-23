@@ -94,7 +94,7 @@ def find_all(text, substr):
     result = []
     i = 0
     while True:
-        i = text.find(text, substr, i)
+        i = text.find(substr, i)
         if i == -1:
             return result
         result.append(i)
