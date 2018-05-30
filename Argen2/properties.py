@@ -46,11 +46,9 @@ DEFAULT_METAVAR_TYPES = {
 
 LEGAL_OPERATIONS = {
     "none",
-    "set_value",
-    "add_value",
-    "add_values",
-    "set_constant",
-    "add_constant"
+    "assign",
+    "append",
+    "extend"
 }
 
 LEGAL_POST_OPERATIONS = {

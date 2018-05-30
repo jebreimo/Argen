@@ -1,15 +1,15 @@
 Argument properties
 -------------------
-argument
-//    * from text
-    * [WARNING] if operation is set_value, add_value, add_values, type isn't bool and value is None
+// arguments
+//     * from metavar
 
 // callback
 //     * show_help if flags contains -h --help or /?
 
 count
-    * 0..1 if operation is set_value
-    * 0.. if add_value or add_values
+    * 0..1 if flags and operation is assign
+    * 0.. if flags and operation is append or extend
+    * based on arguments if not flags
 
 // flags
 //     * from text
@@ -23,26 +23,30 @@ count
 //    * from longest name in flags
 //    * from argument
 
+metavar
+//     * from text
+    * [WARNING] if operation is assign, append, extend, type isn't bool and value is None
+
 operation
-    * set_value if type isn't list
-    * add_value if type is list
+    * assign if type isn't list
+    * append if type is list
 
 post_operation
 //     * abort if callback is show_help
     * final if flag is --
 
-separator
-    * deduce from argument if detect_separators is True
+// separator
+//     * deduce from argument if detect_separators is True
 
 separator_count
-    * deduce from argument and separator
+    // * deduce from argument and separator
     * deduce from operation and separator
 
 // text
 //    * raw_text
 
 value
-    * "true" if argument is None and operation is set_value or add_value
+    * "true" if argument is None and operation is assign or append
     * "true" if type is "bool"
 
 [values]
