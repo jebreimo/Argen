@@ -28,8 +28,8 @@ metavar
     * [WARNING] if operation is assign, append, extend, type isn't bool and value is None
 
 operation
-    * assign if type isn't list
-    * append if type is list
+    * assign if max-count is 1
+    * append if max-count is greater than 1
 
 post_operation
 //     * abort if callback is show_help
@@ -63,15 +63,15 @@ default
 
 [member_callback]
 
-type
+member_type
     * from default
+    * from count (list if count is/can be greater than one) + value_type
+    * from operation (list if append or extend) + value_type
+
+value_type
     * from value
     * from valid_values
-    * from count (list if count is/can be greater than one)
     * from separator_count (list or tuple if it's greater than zero)
-    * from operation (list if add_value or add_values)
-
-
 
 
 text: from the displayed text unless given

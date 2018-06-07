@@ -52,6 +52,7 @@ class Session:
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.arguments = []
         self.detect_separators = False
+        self.members = []
 
     def set_setting(self, name, value):
         if name == "ArgumentPrefix":

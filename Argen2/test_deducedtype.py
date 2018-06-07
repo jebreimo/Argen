@@ -6,8 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-import deduce_types as dt
-import helpfilesyntax as hfs
+import deducedtype as dt
 
 
 def test_get_int_type():
@@ -60,30 +59,7 @@ def test_get_value_type():
     assert dt.get_value_type("INT32_MIN").specific == "int32_t"
     assert dt.get_value_type("std::vector<int>()").explicit == "std::vector<int>"
     typ = dt.get_value_type('{"ABC", UINT64_MAX}')
-    assert typ.category == dt.Category.TUPLE
+    assert typ.category == dt.Category.COMPOSITE
     assert len(typ.subtypes) == 2
     assert typ.subtypes[0].category == dt.Category.STRING
     assert typ.subtypes[1].specific == "uint64_t"
-
-
-def test_deduce_type_from_values_part():
-    syntax = hfs.HelpFileSyntax()
-    assert dt.deduce_type_from_values_part("-10..20", syntax).category == dt.Category.NUMBER
-    assert dt.deduce_type_from_values_part("-10..20.5", syntax).category == dt.Category.REAL
-    assert dt.deduce_type_from_values_part("Foo(2), Foo(3), Foo(5)", syntax).explicit == "Foo"
-    typ = dt.deduce_type_from_values_part("{1, 2, \"g\"}, {3, 4.0f, \"h\"}", syntax)
-    assert typ.category == dt.Category.TUPLE
-    assert len(typ.subtypes) == 3
-    assert typ.subtypes[0].category == dt.Category.NUMBER
-    assert typ.subtypes[1].specific == "float"
-    assert typ.subtypes[2].category == dt.Category.STRING
-
-
-def test_deduce_type_from_values():
-    syntax = hfs.HelpFileSyntax()
-    typ = dt.deduce_type_from_values("0..10, 99 $ 'a', 'b' $ 1UL, 5", syntax)
-    assert typ.category == dt.Category.TUPLE
-    assert len(typ.subtypes) == 3
-    assert typ.subtypes[0].category == dt.Category.NUMBER
-    assert typ.subtypes[1].specific == "char"
-    assert typ.subtypes[2].specific == "unsigned long"

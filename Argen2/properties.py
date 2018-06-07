@@ -12,7 +12,8 @@ ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
                        "separator", "separator_count", "text", "valid_values",
                        "value", "variable"}
 
-MEMBER_PROPERTIES = {"default", "member_inline", "member_callback", "type"}
+MEMBER_PROPERTIES = {"default", "member_callback", "member_inline",
+                     "member_type", "value_type"}
 
 _REVERSE_PROPERTY_ALIASES = {
     "operation": ["op"],
@@ -20,11 +21,14 @@ _REVERSE_PROPERTY_ALIASES = {
     "member_name": ["mem", "member", "membername"],
     "separator": ["sep"],
     "separator_count": ["sepcount", "sep_count", "separatorcount"],
-    "member_inline": ["meminline", "mem_inline", "meminline", "mem_inline",
-                      "memberinline"],
     "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",
                         "membercallback"],
+    "member_inline": ["meminline", "mem_inline", "meminline", "mem_inline",
+                      "memberinline"],
+    "member_type": ["memtype", "mem_type", "memtype", "mem_type",
+                    "membertype"],
     "valid_values": ["validvalues", "values"],
+    "value_type": ["type", "valuetype"],
     "variable": ["var"]
 }
 

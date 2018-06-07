@@ -17,7 +17,6 @@ class HelpFileSyntax:
         self.variable_start = "${"
         self.variable_end = "}"
         self.values_entry_separator = "$"
-        self.range_separator = ".."
         self.value_separator = ","
         self.internal_variables = {"CONTENTS", "HEADER", "SOURCE", "PROGRAM",
                                    "HPPNAME", "CPPNAME", "OPTIONS",

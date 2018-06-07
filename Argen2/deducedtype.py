@@ -48,10 +48,6 @@ MINMAX_CONSTANTS = {"CHAR": "char",
                     "LDBL_TRUE": "long double"}
 
 
-TYPE_CATEGORIES = {("number", "real"): "real",
-                   ("number", "integer"): "integer",}
-
-
 # Categories:
 # any
 #   composite
@@ -69,7 +65,6 @@ class Category:
     ANY = "any"
     COMPOSITE = "composite"
     LIST = "list"
-    TUPLE = "tuple"
     VALUE = "value"
     STRING = "string"
     NUMBER = "number"
@@ -80,8 +75,8 @@ class Category:
 
 CATEGORY_TYPES = {
     Category.ANY: "std::string",
+    Category.COMPOSITE: "std::tuple",
     Category.LIST: "std::vector",
-    Category.TUPLE: "std::tuple",
     Category.VALUE: "std::string",
     Category.STRING: "std::string",
     Category.NUMBER: "int",
@@ -91,14 +86,55 @@ CATEGORY_TYPES = {
 }
 
 
+PARENT_CATEGORIES = {
+    Category.ANY: None,
+    Category.COMPOSITE: Category.ANY,
+    Category.LIST: Category.COMPOSITE,
+    Category.VALUE: Category.ANY,
+    Category.STRING: Category.VALUE,
+    Category.NUMBER: Category.VALUE,
+    Category.INTEGER: Category.NUMBER,
+    Category.REAL: Category.NUMBER,
+    Category.BOOL: Category.VALUE
+}
+
+
+def is_child_category(child, parent):
+    while child:
+        if child == parent:
+            return True
+        child = PARENT_CATEGORIES[child]
+    return False
+
+
+def most_specific_category(category1, category2):
+    if category1 == category2:
+        return category1
+    if is_child_category(category1, category2):
+        return category1
+    elif is_child_category(category2, category1):
+        return category2
+    else:
+        return None
+
+
 class DeducedType:
-    def __init__(self, category=Category.ANY, specific=None,
-                 explicit=None, subtypes=None):
-        self.category = category ## any composite list tuple value string integer real bool
+    def __init__(self, category=None, specific=None,
+                 explicit=None, subtypes=None, source=None,
+                 prototype=None):
+        self.category = category
         self.specific = specific
         self.explicit = explicit
         self.subtypes = subtypes
-        self.source = None
+        self.source = source
+        if prototype:
+            self.category = self.category or prototype.category
+            self.specific = self.specific or prototype.specific
+            self.explicit = self.explicit or prototype.explicit
+            self.subtypes = self.subtypes or prototype.subtypes
+            self.source = self.source or prototype.source
+        if self.category is None:
+            self.category = Category.ANY
 
     def __eq__(self, other):
         if not isinstance(other, DeducedType):
@@ -131,80 +167,68 @@ class DeducedType:
                            ", ".join(str(st) for st in self.subtypes))
 
 
-PARENT_CATEGORIES = {
-    Category.ANY: None,
-    Category.COMPOSITE: Category.ANY,
-    Category.LIST: Category.COMPOSITE,
-    Category.TUPLE: Category.COMPOSITE,
-    Category.VALUE: Category.ANY,
-    Category.STRING: Category.VALUE,
-    Category.NUMBER: Category.VALUE,
-    Category.INTEGER: Category.NUMBER,
-    Category.REAL: Category.NUMBER,
-    Category.BOOL: Category.VALUE
-}
-
-
-def is_child_category(child, parent):
-    while child:
-        if child == parent:
-            return True
-        child = PARENT_CATEGORIES[child]
-    return False
-
-
-def most_specific_category(category1, category2):
-    if category1 == category2:
-        return category1
-    if is_child_category(category1, category2):
-        return category1
-    elif is_child_category(category2, category1):
-        return category2
-    else:
-        return None
-
-
 def join_deduced_types(deduced_type1, deduced_type2):
+    if not deduced_type1 or not deduced_type2:
+        return None, "Deduced type cannot be None."
+
     if deduced_type1 == deduced_type2:
-        return deduced_type1, None
+        return DeducedType(prototype=deduced_type1), None
 
     category = most_specific_category(deduced_type1.category,
                                       deduced_type2.category)
     if category is None:
-        return None, "Incompatible types: <%s> and <%s>." % \
-               (deduced_type1.category, deduced_type2.category)
+        return None, "Incompatible types: <%s> and <%s>." \
+               % (deduced_type1, deduced_type2)
 
     if deduced_type1.explicit != deduced_type2.explicit:
         if deduced_type1.explicit and not deduced_type2.explicit:
-            return deduced_type1, None
+            return DeducedType(category, prototype=deduced_type1), None
         elif not deduced_type1.explicit and deduced_type2.explicit:
-            return deduced_type2, None
+            return DeducedType(category, prototype=deduced_type2), None
         else:
-            return None, "Conflicting types: <%s> and <%s>." % \
-                   (deduced_type1.explicit, deduced_type2.explicit)
+            return None, "Conflicting types: <%s> and <%s>." \
+                   % (deduced_type1, deduced_type2)
 
     if deduced_type1.specific != deduced_type2.specific:
         if deduced_type1.specific and not deduced_type2.specific:
-            return deduced_type1, None
+            return DeducedType(category, prototype=deduced_type1), None
         elif not deduced_type1.specific and deduced_type2.specific:
-            return deduced_type2, None
+            return DeducedType(category, prototype=deduced_type2), None
         else:
-            return None, "Conflicting types: <%s> and <%s>." % \
-                   (deduced_type1.specific, deduced_type2.specific)
-
+            return None, "Conflicting types: <%s> and <%s>." \
+                   % (deduced_type1, deduced_type2)
     subtypes = None
     if deduced_type1.subtypes and deduced_type2.subtypes:
-        if len(deduced_type1.subtypes) != len(deduced_type2.subtypes):
-            return None, "Conflicting number of sub-element types."
-        subtypes = []
-        for st1, st2 in zip(deduced_type1.subtypes, deduced_type2.subtypes):
-            st, error = join_deduced_types(st1, st2)
-            if error:
-                return None, error
-            subtypes.append(st)
+        if len(deduced_type1.subtypes) == len(deduced_type2.subtypes):
+            subtypes = []
+            for st1, st2 in zip(deduced_type1.subtypes, deduced_type2.subtypes):
+                st, error = join_deduced_types(st1, st2)
+                if error:
+                    return None, error
+                subtypes.append(st)
+        elif category == Category.LIST:
+            common_type1 = join_list_of_deduced_types(deduced_type1.subtypes)
+            common_type2 = join_list_of_deduced_types(deduced_type2.subtypes)
+            common_type, error = join_deduced_types(common_type1, common_type2)
+            if common_type:
+                subtypes = [common_type]
+        if not subtypes:
+            return None, "Conflicting lists of subtypes: <%s> and <%s>." \
+                   % (deduced_type1, deduced_type2)
     else:
         subtypes = deduced_type1.subtypes or deduced_type2.subtypes
     return DeducedType(category, subtypes=subtypes), None
+
+
+def join_list_of_deduced_types(deduced_types):
+    if not deduced_types:
+        return None, "deduced_types cannot be None or empty."
+    common_type = deduced_types[0]
+    for i in range(1, len(deduced_types)):
+        common_type, error = join_deduced_types(common_type, deduced_types[i])
+        if error:
+            return None, error
+    return common_type, None
 
 
 def get_int_type(s):
@@ -292,18 +316,17 @@ def get_class_name_parenthesis(text):
     if pos == 0:
         end_pos = text.find(")")
         if end_pos not in (-1, len(text) - 1) and looks_like_type_name(text[pos + 1:end_pos]):
-            return DeducedType(Category.ANY,
-                               explicit=text[pos+1:end_pos].strip())
+            return DeducedType(explicit=text[pos+1:end_pos].strip())
         else:
             return None
-    return DeducedType(Category.ANY, explicit=text[:pos].strip())
+    return DeducedType(explicit=text[:pos].strip())
 
 
 def get_class_name_braces(text):
     pos = text.find("{")
     if pos <= 0 or 0 <= text.find("(") < pos:
         return None
-    return DeducedType(Category.ANY, explicit=text[:pos].strip())
+    return DeducedType(explicit=text[:pos].strip())
 
 
 def find_end_of_whitespace(text, start_pos):
@@ -335,13 +358,7 @@ def get_tuple_parts(text):
 
 
 def has_common_type(deduced_types):
-    if not deduced_types:
-        return False
-    common_type = deduced_types[0]
-    for i in range(1, len(deduced_types)):
-        common_type = join_deduced_types(common_type, deduced_types[i])[0]
-        if not common_type:
-            return False
+    common_type, error = join_list_of_deduced_types(deduced_types)
     return common_type is not None
 
 
@@ -376,52 +393,14 @@ def get_value_type(text):
     if tuple_parts is not None:
         types = [get_value_type(part) for part in tuple_parts]
         if None not in types:
-            if has_common_type(types):
-                return DeducedType(Category.COMPOSITE, subtypes=types)
-            else:
-                return DeducedType(Category.TUPLE, subtypes=types)
+            return DeducedType(Category.COMPOSITE, subtypes=types)
     return None
 
 
-def deduce_type_from_values_part(text, syntax):
-    values = []
-    for part in [t.strip() for t in parser_tools.split_text(text, syntax.value_separator)]:
-        values.extend(t for t in (t.strip() for t in part.split(syntax.range_separator)) if t)
-    value_types = []
-    for value in values:
-        value_type = get_value_type(value)
-        if value_type:
-            value_types.append(value_type)
-    if not value_types:
-        return None
-    result = value_types[0]
-    for i in range(1, len(value_types)):
-        result, error = join_deduced_types(result, value_types[i])
-        if not result:
-            return None
-    return result
-
-
-def deduce_type_from_values(text, syntax):
-    parts = parser_tools.split_and_unescape_text(text, syntax.values_entry_separator)
-    types = []
-    for part in parts:
-        part_type = deduce_type_from_values_part(part, syntax)
-        if not part_type:
-            return None
-        types.append(part_type)
-    if not types:
-        return None
-    if has_common_type(types):
-        return DeducedType(Category.COMPOSITE, subtypes=types)
-    return DeducedType(Category.TUPLE, subtypes=types)
-
-
 OPERATION_DEDUCED_TYPES = {
-    "assign": DeducedType(Category.ANY),
-    "append": DeducedType(Category.LIST,
-                          subtypes=[DeducedType(Category.ANY)]),
-    "extend": DeducedType(Category.LIST, subtypes=[DeducedType(Category.ANY)])
+    "assign": DeducedType(),
+    "append": DeducedType(Category.LIST, subtypes=[DeducedType()]),
+    "extend": DeducedType(Category.LIST, subtypes=[DeducedType()])
 }
 
 
@@ -434,30 +413,34 @@ def deduce_type(member, syntax):
         if default_type:
             default_type.source = "default"
             deduced_types.append(default_type)
-    # for argument in member.arguments:
-    #     if argument.valid_values:
-    #         typ = deduce_type_from_values(argument.valid_values,
-    #                                       syntax)
-    #         if typ:
-    #             typ.source = "values"
-    #             deduced_types.append(typ)
-    #     if argument.value:
-    #         typ = get_value_type(argument.value, syntax)
-    #         if typ:
-    #             typ.source = "value"
-    #             deduced_types.append(typ)
-    #     if argument.operation:
-    #         op = argument.operation
-    #         if op in OPERATION_DEDUCED_TYPES:
-    #             deduced_types.append(typ)
+    for argument in member.arguments:
+        # if argument.valid_values:
+        #     typ = deduce_type_from_values(argument.valid_values, syntax)
+        #     if typ:
+        #         typ.source = "values"
+        #         deduced_types.append(typ)
+        # if argument.value:
+        #     typ = get_value_type(argument.value, syntax)
+        #     if typ:
+        #         typ.source = "value"
+        #         deduced_types.append(typ)
+        # if argument.operation:
+        #     op = argument.operation
+        #     if op in OPERATION_DEDUCED_TYPES:
+        #         deduced_types.append(OPERATION_DEDUCED_TYPES[op])
+        # if argument.separator_count:
+        #     typ = deduce_type_from_separator_count(argument.separator_count)
+        #     if typ:
+        #         typ.source = "separator_count"
+        #         deduced_types.append(typ)
+        if argument.count:
+            if argument.count[1] != 1:
+                typ = DeducedType(Category.LIST,
+                                  subtypes=[DeducedType()])
+
 
         # if "count" in argument.given_properties:
         #     pass
-        # if "separator_count" in argument.given_properties:
-        #     pass
-    # Legal values
-    # Metavar
-    # Operation
     return None
 
 

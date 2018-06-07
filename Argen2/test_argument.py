@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import argument as a
+import pytest
 
 
 # def test_determine_metavar_type():
@@ -37,12 +38,16 @@ import argument as a
 
 def test_get_int_range():
     assert a.get_int_range("1") == (1, 1)
-    assert a.get_int_range("..1") == (None, 1)
+    assert a.get_int_range("..1") == (0, 1)
     assert a.get_int_range("34..") == (34, None)
     assert a.get_int_range("3..8") == (3, 8)
+    assert a.get_int_range("3...8") == (3, 8)
     assert a.get_int_range("-3..8") == (-3, 8)
     assert a.get_int_range("13..8") == (13, 8)
-    assert a.get_int_range("..") is None
+    assert a.get_int_range("..") == (0, None)
+    assert a.get_int_range("0x1a") == (0x1A, 0x1A)
+    with pytest.raises(ValueError):
+        a.get_int_range("1e")
 
 
 def test_parse_valid_values():

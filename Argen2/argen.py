@@ -21,6 +21,7 @@ import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
 import deduce_separator_counts as ds
+import deduce_value_types as dvt
 import make_members as mm
 
 
@@ -156,13 +157,16 @@ def make_deductions(session):
     if conflicts:
         pass
     affected = ds.deduce_separator_counts(session.arguments)
-    members, conflicts = mm.make_members(session.arguments)
+    session.members, conflicts = mm.make_members(session.arguments)
     if conflicts:
         pass
     affected, conflicts = di.deduce_indices(session.arguments)
     if conflicts:
         pass
     affected, conflicts = dho.deduce_help_option(session.arguments)
+    if conflicts:
+        pass
+    affected, conflict = dvt.deduce_value_types(session.members)
     if conflicts:
         pass
 
@@ -250,6 +254,8 @@ def main():
     print("ARGUMENTS")
     for arg in session.arguments:
         print(arg)
+    for member in session.members:
+        print(member)
     return 0
 
 

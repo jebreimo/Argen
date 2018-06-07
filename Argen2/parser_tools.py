@@ -86,8 +86,31 @@ def find_last_not_of(text, char):
     return i
 
 
+def find_next_ellipsis(text, start=0):
+    if not text:
+        return -1, -1
+    while True:
+        start = find_char(text, ".", start)
+        if start == -1:
+            return -1, -1
+        end = find_first_not_of(text, ".", start + 1)
+        if end == -1:
+            end = len(text)
+        if end - start >= 2:
+            return start, end
+        start = end
+
+
 def is_ellipsis(text):
     return len(text) >= 2 and find_first_not_of(text, ".") == -1
+
+
+def split_range(text):
+    start, end = find_next_ellipsis(text)
+    if start != -1:
+        return text[:start], text[end:]
+    else:
+        return None
 
 
 def find_all(text, substr):
