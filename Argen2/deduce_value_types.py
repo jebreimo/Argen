@@ -7,7 +7,6 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import deducedtype as dt
-import parser_tools
 
 
 def deduce_type_from_values_part(ranges):
@@ -42,6 +41,25 @@ def deduce_type_from_valid_values(values):
         return dt.DeducedType(dt.Category.COMPOSITE, subtypes=types)
 
 
+def deduce_type_from_value(value, separator, max_separators):
+    if separator:
+        types = []
+        maxsplit = -1 if max_separators is None else max_separators
+        for part in value.split(separator, maxsplit):
+            value_type = dt.get_value_type(part)
+            if value_type:
+                types.append(value_type)
+            else:
+                types.append(dt.DeducedType())
+        return dt.DeducedType(dt.Category.COMPOSITE, subtypes=types)
+    else:
+        value_type = dt.get_value_type(value)
+        if value_type:
+            return value_type
+        else:
+            return dt.DeducedType()
+
+
 def deduce_type_from_separator_count(count):
     if not count:
         return None, None
@@ -57,7 +75,8 @@ def deduce_type_from_separator_count(count):
 def deduce_value_type(member):
     if member.value_type:
         return None, None
-    deduced_types = []
+    deduced_types = [dt.DeducedType()]
+    print(member.name)
     for argument in member.arguments:
         if argument.valid_values:
             typ = deduce_type_from_valid_values(argument.valid_values)
@@ -65,7 +84,13 @@ def deduce_value_type(member):
                 typ.source = "valid_values"
                 deduced_types.append(typ)
         if argument.value:
-            typ = dt.get_value_type(argument.value)
+            if argument.separator_count:
+                max_separators = argument.separator_count[1]
+            else:
+                max_separators = None
+            typ = deduce_type_from_value(argument.value,
+                                         argument.separator,
+                                         max_separators)
             if typ:
                 typ.source = "value"
                 deduced_types.append(typ)

@@ -18,25 +18,6 @@ def get_int_property(dict, key):
         return None
 
 
-def get_int_range(text):
-    if not text:
-        return None
-    parts = parser_tools.split_range(text)
-    if parts:
-        a, b = parts[0].strip(), parts[1].strip()
-        if a or b:
-            return (int(a, 0) if a else 0), (int(b, 0) if b else None)
-        else:
-            return 0, None
-    else:
-        a = int(text.strip(), 0)
-        return a, a
-
-
-def get_int_range_property(dict, key):
-    return get_int_range(dict.get(key))
-
-
 def parse_valid_values(text):
     if not text:
         return None
@@ -73,11 +54,6 @@ class Argument:
         self.given_properties = dict(properties)
 
         self.callback = properties.get("callback")
-        try:
-            self.count = get_int_range_property(properties, "count")
-        except ValueError:
-            raise HelpFileError("Invalid count: %s, the value must be an integer or a range of integers (from..[to])"
-                                % properties["count"])
         if "flags" in properties:
             self.flags = properties["flags"].split()
         else:
@@ -90,8 +66,8 @@ class Argument:
         self.post_operation = properties.get("post_operation")
         self.separator = properties.get("separator")
         try:
-            self.separator_count = get_int_range_property(properties,
-                                                          "separator_count")
+            self.separator_count = parser_tools.get_int_range(
+                properties.get("separator_count"))
         except ValueError:
             raise HelpFileError("Invalid separator_count: %s, the value must be an integer or a range of integers (from..[to])"
                                 % properties["separator_count"])

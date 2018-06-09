@@ -207,8 +207,8 @@ def join_deduced_types(deduced_type1, deduced_type2):
                     return None, error
                 subtypes.append(st)
         elif category == Category.LIST:
-            common_type1 = join_list_of_deduced_types(deduced_type1.subtypes)
-            common_type2 = join_list_of_deduced_types(deduced_type2.subtypes)
+            common_type1, error = join_list_of_deduced_types(deduced_type1.subtypes)
+            common_type2, error = join_list_of_deduced_types(deduced_type2.subtypes)
             common_type, error = join_deduced_types(common_type1, common_type2)
             if common_type:
                 subtypes = [common_type]
@@ -231,7 +231,31 @@ def join_list_of_deduced_types(deduced_types):
     return common_type, None
 
 
-def get_int_type(s):
+def is_undetermined(deduced_type):
+    if not deduced_type:
+        return False
+    if deduced_type.category != Category.ANY:
+        return False
+    if deduced_type.explicit or deduced_type.specific:
+        return False
+    return True
+
+
+def is_list(deduced_type):
+    if not deduced_type:
+        return False
+    if deduced_type.category == Category.LIST:
+        return True
+    if deduced_type.category == Category.COMPOSITE \
+            and join_list_of_deduced_types(deduced_type.subtypes):
+        return True
+    if deduced_type.category == Category.ANY \
+            and (deduced_type.explicit or deduced_type.specific):
+        return True
+    return False
+
+
+def _get_int_type(s):
     if not s:
         return None
     n = len(s)
@@ -260,7 +284,7 @@ def get_int_type(s):
     return None
 
 
-def get_float_type(text):
+def _get_float_type(text):
     if not text:
         return None
     n = len(text)
@@ -302,41 +326,41 @@ def get_float_type(text):
     return None
 
 
-def looks_like_type_name(text):
+def _looks_like_type_name(text):
     for c in text:
         if not (c.isidentifier() or c in " *&<>:"):
             return False
     return True
 
 
-def get_class_name_parenthesis(text):
+def _get_class_name_parenthesis(text):
     pos = text.find("(")
     if pos == -1 or 0 <= text.find("{") < pos:
         return None
     if pos == 0:
         end_pos = text.find(")")
-        if end_pos not in (-1, len(text) - 1) and looks_like_type_name(text[pos + 1:end_pos]):
+        if end_pos not in (-1, len(text) - 1) and _looks_like_type_name(text[pos + 1:end_pos]):
             return DeducedType(explicit=text[pos+1:end_pos].strip())
         else:
             return None
     return DeducedType(explicit=text[:pos].strip())
 
 
-def get_class_name_braces(text):
+def _get_class_name_braces(text):
     pos = text.find("{")
     if pos <= 0 or 0 <= text.find("(") < pos:
         return None
     return DeducedType(explicit=text[:pos].strip())
 
 
-def find_end_of_whitespace(text, start_pos):
+def _find_end_of_whitespace(text, start_pos):
     for i in range(start_pos, len(text)):
         if not text[i].isspace():
             return i
     return -1
 
 
-def get_tuple_parts(text):
+def _get_tuple_parts(text):
     if not text or text[0] != "{" or text[-1] != "}":
         return None
     text = text[1:-1].strip()
@@ -372,16 +396,16 @@ def get_value_type(text):
     elif len(text) > 1 and text[-1] == '"' \
             and (text[0] == '"' or text[:3] == 'u8"'):
         return DeducedType(Category.STRING)
-    value_type = get_int_type(text)
+    value_type = _get_int_type(text)
     if value_type:
         return value_type
-    value_type = get_float_type(text)
+    value_type = _get_float_type(text)
     if value_type:
         return value_type
-    value_type = get_class_name_parenthesis(text)
+    value_type = _get_class_name_parenthesis(text)
     if value_type:
         return value_type
-    value_type = get_class_name_braces(text)
+    value_type = _get_class_name_braces(text)
     if value_type:
         return value_type
     if text.endswith("_MIN") or text.endswith("_MAX"):
@@ -389,61 +413,9 @@ def get_value_type(text):
                                  specific=MINMAX_CONSTANTS.get(text[:-4]))
         if value_type:
             return value_type
-    tuple_parts = get_tuple_parts(text)
+    tuple_parts = _get_tuple_parts(text)
     if tuple_parts is not None:
         types = [get_value_type(part) for part in tuple_parts]
         if None not in types:
             return DeducedType(Category.COMPOSITE, subtypes=types)
     return None
-
-
-OPERATION_DEDUCED_TYPES = {
-    "assign": DeducedType(),
-    "append": DeducedType(Category.LIST, subtypes=[DeducedType()]),
-    "extend": DeducedType(Category.LIST, subtypes=[DeducedType()])
-}
-
-
-def deduce_type(member, syntax):
-    if member.type:
-        return None
-    deduced_types = []
-    if member.default:
-        default_type = get_value_type(member.default)
-        if default_type:
-            default_type.source = "default"
-            deduced_types.append(default_type)
-    for argument in member.arguments:
-        # if argument.valid_values:
-        #     typ = deduce_type_from_values(argument.valid_values, syntax)
-        #     if typ:
-        #         typ.source = "values"
-        #         deduced_types.append(typ)
-        # if argument.value:
-        #     typ = get_value_type(argument.value, syntax)
-        #     if typ:
-        #         typ.source = "value"
-        #         deduced_types.append(typ)
-        # if argument.operation:
-        #     op = argument.operation
-        #     if op in OPERATION_DEDUCED_TYPES:
-        #         deduced_types.append(OPERATION_DEDUCED_TYPES[op])
-        # if argument.separator_count:
-        #     typ = deduce_type_from_separator_count(argument.separator_count)
-        #     if typ:
-        #         typ.source = "separator_count"
-        #         deduced_types.append(typ)
-        if argument.count:
-            if argument.count[1] != 1:
-                typ = DeducedType(Category.LIST,
-                                  subtypes=[DeducedType()])
-
-
-        # if "count" in argument.given_properties:
-        #     pass
-    return None
-
-
-def deduce_types(members, syntax):
-    for member in members:
-        deduce_type(member, syntax)

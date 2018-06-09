@@ -5,8 +5,9 @@ ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
 Executes unit tests.
 
 ARGUMENTS
-{{| type: int | values: -10..0 2 3 5 7 11 13 17 19}}
-{{<test name> | count: 2..4 | values: "p1" "p2" "p3" "p4"}}
+  {{-i PATH, --include=PATH | count: 0.. | separator: : | default: "foo":"bar":"baz"}}
+{{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19}}
+{{<test name> | count: 2..4 | values: "p1", "p2", "p3", "p4"}}
     The name of the test or tests that will be run. All tests are run if no test names are given. If the --exclude option is used, all tests except the given ones are run.
 
     Tests are typically arranged in a two-level hierarchy with a parent and several child-tests. To disable a parent test and all its children, just enter the name of the parent. To disable a spesific child enter the names of both the parent and the child, separated with a single "/".
@@ -48,7 +49,7 @@ OTHER OPTIONS
   {{--line=LEN              | member: cuboid}}
   {{--antiflag              | member: flag | value: false}}
   {{-p N, --percentage=N    | type: int | values: 0..100, 200..| default: 50}}
-  {{-s TEXT                 | count: ..10 | default: "Kjakan Gundersen"}}
+  {{-s TEXT                 | count: ..10 | default: {"Kjakan Gundersen"}}}
   {{--special               | member: s | value: "$spec$"}}
   {{-n X,Y                  | type: double | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
   {{-p X,Y,Z                | type: double | values: -1000..1000 : -1000..1000 : 0..500}}
@@ -56,7 +57,6 @@ OTHER OPTIONS
   {{--string=STR            | default: "Two words"}}
   {{--kjell                 | type:int}}  Option that specify non-boolean type, but no argument or value
   {{--                      }}  End of options
-  {{-i PATH, --include=PATH | count: 0.. | separator: : | default: "foo":"bar":"baz"}}
   {{--sysinclude            | member: include | value: "foo":"bar":"baz" | separator: :}}
   {{--stygg=N               | type: uint64_t }}
   {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}

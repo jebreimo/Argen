@@ -10,21 +10,17 @@ import parser_tools
 
 
 def count_separators(text, separator):
-    if not text and not separator:
+    if not separator:
         return 0, 0
     if not text:
         return 0, None
-    if not separator:
-        return 1, 1
     positions = parser_tools.find_all(text, separator)
-    if not positions and parser_tools.is_ellipsis(text):
+    if not positions:
         return 0, None
-    if not positions and text:
-        return 1, None
     final_token_pos = positions[-1] + len(separator)
     if parser_tools.is_ellipsis(text[final_token_pos:]):
         return len(positions), None
-    return len(positions) + 1, len(positions) + 1
+    return len(positions), len(positions)
 
 
 def deduce_separator_counts(arguments):

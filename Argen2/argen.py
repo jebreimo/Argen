@@ -20,6 +20,7 @@ import deduce_flags_and_metavars as dfam
 import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
+import deduce_member_types as dmt
 import deduce_separator_counts as ds
 import deduce_value_types as dvt
 import make_members as mm
@@ -167,6 +168,9 @@ def make_deductions(session):
     if conflicts:
         pass
     affected, conflict = dvt.deduce_value_types(session.members)
+    if conflicts:
+        pass
+    affected, conflict = dmt.deduce_member_types(session.members)
     if conflicts:
         pass
 

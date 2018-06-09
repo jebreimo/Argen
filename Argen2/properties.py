@@ -7,18 +7,19 @@
 # License text is included with the source distribution.
 # ===========================================================================
 
-ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
+ARGUMENT_PROPERTIES = {"callback", "flags", "index",
                        "inline", "member_name", "operation", "post_operation",
                        "separator", "separator_count", "text", "valid_values",
                        "value", "variable"}
 
-MEMBER_PROPERTIES = {"default", "member_callback", "member_inline",
+MEMBER_PROPERTIES = {"count", "default_value", "member_callback", "member_inline",
                      "member_type", "value_type"}
 
 _REVERSE_PROPERTY_ALIASES = {
-    "operation": ["op"],
     "callback": ["call"],
+    "default_value": ["default"],
     "member_name": ["mem", "member", "membername"],
+    "operation": ["op"],
     "separator": ["sep"],
     "separator_count": ["sepcount", "sep_count", "separatorcount"],
     "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",

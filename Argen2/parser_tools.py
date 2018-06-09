@@ -113,6 +113,21 @@ def split_range(text):
         return None
 
 
+def get_int_range(text):
+    if not text:
+        return None
+    parts = split_range(text)
+    if parts:
+        a, b = parts[0].strip(), parts[1].strip()
+        if a or b:
+            return (int(a, 0) if a else 0), (int(b, 0) if b else None)
+        else:
+            return 0, None
+    else:
+        a = int(text.strip(), 0)
+        return a, a
+
+
 def find_all(text, substr):
     result = []
     i = 0
