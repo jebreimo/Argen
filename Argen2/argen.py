@@ -21,8 +21,10 @@ import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
 import deduce_member_types as dmt
+import deduce_operations as do
 import deduce_separator_counts as ds
 import deduce_value_types as dvt
+import deduce_values as dv
 import make_members as mm
 
 
@@ -167,6 +169,8 @@ def make_deductions(session):
     affected, conflicts = dho.deduce_help_option(session.arguments)
     if conflicts:
         pass
+    affected = dv.deduce_values(session.arguments)
+    affected = do.deduce_operations(session.arguments)
     affected, conflict = dvt.deduce_value_types(session.members)
     if conflicts:
         pass

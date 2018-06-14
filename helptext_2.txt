@@ -5,7 +5,6 @@ ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
 Executes unit tests.
 
 ARGUMENTS
-  {{-i PATH, --include=PATH | count: 0.. | separator: : | default: "foo":"bar":"baz"}}
 {{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19}}
 {{<test name> | count: 2..4 | values: "p1", "p2", "p3", "p4"}}
     The name of the test or tests that will be run. All tests are run if no test names are given. If the --exclude option is used, all tests except the given ones are run.
@@ -41,9 +40,9 @@ REPORT OPTIONS
 OTHER OPTIONS
   {{--ting                  | value: 10.0 | count: 1}}  Text
   {{--tang=N                | member:ting | count: 1 }}  Text
-  {{-@                      | member: at | value: 2,5,3 | default: 0,2,4}}  Text
+  {{-@                      | member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
   {{--flag                  | default: true}}  Text
-  {{--size=ROWSxCOLS        | separator: x | default: 800x600}}
+  {{--size=ROWSxCOLS        | separator: x | default: {800, 600}}}
   {{--cuboid=LENxWIDxHEI    | separator: x | values: -1000..1000 | count:1}}
   {{--rect=LENxWID          | separator: x | member: cuboid}}
   {{--line=LEN              | member: cuboid}}
@@ -57,7 +56,8 @@ OTHER OPTIONS
   {{--string=STR            | default: "Two words"}}
   {{--kjell                 | type:int}}  Option that specify non-boolean type, but no argument or value
   {{--                      }}  End of options
-  {{--sysinclude            | member: include | value: "foo":"bar":"baz" | separator: :}}
+  {{-i PATH, --include=PATH | op: extend | separator: : | default: {"foo", "bar", "baz"}}}
+  {{--sysinclude            | member: include | value: {"foo", "bar", "baz"}}}
   {{--stygg=N               | type: uint64_t }}
   {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
   {{-                       }} Read input from stdin.

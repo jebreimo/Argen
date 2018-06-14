@@ -7,7 +7,6 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import deducedtype as dt
-import deduce_value_types
 
 
 def deduce_member_type_fom_operation(member):
@@ -52,11 +51,6 @@ def deduce_member_type_from_default_value(member):
     if not member.default_value:
         return None
     typ = dt.get_value_type(member.default_value)
-    if typ is None or dt.is_undetermined(typ):
-        sep, count = _get_separator(member.arguments)
-        if sep:
-            typ = deduce_value_types.deduce_type_from_value(
-                member.default_value, sep, count)
     if typ:
         typ.source = "default_value"
     return typ

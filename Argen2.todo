@@ -1,2 +1,4 @@
-Deduce value
-Deduce operation
++ Deduce value
++ Deduce operation
+- Don't create members if the argument doesn't specify a member and operation is none.
+- Create a proper error reporting mechanism.

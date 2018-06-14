@@ -73,6 +73,15 @@ class Category:
     BOOL = "bool"
 
 
+KNOWN_TYPE_CATEGORIES = {
+    "std::string": Category.STRING,
+    "int": Category.INTEGER,
+    "long": Category.INTEGER,
+    "double": Category.REAL,
+    "bool": Category.BOOL
+}
+
+
 CATEGORY_TYPES = {
     Category.ANY: "std::string",
     Category.COMPOSITE: "std::tuple",
