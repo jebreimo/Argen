@@ -15,9 +15,9 @@ def has_help_flags(flags):
     return True
 
 
-def deduce_help_option(arguments):
+def deduce_help_option(session):
     candidates = []
-    for arg in arguments:
+    for arg in session.arguments:
         if arg.callback == "show_help":
             return arg, None
         elif arg.callback is None and has_help_flags(arg.flags):
@@ -34,4 +34,10 @@ def deduce_help_option(arguments):
         arg.callback = "show_help"
         if arg.post_operation is None:
             arg.post_operation = "abort"
+            session.logger.debug("Deduced callback: %s and post-operation: %s."
+                                 % (arg.callback, arg.post_operation),
+                                 argument=arg)
+        else:
+            session.logger.debug("Deduced callback: %s." % arg.callback,
+                                 argument=arg)
     return candidates, None

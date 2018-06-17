@@ -8,14 +8,19 @@
 # ===========================================================================
 import argument as a
 import deduce_indices as di
+import session
 
 
 def test_ordering():
-    args = [a.Argument("a", {"index": "2"}),
+    args = [a.Argument("a"),
             a.Argument("b"),
             a.Argument("c"),
-            a.Argument("d", {"index": "0"})]
-    assert di.deduce_indices(args) == ([args[1], args[2]], None)
+            a.Argument("d")]
+    args[0].index = 2
+    args[3].index = 0
+    s = session.Session()
+    s.arguments = args
+    di.deduce_indices(s)
     assert args[0].index == 2
     assert args[1].index == 1
     assert args[2].index == 3

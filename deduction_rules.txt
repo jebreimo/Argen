@@ -6,10 +6,10 @@ Argument properties
 // callback
 //     * show_help if flags contains -h --help or /?
 
-count
-    * 0..1 if flags and operation is assign
-    * 0.. if flags and operation is append or extend
-    * based on arguments if not flags
+// count
+//    * 0..1 if flags and operation is assign
+//    * 0.. if flags and operation is append or extend
+//    * based on arguments if not flags
 
 // flags
 //     * from text
@@ -27,9 +27,9 @@ metavar
 //     * from text
     * [WARNING] if operation is assign, append, extend, type isn't bool and value is None
 
-operation
-    * assign if max-count is 1
-    * append if max-count is greater than 1
+// operation
+//    * assign if max-count is 1
+//    * append if max-count is greater than 1
 
 post_operation
 //     * abort if callback is show_help
@@ -38,16 +38,15 @@ post_operation
 // separator
 //     * deduce from argument if detect_separators is True
 
-separator_count
+// separator_count
     // * deduce from argument and separator
-    * deduce from operation and separator
 
 // text
 //    * raw_text
 
-value
-    * "true" if argument is None and operation is assign or append
-    * "true" if type is "bool"
+// value
+//     * "true" if argument is None
+//    * "true" if type is "bool"
 
 [values]
 

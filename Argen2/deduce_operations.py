@@ -45,12 +45,11 @@ def deduce_operation(argument, member_operations):
         return "append"
 
 
-def deduce_operations(arguments):
-    affected = []
-    member_operations = get_member_operations(arguments)
-    for arg in arguments:
+def deduce_operations(session):
+    member_operations = get_member_operations(session.arguments)
+    for arg in session.arguments:
         if arg.operation:
             continue
         arg.operation = deduce_operation(arg, member_operations)
-        affected.append(arg)
-    return affected
+        session.logger.debug("Deduced operation: %s." % arg.operation,
+                             argument=arg)

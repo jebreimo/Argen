@@ -6,7 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-from member import Member
+import member
 import properties
 
 
@@ -21,7 +21,7 @@ def get_arguments_by_member_name(arguments):
     return member_arguments
 
 
-def make_member(member_name, arguments, conflicts):
+def make_member(member_name, arguments, session):
     if len(arguments) == 0:
         return None
 
@@ -35,9 +35,12 @@ def make_member(member_name, arguments, conflicts):
             value = arg.given_properties.get(prop_name)
             if value is not None:
                 if prev_arg and value != prev_value:
-                    conflicts.append(dict(property=prop_name,
-                                          values=[value, prev_value],
-                                          arguments=[arg, prev_arg]))
+                    session.logger.error("Conflicting values for member"
+                                         " property %s: %s and %s."
+                                         % (prop_name, value, prev_value),
+                                         argument=arg)
+                    session.logger.info("...defined as %s here" % prev_value,
+                                        argument=prev_arg)
                     has_conflicts = True
                 else:
                     prev_arg, prev_value = arg, value
@@ -46,20 +49,18 @@ def make_member(member_name, arguments, conflicts):
 
     if has_conflicts:
         return None
-    member = Member(member_name, member_props)
-    member.arguments = arguments
-    return member
+    mem = member.make_member(member_name, member_props, arguments, session)
+    return mem
 
 
-def make_members(arguments):
-    member_arguments = get_arguments_by_member_name(arguments)
+def make_members(session):
+    member_arguments = get_arguments_by_member_name(session.arguments)
     members = []
-    conflicts = []
     for member_name in member_arguments:
         arguments = member_arguments[member_name]
-        member = make_member(member_name, arguments, conflicts)
-        if member:
-            members.append(member)
+        mem = make_member(member_name, arguments, session)
+        if mem:
+            members.append(mem)
             for arg in arguments:
-                arg.member = member
-    return members, conflicts
+                arg.member = mem
+    session.members = members

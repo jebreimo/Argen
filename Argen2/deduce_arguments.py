@@ -139,13 +139,13 @@ def split_metavar(text):
     return assembler.get_parts()
 
 
-def deduce_arguments(args):
-    affected = []
-    for arg in args:
+def deduce_arguments(session):
+    for arg in session.arguments:
         if arg.metavar:
             if not arg.flags:
                 arg.arguments = split_metavar(arg.metavar)
-                affected.append(arg)
+                session.logger.debug("Deduced arguments: %s" % arg.arguments,
+                                     argument=arg)
             else:
                 if arg.metavar[0] != "<" and arg.metavar[-1] != ">":
                     fmt = "<%s>"
@@ -156,5 +156,5 @@ def deduce_arguments(args):
                 else:
                     fmt = "%s"
                 arg.arguments = [fmt % arg.metavar]
-                affected.append(arg)
-    return affected
+                session.logger.debug("Deduced arguments: %s" % arg.arguments,
+                                     argument=arg)

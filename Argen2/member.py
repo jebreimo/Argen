@@ -14,25 +14,15 @@ from helpfileerror import HelpFileError
 class Member:
     def __init__(self, name, properties):
         self.name = name
-        self.arguments = []
         self.given_properties = properties
-        try:
-            self.count = parser_tools.get_int_range(properties.get("count"))
-        except ValueError:
-            raise HelpFileError("Invalid count: %s, the value must be an integer or a range of integers (from..[to])"
-                                % properties["count"])
-        self.default_value = properties.get("default_value")
-        self.member_action = properties.get("member_action")
-        self.member_callback = properties.get("member_callback")
-        self.member_type = properties.get("member_type")
-        if "member_type" in properties:
-            self.member_type = DeducedType(explicit=properties["member_type"])
-        else:
-            self.member_type = None
-        if "value_type" in properties:
-            self.value_type = DeducedType(explicit=properties["value_type"])
-        else:
-            self.value_type = None
+        self.arguments = None
+        self.count = None
+        self.default_value = None
+        self.member_action = None
+        self.member_callback = None
+        self.member_type = None
+        self.member_type = None
+        self.value_type = None
 
     def __str__(self):
         values = self.__dict__
@@ -40,3 +30,25 @@ class Member:
         keys.sort()
         kvs = ("%s: %s" % (k, values[k]) for k in keys if values[k] is not None)
         return "%s\n    %s" % (self.name, "\n    ".join(kvs))
+
+
+def make_member(name, properties, arguments, session):
+    mem = Member(name, properties)
+    mem.arguments = arguments
+    mem.given_properties = properties
+    try:
+        mem.count = parser_tools.get_int_range(properties.get("count"))
+    except ValueError:
+        args = [a for a in arguments if "count" in a.given_properties] or [None]
+        session.logger.error("Invalid count: %s. The value must be an integer "
+                             "or a range of integers (from..[to])"
+                             % properties["count"], argument=args[0])
+    mem.default_value = properties.get("default_value")
+    mem.member_action = properties.get("member_action")
+    mem.member_callback = properties.get("member_callback")
+    mem.member_type = properties.get("member_type")
+    if "member_type" in properties:
+        mem.member_type = DeducedType(explicit=properties["member_type"])
+    if "value_type" in properties:
+        mem.value_type = DeducedType(explicit=properties["value_type"])
+    return mem

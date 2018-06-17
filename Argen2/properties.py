@@ -20,6 +20,7 @@ _REVERSE_PROPERTY_ALIASES = {
     "default_value": ["default"],
     "member_name": ["mem", "member", "membername"],
     "operation": ["op"],
+    "post_operation": ["postop", "post_op", "postoperation"],
     "separator": ["sep"],
     "separator_count": ["sepcount", "sep_count", "separatorcount"],
     "member_callback": ["memcall", "mem_call", "memcallback", "mem_callback",

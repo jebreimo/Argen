@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import argument
+import session
 import text_deductions as td
 
 
@@ -46,6 +47,6 @@ def test_get_argument_metavar_and_count():
 
 
 def test_parse_argument_text():
-    arg = argument.Argument("-")
+    arg = argument.make_argument("-", {}, session.Session(), "", 0)
     props = td.parse_argument_text(arg)
     assert props["flags"] == "-"

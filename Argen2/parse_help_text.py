@@ -8,7 +8,7 @@
 # ===========================================================================
 from helpfileerror import HelpFileError
 from replace_variables import replace_variables
-from argument import Argument
+from argument import make_argument
 from properties import LEGAL_PROPERTIES, PROPERTY_ALIASES
 from parser_tools import split_and_unescape_text, find_next_separator
 
@@ -26,21 +26,23 @@ def find_argument(text, start_pos, syntax):
     return start, end + len(syntax.argument_end)
 
 
-def parse_argument(text, syntax):
-    parts = split_and_unescape_text(text, syntax.argument_separator)
+def parse_argument(text, session):
+    parts = split_and_unescape_text(text, session.syntax.argument_separator)
     properties = {}
     for part in parts[1:]:
         subparts = part.split(":", 1)
         if len(subparts) != 2:
-            raise HelpFileError('Invalid property: "%s".' % part)
+            session.logger.warn('Ignoring property without ":": "%s".' % part)
+            continue
         name = subparts[0].strip()
         value = subparts[1].strip()
         property_name = name.lower()
         property_name = PROPERTY_ALIASES.get(property_name, property_name)
         if property_name not in LEGAL_PROPERTIES:
-            raise HelpFileError('Unknown property: "%s".' % name)
-        properties[property_name] = value
-    return Argument(parts[0], properties)
+            session.logger.warn('Ignoring unknown property: "%s".' % name)
+        else:
+            properties[property_name] = value
+    return parts[0], properties
 
 
 def parse_help_text_impl(text, session, file_name, line_number):
@@ -57,12 +59,13 @@ def parse_help_text_impl(text, session, file_name, line_number):
             out_text.append(text[from_pos:to_pos])
             arg_start = to_pos + len(syntax.argument_start)
             arg_end = arg_range[1] - len(syntax.argument_end)
-            argument = parse_argument(text[arg_start:arg_end], syntax)
-            argument.file_name = file_name
             line_number += text.count("\n", from_pos, arg_range[0])
-            argument.line_number = line_number
+            session.logger.line_number = line_number
+            arg_text, props = parse_argument(text[arg_start:arg_end], session)
+            argument = make_argument(arg_text, props, session,
+                                     file_name, line_number)
             line_number += text.count("\n", arg_range[0], arg_range[1])
-            out_text.append(argument.raw_text)
+            out_text.append(arg_text)
             session.arguments.append(argument)
             from_pos = arg_range[1]
         return "".join(out_text)
@@ -75,6 +78,7 @@ def parse_help_text(section, session):
     lines = []
     for i, line in enumerate(section.lines):
         try:
+            session.logger.line_number = section.line_number + i
             lines.append(replace_variables(line, session))
         except HelpFileError as ex:
             ex.file_name = section.file_name

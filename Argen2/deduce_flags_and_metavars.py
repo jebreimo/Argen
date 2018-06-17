@@ -71,17 +71,15 @@ def get_flags_and_arguments(text):
     return flags, argument
 
 
-def deduce_flags_and_metavars(arguments):
-    affected = []
-    conflicts = []
-    for arg in arguments:
+def deduce_flags_and_metavars(session):
+    for arg in session.arguments:
         if arg.metavar == "":
             arg.metavar = None
         if arg.flags is None and arg.metavar is None:
             arg.flags, arg.metavar = get_flags_and_arguments(arg.text)
             if arg.flags or arg.metavar:
-                affected.append(arg)
+                session.logger.debug("Deduced flags: %s and variable: %s"
+                                     % (arg.flags, arg.metavar), argument=arg)
             else:
-                conflicts.append(dict(message="Unable to determine flags or variable for argument.",
-                                      arguments=[arg]))
-    return affected, conflicts
+                session.logger.error("Unable to determine flags or variable"
+                                     " for argument.", argument=arg)

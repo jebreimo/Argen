@@ -8,30 +8,34 @@
 # ===========================================================================
 import parse_help_text as pht
 import helpfilesyntax
+import session
 
 
 def test_parse_argument():
-    syntax = helpfilesyntax.HelpFileSyntax()
-    arg = pht.parse_argument("-t --test | Value: 3 | Count: 2..", syntax)
-    assert arg.text == "-t --test "
-    assert arg.value == "3"
-    assert arg.count == (2, None)
+    s = session.Session()
+    txt, props = pht.parse_argument("-t --test | Value: 3 | Count: 2..", s)
+    assert txt == "-t --test "
+    assert props["value"] == "3"
+    assert props["count"] == "2.."
 
 
 def test_parse_argument_quotes():
-    syntax = helpfilesyntax.HelpFileSyntax()
-    arg = pht.parse_argument("-t --test | Value: \"3 | 4\" | Count: 2..", syntax)
-    assert arg.text == "-t --test "
-    assert arg.value == '"3 | 4"'
-    assert arg.count == (2, None)
+    s = session.Session()
+    txt, props = pht.parse_argument('-t --test | Value: "3 | 4" | Count: 2..',
+                                    s)
+    assert txt == "-t --test "
+    assert props["value"] == '"3 | 4"'
+    assert props["count"] == "2.."
 
 
 def test_parse_complex():
-    syntax = helpfilesyntax.HelpFileSyntax()
-    arg = pht.parse_argument("-t --test | Value: {Foo(a | b), Bar(c | d)} | Count: 2..", syntax)
-    assert arg.text == "-t --test "
-    assert arg.value == "{Foo(a | b), Bar(c | d)}"
-    assert arg.count == (2, None)
+    s = session.Session()
+    txt, props = pht.parse_argument("-t --test "
+                                    "| Value: {Foo(a | b), Bar(c | d)} "
+                                    "| Count: 2..", s)
+    assert txt == "-t --test "
+    assert props["value"] == "{Foo(a | b), Bar(c | d)}"
+    assert props["count"] == "2.."
 
 
 def test_find_argument():

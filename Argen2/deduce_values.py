@@ -8,10 +8,8 @@
 # ===========================================================================
 
 
-def deduce_values(arguments):
-    conflicts = []
-    affected = []
-    for arg in arguments:
+def deduce_values(session):
+    for arg in session.arguments:
         if arg.value or arg.metavar or not arg.member:
             continue
         if (not arg.member.value_type
@@ -19,7 +17,8 @@ def deduce_values(arguments):
             and (not arg.member.member_type
                  or arg.member.member_type.explicit == "bool"):
             arg.value = "true"
-            affected.append(arg)
+            session.logger.debug("Deduced value: %s." % arg.value,
+                                 argument=arg)
         else:
-            conflicts.append("Error")
-    return affected
+            session.logger.error("Unable to deduce the option's value.",
+                                 argument=arg)

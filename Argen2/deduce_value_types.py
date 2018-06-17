@@ -76,7 +76,6 @@ def deduce_value_type(member):
     if member.value_type:
         return None, None
     deduced_types = [dt.DeducedType()]
-    print(member.name)
     for argument in member.arguments:
         if argument.valid_values:
             typ = deduce_type_from_valid_values(argument.valid_values)
@@ -102,16 +101,20 @@ def deduce_value_type(member):
     return dt.join_list_of_deduced_types(deduced_types)[0]
 
 
-def deduce_value_types(members):
-    affected = []
-    conflicts = []
-    for member in members:
+def deduce_value_types(session):
+    for member in session.members:
         if not member.value_type:
             typ = deduce_value_type(member)
             if typ:
                 member.value_type = typ
-                affected.append(member)
+                session.logger.debug("Deduced value type for %s: %s."
+                                     % (member.name, member.value_type),
+                                     argument=member.arguments[0])
+                for arg in member.arguments[1:]:
+                    session.logger.debug("...also defined here.", argument=arg)
             else:
-                conflicts.append(dict(message="Unable to determine value_type for member.",
-                                      arguments=[member]))
-    return affected, conflicts
+                session.logger.error("Unable to deduce value type for %s."
+                                     % member.name,
+                                     argument=member.arguments[0])
+                for arg in member.arguments[1:]:
+                    session.logger.info("...also defined here.", argument=arg)

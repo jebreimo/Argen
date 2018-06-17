@@ -10,6 +10,7 @@ import datetime
 import os
 
 import properties
+import logger
 from helpfileerror import HelpFileError
 from helpfilesyntax import HelpFileSyntax
 
@@ -32,9 +33,8 @@ def parse_bool(value):
     raise HelpFileError("Invalid boolean value: %s" % value)
 
 
-class Session:
+class Settings:
     def __init__(self):
-        self.variables = make_default_variables()
         self.indentation = -1
         self.allow_abbreviations = True
         self.use_pragma_once = True
@@ -46,13 +46,32 @@ class Session:
         self.function_name = "parse_arguments"
         self.line_width = 79
         self.add_test = False
+        self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
+        self.detect_separators = False
+
+
+class Session:
+    def __init__(self):
+        self.settings = Settings()
+        self.variables = make_default_variables()
         self.syntax = HelpFileSyntax()
         self.help_text = ""
         self.error_text = ""
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.arguments = []
-        self.detect_separators = False
         self.members = []
+        self.logger = logger.Logger()
+
+    def begin_processing_file(self, file_name):
+        self.logger.file_name = file_name
+        self.logger.line_number = None
+
+    def end_processing_file(self):
+        self.logger.file_name = None
+        self.logger.line_number = None
+
+    def has_errors(self):
+        return self.logger.counters[logger.Logger.ERROR] != 0
 
     def set_setting(self, name, value):
         if name == "ArgumentPrefix":
@@ -62,11 +81,11 @@ class Session:
         elif name == "ArgumentSeparator":
             self.syntax.argument_separator = value
         elif name == "IndentationWidth":
-            self.indentation = int(value)
+            self.settings.indentation = int(value)
         elif name == "Abbreviations":
-            self.allow_abbreviations = parse_bool(value)
+            self.settings.allow_abbreviations = parse_bool(value)
         elif name == "PragmaOnce":
-            self.use_pragma_once = parse_bool(value)
+            self.settings.use_pragma_once = parse_bool(value)
         elif name == "SectionPrefix":
             self.syntax.section_prefix = value
         elif name == "VariablePrefix":
@@ -74,20 +93,23 @@ class Session:
         elif name == "VariableSuffix":
             self.syntax.variable_end = value
         elif name == "Class_name":
-            self.class_name = value
+            self.settings.class_name = value
         elif name == "File_name":
-            self.file_name = value
+            self.settings.file_name = value
         elif name == "HeaderExtension":
-            self.header_extension = value
+            self.settings.header_extension = value
         elif name == "SourceExtension":
-            self.source_extension = value
+            self.settings.source_extension = value
         elif name == "Namespace":
-            self.namespace = value
+            self.settings.namespace = value
         elif name == "FunctionName":
-            self.function_name = value
+            self.settings.function_name = value
         elif name == "LineWidth":
-            self.line_width = int(value)
+            self.settings.line_width = int(value)
         elif name == "Test":
-            self.add_test = parse_bool(value)
+            self.settings.add_test = parse_bool(value)
         elif name == "DetectSeparators":
-            self.detect_separators = parse_bool(value)
+            self.settings.detect_separators = parse_bool(value)
+        else:
+            return False
+        return True

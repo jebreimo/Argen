@@ -72,18 +72,20 @@ def make_member_name_from_metavar(metavar, taken_names):
     return _make_unique_name(_make_name(metavar), taken_names)
 
 
-def deduce_member_names(arguments):
+def deduce_member_names(session):
     unnamed = []
-    conflicts = []
     taken_names = {}
-    for arg in arguments:
+    for arg in session.arguments:
         if arg.member_name:
             prev_arg = taken_names.get(arg.member_name)
             if not prev_arg:
                 taken_names[arg.member_name] = arg
             elif arg.is_option() != prev_arg.is_option():
-                conflicts.append(dict(message="An option and an argument cannot have the same member name (%s)." % arg.member_name,
-                                      arguments=[arg, prev_arg]))
+                session.logger.error("Options and arguments cannot share the "
+                                     "same member name (%s)." % arg.member_name,
+                                     argument=arg)
+                session.logger.info("The conflicting argument or option "
+                                    "is defined here.", argument=prev_arg)
         else:
             unnamed.append(arg)
     for arg in unnamed:
@@ -92,6 +94,6 @@ def deduce_member_names(arguments):
         else:
             name = make_member_name_from_metavar(arg.metavar, taken_names)
         arg.member_name = name
+        session.logger.debug("Deduced member name: " + name, argument=arg)
         if name not in taken_names:
             taken_names[name] = arg
-    return unnamed, conflicts

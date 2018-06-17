@@ -36,7 +36,7 @@ def replace_variables(text, session):
             output.append(text[pos:var[0]])
             output.append(session.variables[name])
         else:
-            raise HelpFileError("Undefined variable: %s" % name)
+            session.logger.warn("Undefined variable: %s" % name)
         pos = var[1]
     if not output:
         return text

@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import parser_tools as pt
+import pytest
 
 
 def test_find_next_separator():
@@ -40,3 +41,17 @@ def test_find_last_not_of():
     assert pt.find_last_not_of("", ".") == -1
     assert pt.find_last_not_of(None, ".") == -1
     assert pt.find_last_not_of("ABC", ".") == 2
+
+
+def test_get_int_range():
+    assert pt.get_int_range("1") == (1, 1)
+    assert pt.get_int_range("..1") == (0, 1)
+    assert pt.get_int_range("34..") == (34, None)
+    assert pt.get_int_range("3..8") == (3, 8)
+    assert pt.get_int_range("3...8") == (3, 8)
+    assert pt.get_int_range("-3..8") == (-3, 8)
+    assert pt.get_int_range("13..8") == (13, 8)
+    assert pt.get_int_range("..") == (0, None)
+    assert pt.get_int_range("0x1a") == (0x1A, 0x1A)
+    with pytest.raises(ValueError):
+        pt.get_int_range("1e")

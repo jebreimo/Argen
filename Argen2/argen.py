@@ -11,9 +11,10 @@ import argparse
 import sys
 
 from helpfileerror import HelpFileError
-from sections import read_sections
+from logger import Logger
 from parse_help_text import parse_help_text
 from replace_variables import replace_variables
+from sections import read_sections
 from session import Session
 import deduce_arguments as da
 import deduce_flags_and_metavars as dfam
@@ -28,10 +29,11 @@ import deduce_values as dv
 import make_members as mm
 
 
-def tokenize_setting(line):
+def tokenize_setting(line, logger):
     parts = line.split("=", 1)
     if len(parts) != 2:
-        raise HelpFileError("Incorrect setting: %s" % line)
+        logger.warn("Incorrect setting: %s" % line)
+        return None, None, None
     left_side = parts[0].split()
     if len(left_side) == 1:
         name = left_side[0]
@@ -40,7 +42,8 @@ def tokenize_setting(line):
         name = left_side[1]
         is_setting = False
     else:
-        raise HelpFileError("Incorrect option name: %s" % parts[0])
+        logger.warn("Incorrect setting name: %s" % parts[0])
+        return None, None, None
     value = parts[1].strip()
     if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
         value = value[1:-1]
@@ -50,14 +53,16 @@ def tokenize_setting(line):
 def parse_settings(section, session):
     for i, line in enumerate(section.lines):
         try:
+            session.logger.line_number = section.line_number + i + 1
             line = replace_variables(line, session)
             line = line.strip()
             if line:
-                name, value, is_setting = tokenize_setting(line)
-                if not is_setting:
-                    session.variables[name] = value
-                else:
-                    session.set_setting(name, value)
+                name, value, is_setting = tokenize_setting(line, session.logger)
+                if name:
+                    if not is_setting:
+                        session.variables[name] = value
+                    elif not session.set_setting(name, value):
+                        session.logger.warn("Unknown setting: " + name)
         except HelpFileError as ex:
             ex.file_name = section.file_name
             ex.line_number = section.line_number + i + 1
@@ -76,34 +81,6 @@ def parse_definition(section, session):
     session.variables[section.parameter] = "".join(lines)
 
 
-# def parse_section(section, session):
-#     pass
-#
-#
-# def deduce_missing_option_values(options):
-#     pass
-#
-#
-# def deduce_missing_argument_values(arguments):
-#     pass
-#
-#
-# def create_arguments(arguments):
-#     pass
-#
-#
-# def create_options(options):
-#     pass
-#
-#
-# def create_argument_members(arguments):
-#     pass
-#
-#
-# def create_option_members(options):
-#     pass
-#
-#
 # def create_code_properties(arguments, options, members):
 #     pass
 #
@@ -114,6 +91,7 @@ def parse_definition(section, session):
 
 def parse_sections(sections, session):
     for section in sections:
+        session.begin_processing_file(section.file_name)
         if section.type == "text":
             session.help_text = parse_help_text(section, session)
         elif section.type == "set":
@@ -122,6 +100,7 @@ def parse_sections(sections, session):
             parse_settings(section, session)
         elif section.type == "errortext":
             session.error_text = parse_help_text(section, session)
+        session.end_processing_file()
 
 
 class HelpText:
@@ -130,7 +109,7 @@ class HelpText:
 
 
 def make_argument_parser():
-    ap = argparse.ArgumentParser(description='Generates a C++ argument parser.')
+    ap = argparse.ArgumentParser(description='Generates source files for a C++ command line argument parser.')
     ap.add_argument("helpfiles", metavar="text file", action="append",
                     help="text files containing the help text")
     ap.add_argument("-i", "--indent", metavar="N", type=int, default=-1,
@@ -152,31 +131,17 @@ def update_properties(existing_properties, new_properties):
 
 
 def make_deductions(session):
-    affected, conflicts = dfam.deduce_flags_and_metavars(session.arguments)
-    if conflicts:
-        pass
-    affected = da.deduce_arguments(session.arguments)
-    affected, conflicts = dmn.deduce_member_names(session.arguments)
-    if conflicts:
-        pass
-    affected = ds.deduce_separator_counts(session.arguments)
-    session.members, conflicts = mm.make_members(session.arguments)
-    if conflicts:
-        pass
-    affected, conflicts = di.deduce_indices(session.arguments)
-    if conflicts:
-        pass
-    affected, conflicts = dho.deduce_help_option(session.arguments)
-    if conflicts:
-        pass
-    affected = dv.deduce_values(session.arguments)
-    affected = do.deduce_operations(session.arguments)
-    affected, conflict = dvt.deduce_value_types(session.members)
-    if conflicts:
-        pass
-    affected, conflict = dmt.deduce_member_types(session.members)
-    if conflicts:
-        pass
+    dfam.deduce_flags_and_metavars(session)
+    da.deduce_arguments(session)
+    dmn.deduce_member_names(session)
+    ds.deduce_separator_counts(session)
+    mm.make_members(session)
+    di.deduce_indices(session)
+    dho.deduce_help_option(session)
+    dv.deduce_values(session)
+    do.deduce_operations(session)
+    dvt.deduce_value_types(session)
+    dmt.deduce_member_types(session)
 
 
 def find_duplicated_flags(args):
@@ -196,36 +161,55 @@ def find_duplicated_flags(args):
     return conflicts
 
 
-def list_conflicting_flags(conflicting_flags):
-    for flag in conflicting_flags:
-        print("Error: the flag '%s' is defined by multiple options:")
-        for a in conflicting_flags[flag]:
-            print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
+# def list_conflicting_flags(conflicting_flags):
+#     for flag in conflicting_flags:
+#         print("Error: the flag '%s' is defined by multiple options:")
+#         for a in conflicting_flags[flag]:
+#             print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
 
 
-def print_error(file_name, line_number, message):
-    if file_name and line_number:
-        print(f"{file_name}:{line_number}: {message}", file=sys.stderr)
-    elif file_name:
-        print(f"{file_name}: {message}", file=sys.stderr)
-    elif line_number:
-        print(f"line {line_number}: {message}", file=sys.stderr)
-    else:
-        print(message, file=sys.stderr)
+# def print_error(file_name, line_number, message):
+#     if file_name and line_number:
+#         print(f"{file_name}:{line_number}: {message}", file=sys.stderr)
+#     elif file_name:
+#         print(f"{file_name}: {message}", file=sys.stderr)
+#     elif line_number:
+#         print(f"line {line_number}: {message}", file=sys.stderr)
+#     else:
+#         print(message, file=sys.stderr)
 
 
-def print_member_property_conflicts(conflicts):
-    for conflict in conflicts:
-        arg1, arg2 = conflict["arguments"]
-        name = conflict["property"]
-        value1, value2 = conflict["values"]
-        if arg2.file_name:
-            other_pos = "%s:%d" % (arg2.file_name, arg2.line_number)
-        else:
-            other_pos = "line %d" % arg2.line_number
-        print_error(arg1.file_name, arg1.line_number,
-                    f"The value of property {name} ({value1}) conflicts with"
-                    + f"the value given at {other_pos} ({value2}).")
+# def print_member_property_conflicts(conflicts):
+#     for conflict in conflicts:
+#         arg1, arg2 = conflict["arguments"]
+#         name = conflict["property"]
+#         value1, value2 = conflict["values"]
+#         if arg2.file_name:
+#             other_pos = "%s:%d" % (arg2.file_name, arg2.line_number)
+#         else:
+#             other_pos = "line %d" % arg2.line_number
+#         print_error(arg1.file_name, arg1.line_number,
+#                     f"The value of property {name} ({value1}) conflicts with"
+#                     + f"the value given at {other_pos} ({value2}).")
+
+
+def process_files(file_names, session):
+    sections = []
+    for file_name in file_names:
+        print(file_name)
+        new_sections = read_sections(file_name, session.syntax)
+        sections.extend(new_sections)
+        parse_sections(new_sections, session)
+    if session.has_errors():
+        return False
+    make_deductions(session)
+    return not session.has_errors()
+
+
+def print_result(result, session):
+    print(result + " %d error(s) %d warning(s)"
+          % (session.logger.counters[Logger.ERROR],
+             session.logger.counters[Logger.WARNING]))
 
 
 def main():
@@ -233,13 +217,10 @@ def main():
     session = Session()
     syntax = session.syntax
     syntax.section_prefix = args.section_prefix
-    sections = []
-    for file_name in args.helpfiles:
-        print(file_name)
-        new_sections = read_sections(file_name, syntax)
-        sections.extend(new_sections)
-        parse_sections(new_sections, session)
-    make_deductions(session)
+    if not process_files(args.helpfiles, session):
+        print_result("Failure.", session)
+        return 1
+    print_result("Success.", session)
     # conflicting_flags = find_duplicated_flags(session.arguments)
     # if conflicting_flags:
     #     list_conflicting_flags(conflicting_flags)
@@ -250,20 +231,20 @@ def main():
     #     print_member_property_conflicts(conflicts)
     #     return 1
 
-    for section in sections:
-        print(section)
-    for variable in session.variables:
-        print(variable)
-        print(session.variables[variable])
-    print("ERROR_TEXT")
-    print(session.error_text)
-    print("HELP_TEXT")
-    print(session.help_text)
-    print("ARGUMENTS")
-    for arg in session.arguments:
-        print(arg)
-    for member in session.members:
-        print(member)
+    # for section in sections:
+    #     print(section)
+    # print("==== VARIABLES ====")
+    # for variable in session.variables:
+    #     print("%s=%s" % (variable, session.variables[variable]))
+    # print("==== ERROR_TEXT ====")
+    # print(session.error_text)
+    # print("==== HELP_TEXT ====")
+    # print(session.help_text)
+    # print("==== ARGUMENTS ====")
+    # for arg in session.arguments:
+    #     print(arg)
+    # for member in session.members:
+    #     print(member)
     return 0
 
 

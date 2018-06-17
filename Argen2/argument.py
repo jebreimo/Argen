@@ -7,7 +7,6 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import parser_tools
-from helpfileerror import HelpFileError
 
 
 def get_int_property(dict, key):
@@ -41,41 +40,25 @@ class Argument:
     argument_counter = 1
 
     def __init__(self, raw_text, properties=None):
-        if properties is None:
-            properties = {}
-
         self.auto_index = Argument.argument_counter
         Argument.argument_counter += 1
-
-        self.line_number = -1
-        self.file_name = ""
+        self.line_number = None
+        self.file_name = None
         self.raw_text = raw_text
-        # self.properties = properties if properties else {}
-        self.given_properties = dict(properties)
-
-        self.callback = properties.get("callback")
-        if "flags" in properties:
-            self.flags = properties["flags"].split()
-        else:
-            self.flags = None
-        self.index = get_int_property(properties, "index")
-        self.inline = properties.get("inline")
-        self.member_name = properties.get("member_name")
-        self.metavar = properties.get("argument")
-        self.operation = properties.get("operation")
-        self.post_operation = properties.get("post_operation")
-        self.separator = properties.get("separator")
-        try:
-            self.separator_count = parser_tools.get_int_range(
-                properties.get("separator_count"))
-        except ValueError:
-            raise HelpFileError("Invalid separator_count: %s, the value must be an integer or a range of integers (from..[to])"
-                                % properties["separator_count"])
-
-        self.text = properties.get("text", raw_text)
-        self.valid_values = parse_valid_values(properties.get("valid_values"))
-        self.value = properties.get("value")
-
+        self.given_properties = properties
+        self.callback = None
+        self.flags = None
+        self.index = None
+        self.inline = None
+        self.member_name = None
+        self.metavar = None
+        self.operation = None
+        self.post_operation = None
+        self.separator = None
+        self.separator_count = None
+        self.text = None
+        self.valid_values = None
+        self.value = None
         self.arguments = None
         self.member = None
 
@@ -89,6 +72,32 @@ class Argument:
     def is_option(self):
         return len(self.flags) != 0
 
+
+def make_argument(raw_text, properties, session, file_name, line_number):
+    arg = Argument(raw_text, dict(properties))
+    arg.line_number = line_number
+    arg.file_name = file_name
+    arg.callback = properties.get("callback")
+    if "flags" in properties:
+        arg.flags = properties["flags"].split()
+    arg.index = get_int_property(properties, "index")
+    arg.inline = properties.get("inline")
+    arg.member_name = properties.get("member_name")
+    arg.metavar = properties.get("argument")
+    arg.operation = properties.get("operation")
+    arg.post_operation = properties.get("post_operation")
+    arg.separator = properties.get("separator")
+    try:
+        arg.separator_count = parser_tools.get_int_range(
+            properties.get("separator_count"))
+    except ValueError:
+        session.logger.error("Invalid separator_count: %s, the value must be "
+                             "an integer or a range of integers (from..[to])"
+                             % properties["separator_count"])
+    arg.text = properties.get("text", raw_text)
+    arg.valid_values = parse_valid_values(properties.get("valid_values"))
+    arg.value = properties.get("value")
+    return arg
 
 # def compare_metavar_properties(aprops, bprops):
 #     akeys = list(aprops.keys())

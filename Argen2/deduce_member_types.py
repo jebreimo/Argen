@@ -75,17 +75,20 @@ def deduce_member_type(member):
     return dt.join_list_of_deduced_types(types)[0]
 
 
-def deduce_member_types(members):
-    affected = []
-    conflicts = []
-    for member in members:
+def deduce_member_types(session):
+    for member in session.members:
         if not member.member_type:
             typ = deduce_member_type(member)
             if typ:
                 member.member_type = typ
-                affected.append(member)
+                session.logger.debug("Deduced member type for %s: %s."
+                                     % (member.name, member.value_type),
+                                     argument=member.arguments[0])
+                for arg in member.arguments[1:]:
+                    session.logger.debug("...also defined here.", argument=arg)
             else:
-                conflicts.append(dict(
-                    message="Unable to determine member_type for member.",
-                    arguments=[member]))
-    return affected, conflicts
+                session.logger.error("Unable to deduce member type for %s."
+                                     % member.name,
+                                     argument=member.arguments[0])
+                for arg in member.arguments[1:]:
+                    session.logger.info("...also defined here.", argument=arg)
