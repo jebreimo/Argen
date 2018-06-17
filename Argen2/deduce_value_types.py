@@ -113,8 +113,8 @@ def deduce_value_types(session):
                 for arg in member.arguments[1:]:
                     session.logger.debug("...also defined here.", argument=arg)
             else:
-                session.logger.error("Unable to deduce value type for %s."
-                                     % member.name,
-                                     argument=member.arguments[0])
+                session.logger.warn("Unable to deduce value type for %s."
+                                    % member.name,
+                                    argument=member.arguments[0])
                 for arg in member.arguments[1:]:
                     session.logger.info("...also defined here.", argument=arg)
