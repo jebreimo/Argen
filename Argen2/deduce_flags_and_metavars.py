@@ -19,8 +19,9 @@ def find_end_of_flag(text, start):
 
 def is_flag(text, start):
     n = len(text) - start
-    return n >= 2 and text[start] in "-/" \
-        and (n != 2 or text[start + 1] not in "\x09 ,")
+    return (n >= 2 and text[start] in "-/"
+            and (n != 2 or text[start + 1] not in "\x09 ,")) \
+        or text == "-"
 
 
 def find_end_of_separator(text, start):
@@ -72,6 +73,7 @@ def get_flags_and_arguments(text):
 
 
 def deduce_flags_and_metavars(session):
+    undetermined = []
     for arg in session.arguments:
         if arg.metavar == "":
             arg.metavar = None
@@ -81,5 +83,19 @@ def deduce_flags_and_metavars(session):
                 session.logger.debug("Deduced flags: %s and variable: %s"
                                      % (arg.flags, arg.metavar), argument=arg)
             else:
-                session.logger.error("Unable to determine flags or variable"
-                                     " for argument.", argument=arg)
+                session.logger.warn("Unable to determine flags or variable"
+                                    " for argument.", argument=arg)
+                undetermined.append(arg)
+    if undetermined:
+        taken_metavars = {a.metavar for a in session.arguments if a.metavar}
+        i = 0
+        for arg in undetermined:
+            metavar = "<unnamed>" if i == 0 else "<unnamed_%d>" % i
+            i += 1
+            while metavar in taken_metavars:
+                metavar = "<unnamed_%d>" % i
+                i += 1
+            arg.metavar = metavar
+            taken_metavars.add(metavar)
+            session.logger.debug("Deduced variable: %s" % arg.metavar,
+                                 argument=arg)

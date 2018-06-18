@@ -74,7 +74,7 @@ def deduce_type_from_separator_count(count):
 
 def deduce_value_type(member):
     if member.value_type:
-        return None, None
+        return None
     deduced_types = [dt.DeducedType()]
     for argument in member.arguments:
         if argument.valid_values:
@@ -107,8 +107,8 @@ def deduce_value_types(session):
             typ = deduce_value_type(member)
             if typ:
                 member.value_type = typ
-                session.logger.debug("Deduced value type for %s: %s."
-                                     % (member.name, member.value_type),
+                session.logger.debug("Deduced value type for %s from %s: %s."
+                                     % (member.name, typ.source, member.value_type),
                                      argument=member.arguments[0])
                 for arg in member.arguments[1:]:
                     session.logger.debug("...also defined here.", argument=arg)

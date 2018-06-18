@@ -32,3 +32,5 @@ def test_get_flags_and_arguments():
     assert dfam.get_flags_and_arguments("-a M N, --a M N, --b Q R") == (["-a", "--a", "--b"], "M N")
     assert dfam.get_flags_and_arguments("-a, --a M N") == (["-a", "--a"], "M N")
     assert dfam.get_flags_and_arguments("[FILE ...]") == ([], "[FILE ...]")
+    assert dfam.get_flags_and_arguments("-") == (["-"], None)
+    assert dfam.get_flags_and_arguments("--") == (["--"], None)

@@ -121,6 +121,9 @@ def make_argument_parser():
                     help="don't insert a pragma once at the beginning of the header file")
     ap.add_argument("--section-prefix", default="$$$",
                     help="set the section prefix that are used to define sections in helpfiles")
+    ap.add_argument("--debug", action="store_const", const=True,
+                    default=False,
+                    help="show debug messages")
     return ap
 
 
@@ -217,6 +220,7 @@ def main():
     session = Session()
     syntax = session.syntax
     syntax.section_prefix = args.section_prefix
+    session.logger.error_level = Logger.DEBUG if args.debug else Logger.INFO
     if not process_files(args.helpfiles, session):
         print_result("Failure.", session)
         return 1

@@ -5,7 +5,7 @@ ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
 Executes unit tests.
 
 ARGUMENTS
-{{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19 | index: 2}}
+{{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19 | index: 2 | count: 0..1}}
 {{<test name> | count: 2..4 | values: "p1", "p2", "p3", "p4"}}
     The name of the test or tests that will be run. All tests are run if no test names are given. If the --exclude option is used, all tests except the given ones are run.
 
@@ -18,7 +18,7 @@ ARGUMENTS
     Ei lita liste:
         * en og to
         * tre og fire
-        * fem og seks ${KENNETH}
+        * fem og seks
 
 GENERAL OPTIONS
   {{-e, --exclude           }}  Exclude the tests whose names appear after the options and run everything else. This is the opposite of the default behavior.
@@ -43,7 +43,7 @@ OTHER OPTIONS
   {{-@                      | member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
   {{--flag                  | default: true}}  Text
   {{--size=ROWSxCOLS        | separator: x | default: {800, 600}}}
-  {{--cuboid=LENxWIDxHEI    | separator: x | values: -1000..1000 | count:1}}
+  {{--cuboid=LENxWIDxHEI    | separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | count:1}}
   {{--rect=LENxWID          | separator: x | member: cuboid}}
   {{--line=LEN              | member: cuboid }}
   {{--antiflag              | member: flag | value: false}}
@@ -85,10 +85,9 @@ ${FileHeader}
 ${CONTENTS}
 
 $$$ Settings
-assign Gunsi=Gudrun
 HeaderExtension = "hpp"
 FunctionName = "parseArguments"
-NameSpace = Foo::Bar
+Namespace = Foo::Bar
 
 $$$ ErrorText
 ${PROGRAM} ${OPTIONS} ${ARGUMENTS}

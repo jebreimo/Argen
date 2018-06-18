@@ -26,6 +26,8 @@ def _make_name(raw_name):
             chars.append("_")
     if len(chars) > 1 and chars[-1] == "_" and raw_name[-1] != "_":
         chars.pop()
+    if not chars:
+        return "_"
     return "".join(chars)
 
 
@@ -51,9 +53,11 @@ def _get_longest_flag(flags):
 def _make_unique_name(name, taken_names):
     if name not in taken_names:
         return name
+    if name[-1] != "_":
+        name += "_"
     i = 2
     while True:
-        unique_name = "%s_%d" % (name, i)
+        unique_name = "%s%d" % (name, i)
         if unique_name not in taken_names:
             return unique_name
         i += 1
@@ -63,7 +67,7 @@ def make_member_name_from_flags(flags, taken_names):
     longest_flag = _get_longest_flag(flags)
     name = _make_name(longest_flag)
     prev_arg = taken_names.get(name)
-    if prev_arg and not prev_arg.flags:
+    if prev_arg and (not prev_arg.flags or name == "_"):
         name = _make_unique_name(name, taken_names)
     return name
 

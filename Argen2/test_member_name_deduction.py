@@ -19,6 +19,7 @@ def test_make_member_name():
     assert mnd._make_name("12+t-p_s**2") == "_12_t_p_s_2"
     assert mnd._make_name("t_$_t") == "t_t"
     assert mnd._make_name("foo faa") == "foo_faa"
+    assert mnd._make_name("--") == "_"
 
 
 def test_get_longest_flags():
