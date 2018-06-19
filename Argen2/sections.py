@@ -9,10 +9,11 @@
 # ===========================================================================
 from helpfileerror import HelpFileError
 
+
 # Section types: Text, Define, Header, Source, Options, ErrorText
 class Section:
-    def __init__(self, sectionType, parameter, file_name, line_number):
-        self.type = sectionType
+    def __init__(self, section_type, parameter, file_name, line_number):
+        self.type = section_type
         self.parameter = parameter
         self.file_name = file_name
         self.line_number = line_number
@@ -20,7 +21,8 @@ class Section:
 
     def __str__(self):
         if self.parameter:
-            return "%(type)s %(parameter)s (%(file_name)s:%(line_number)d)" % self.__dict__
+            return "%(type)s %(parameter)s (%(file_name)s:%(line_number)d)" \
+                   % self.__dict__
         else:
             return "%(type)s (%(file_name)s:%(line_number)d)" % self.__dict__
 
@@ -29,16 +31,16 @@ def parse_section_header(line):
     words = line.split(None, 1)
     if len(words) == 0:
         raise HelpFileError("Empty section header")
-    sectionType = words[0].lower()
-    if sectionType == "set":
-        return sectionType, words[1]
-    elif sectionType in ("text", "source", "header", "settings", "errortext"):
+    section_type = words[0].lower()
+    if section_type == "set":
+        return section_type, words[1]
+    elif section_type in ("text", "source", "header", "settings", "errortext"):
         if len(words) == 1:
-            return sectionType, None
+            return section_type, None
         else:
             raise HelpFileError("Incorrect section header: %s" % line)
     else:
-        raise HelpFileError("Unknown section header: %s" % sectionType)
+        raise HelpFileError("Unknown section header: %s" % section_type)
 
 
 def read_sections(file_name, syntax):
@@ -49,11 +51,11 @@ def read_sections(file_name, syntax):
         if line.startswith(syntax.section_prefix):
             text = line[len(syntax.section_prefix):].strip()
             try:
-                sectionType, parameter = parse_section_header(text)
-                if sectionType in ("source", "header"):
-                    parameter = sectionType.upper()
-                    sectionType = "set"
-                sections.append(Section(sectionType, parameter,
+                section_type, parameter = parse_section_header(text)
+                if section_type in ("source", "header"):
+                    parameter = section_type.upper()
+                    section_type = "set"
+                sections.append(Section(section_type, parameter,
                                         file_name, i + 1))
             except HelpFileError as ex:
                 ex.file_name = file_name
