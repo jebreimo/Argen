@@ -60,7 +60,7 @@ OTHER OPTIONS
   {{--sysinclude            | member: include | value: {"foo", "bar", "baz"}}}
   {{--stygg=N               | type: uint64_t}}
   {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
-  {{-                       }} Read input from stdin.
+  {{-                       | op: none}} Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 
 $$$ Set FileHeader

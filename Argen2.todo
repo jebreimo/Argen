@@ -1,5 +1,5 @@
 + Deduce value
 + Deduce operation
 + Create a proper error reporting mechanism.
-- Don't create members if the argument doesn't specify a member and operation is none.
++ Don't create members if the argument doesn't specify a member and operation is none.
 + Deduce member name for -- ?
