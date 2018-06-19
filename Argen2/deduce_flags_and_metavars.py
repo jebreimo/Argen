@@ -72,6 +72,20 @@ def get_flags_and_arguments(text):
     return flags, argument
 
 
+def report_duplicate_flags(session):
+    flags = {}
+    for arg in session.arguments:
+        if arg.flags:
+            for flag in arg.flags:
+                if flag in flags:
+                    session.logger.error("Option %s defined more than once."
+                                         % flag, argument=arg)
+                    session.logger.info("...it was first defined here.",
+                                        argument=flags[flag])
+                else:
+                    flags[flag] = arg
+
+
 def deduce_flags_and_metavars(session):
     undetermined = []
     for arg in session.arguments:
@@ -99,3 +113,5 @@ def deduce_flags_and_metavars(session):
             taken_metavars.add(metavar)
             session.logger.debug("Deduced variable: %s" % arg.metavar,
                                  argument=arg)
+    report_duplicate_flags(session)
+
