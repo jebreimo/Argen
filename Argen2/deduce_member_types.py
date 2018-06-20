@@ -56,9 +56,10 @@ def deduce_member_type_from_default_value(member):
     return typ
 
 
-def deduce_member_type(member):
+def deduce_member_type(member, logger):
     if member.member_type:
         return None
+    logger.attribute = member.arguments[0]
     types = [dt.DeducedType()]
     if member.default_value:
         typ = deduce_member_type_from_default_value(member)
@@ -72,13 +73,15 @@ def deduce_member_type(member):
     typ = deduce_member_type_fom_operation(member)
     if typ:
         types.append(typ)
-    return dt.join_list_of_deduced_types(types)[0]
+    result = dt.join_list_of_deduced_types(types, logger)
+    logger.argument = None
+    return result
 
 
 def deduce_member_types(session):
     for member in session.members:
         if not member.member_type:
-            typ = deduce_member_type(member)
+            typ = deduce_member_type(member, session.logger)
             if typ:
                 member.member_type = typ
                 session.logger.debug("Deduced member type for %s: %s."

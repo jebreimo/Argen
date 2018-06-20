@@ -26,17 +26,22 @@ class Logger:
         self.stream = stream
         self.error_level = error_level
         self.file_name = None
-        self.line_number = None
+        self.line_number = None,
+        self.argument = None
         self.counters = [0] * 4
 
     def _file_name_and_line_number(self, file_name=None, line_number=None,
                                    argument=None):
         if file_name is None and argument:
             file_name = argument.file_name
+        if not file_name and self.argument:
+            file_name = self.argument.file_name
         if not file_name:
             file_name = self.file_name
         if line_number is None and argument:
             line_number = argument.line_number
+        if not line_number and self.argument:
+            line_number = self.argument.line_number
         if not line_number:
             line_number = self.line_number
         return file_name, line_number

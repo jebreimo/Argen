@@ -9,7 +9,7 @@
 import deducedtype as dt
 
 
-def deduce_type_from_values_part(ranges):
+def deduce_type_from_values_part(ranges, logger):
     value_types = []
     for lo, hi in ranges:
         if lo:
@@ -20,16 +20,16 @@ def deduce_type_from_values_part(ranges):
         return dt.DeducedType()
     result = value_types[0]
     for i in range(1, len(value_types)):
-        result, error = dt.join_deduced_types(result, value_types[i])
+        result = dt.join_deduced_types(result, value_types[i], logger)
         if not result:
             return None
     return result
 
 
-def deduce_type_from_valid_values(values):
+def deduce_type_from_valid_values(values, logger):
     types = []
     for ranges in values:
-        part_type = deduce_type_from_values_part(ranges)
+        part_type = deduce_type_from_values_part(ranges, logger)
         if not part_type:
             return None
         types.append(part_type)
@@ -72,13 +72,14 @@ def deduce_type_from_separator_count(count):
         return dt.DeducedType(dt.Category.LIST, subtypes=[dt.DeducedType()])
 
 
-def deduce_value_type(member):
+def deduce_value_type(member, logger):
     if member.value_type:
         return None
+    logger.argument = member.arguments[0]
     deduced_types = [dt.DeducedType()]
     for argument in member.arguments:
         if argument.valid_values:
-            typ = deduce_type_from_valid_values(argument.valid_values)
+            typ = deduce_type_from_valid_values(argument.valid_values, logger)
             if typ:
                 typ.source = "valid_values"
                 deduced_types.append(typ)
@@ -98,13 +99,15 @@ def deduce_value_type(member):
             if typ:
                 typ.source = "separator_count"
                 deduced_types.append(typ)
-    return dt.join_list_of_deduced_types(deduced_types)[0]
+    result = dt.join_list_of_deduced_types(deduced_types, logger)
+    logger.argument = None
+    return result
 
 
 def deduce_value_types(session):
     for member in session.members:
         if not member.value_type:
-            typ = deduce_value_type(member)
+            typ = deduce_value_type(member, session.logger)
             if typ:
                 member.value_type = typ
                 session.logger.debug("Deduced value type for %s from %s: %s."

@@ -176,68 +176,75 @@ class DeducedType:
                            ", ".join(str(st) for st in self.subtypes))
 
 
-def join_deduced_types(deduced_type1, deduced_type2):
+def join_deduced_types(deduced_type1, deduced_type2, logger):
     if not deduced_type1 or not deduced_type2:
-        return None, "Deduced type cannot be None."
+        logger.error("Deduced type cannot be None.")
+        return None
 
     if deduced_type1 == deduced_type2:
-        return DeducedType(prototype=deduced_type1), None
+        return DeducedType(prototype=deduced_type1)
 
     category = most_specific_category(deduced_type1.category,
                                       deduced_type2.category)
     if category is None:
-        return None, "Incompatible types: <%s> and <%s>." \
-               % (deduced_type1, deduced_type2)
+        logger.warn("Incompatible types: %s and %s."
+                       % (deduced_type1, deduced_type2))
+        return None
 
     if deduced_type1.explicit != deduced_type2.explicit:
         if deduced_type1.explicit and not deduced_type2.explicit:
-            return DeducedType(category, prototype=deduced_type1), None
+            return DeducedType(category, prototype=deduced_type1)
         elif not deduced_type1.explicit and deduced_type2.explicit:
-            return DeducedType(category, prototype=deduced_type2), None
+            return DeducedType(category, prototype=deduced_type2)
         else:
-            return None, "Conflicting types: <%s> and <%s>." \
-                   % (deduced_type1, deduced_type2)
+            logger.warn("Conflicting types: %s and %s."
+                        % (deduced_type1, deduced_type2))
+            return None
 
     if deduced_type1.specific != deduced_type2.specific:
         if deduced_type1.specific and not deduced_type2.specific:
-            return DeducedType(category, prototype=deduced_type1), None
+            return DeducedType(category, prototype=deduced_type1)
         elif not deduced_type1.specific and deduced_type2.specific:
-            return DeducedType(category, prototype=deduced_type2), None
+            return DeducedType(category, prototype=deduced_type2)
         else:
-            return None, "Conflicting types: <%s> and <%s>." \
-                   % (deduced_type1, deduced_type2)
+            logger.warn("Conflicting types: %s and %s."
+                        % (deduced_type1, deduced_type2))
+            return None
     subtypes = None
     if deduced_type1.subtypes and deduced_type2.subtypes:
         if len(deduced_type1.subtypes) == len(deduced_type2.subtypes):
             subtypes = []
             for st1, st2 in zip(deduced_type1.subtypes, deduced_type2.subtypes):
-                st, error = join_deduced_types(st1, st2)
-                if error:
-                    return None, error
+                st = join_deduced_types(st1, st2, logger)
+                if not st:
+                    return None
                 subtypes.append(st)
-        elif category == Category.LIST:
-            common_type1, error = join_list_of_deduced_types(deduced_type1.subtypes)
-            common_type2, error = join_list_of_deduced_types(deduced_type2.subtypes)
-            common_type, error = join_deduced_types(common_type1, common_type2)
+        else:
+            common_type1 = join_list_of_deduced_types(deduced_type1.subtypes, logger)
+            common_type2 = join_list_of_deduced_types(deduced_type2.subtypes, logger)
+            common_type = join_deduced_types(common_type1, common_type2, logger)
             if common_type:
                 subtypes = [common_type]
+                category = Category.LIST
         if not subtypes:
-            return None, "Conflicting lists of subtypes: <%s> and <%s>." \
-                   % (deduced_type1, deduced_type2)
+            logger.warn("Conflicting lists of subtypes: %s and %s."
+                        % (deduced_type1, deduced_type2))
+            return None
     else:
         subtypes = deduced_type1.subtypes or deduced_type2.subtypes
-    return DeducedType(category, subtypes=subtypes), None
+    return DeducedType(category, subtypes=subtypes)
 
 
-def join_list_of_deduced_types(deduced_types):
+def join_list_of_deduced_types(deduced_types, logger):
     if not deduced_types:
-        return None, "deduced_types cannot be None or empty."
+        logger.error("Deduced_types cannot be None or empty.")
+        return None
     common_type = deduced_types[0]
     for i in range(1, len(deduced_types)):
-        common_type, error = join_deduced_types(common_type, deduced_types[i])
-        if error:
-            return None, error
-    return common_type, None
+        common_type = join_deduced_types(common_type, deduced_types[i], logger)
+        if not common_type:
+            return None
+    return common_type
 
 
 def is_undetermined(deduced_type):

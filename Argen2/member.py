@@ -46,7 +46,6 @@ def make_member(name, properties, arguments, session):
     mem.default_value = properties.get("default_value")
     mem.member_action = properties.get("member_action")
     mem.member_callback = properties.get("member_callback")
-    mem.member_type = properties.get("member_type")
     if "member_type" in properties:
         mem.member_type = DeducedType(explicit=properties["member_type"])
     if "value_type" in properties:
