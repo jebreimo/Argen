@@ -90,7 +90,7 @@ def deduce_member_names(session):
                                      argument=arg)
                 session.logger.info("The conflicting argument or option "
                                     "is defined here.", argument=prev_arg)
-        elif arg.operation != "none":
+        elif arg.member_name is None and arg.operation != "none":
             unnamed.append(arg)
     for arg in unnamed:
         if arg.flags:

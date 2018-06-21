@@ -91,7 +91,7 @@ def parse_flags(text):
 
 
 def deduce_flag_properties(argument):
-    if "flags" in argument.given_properties:
+    if "flags" in argument.properties:
         properties = {}
     else:
         properties = parse_flags(argument.text)
@@ -142,7 +142,7 @@ def looks_like_flags(text):
 
 
 def parse_argument_text(argument):
-    if argument.given_properties.get("flags", ".") \
+    if argument.properties.get("flags", ".") \
             or looks_like_flags(argument.text):
         return deduce_flag_properties(argument)
     else:

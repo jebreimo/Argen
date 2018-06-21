@@ -40,4 +40,27 @@ def deduce_help_option(session):
         else:
             session.logger.debug("Deduced callback: %s." % arg.callback,
                                  argument=arg)
-    return candidates, None
+
+
+def looks_like_final_option(arg):
+    if not arg.flags or arg.flags[0] != "--" or len(arg.flags) != 1:
+        return False
+    if not arg.properties:
+        return True
+    if len(arg.properties) != 1 or "operation" not in arg.properties:
+        return False
+    return arg.properties["operation"] == "none"
+
+
+def deduce_final_option(session):
+    for arg in session.arguments:
+        if looks_like_final_option(arg):
+            arg.post_operation = "final"
+            arg.member_name = ""
+            session.logger.debug("Deduced final option.", argument=arg)
+
+
+def deduce_special_options(session):
+    deduce_help_option(session)
+    deduce_final_option(session)
+

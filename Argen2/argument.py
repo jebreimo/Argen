@@ -45,7 +45,7 @@ class Argument:
         self.line_number = None
         self.file_name = None
         self.raw_text = raw_text
-        self.given_properties = properties
+        self.properties = properties
         self.callback = None
         self.flags = None
         self.index = None

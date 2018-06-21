@@ -18,12 +18,12 @@ from sections import read_sections
 from session import Session
 import deduce_arguments as da
 import deduce_flags_and_metavars as dfam
-import deduce_help_option as dho
 import deduce_indices as di
 import deduce_member_names as dmn
 import deduce_member_types as dmt
 import deduce_operations as do
 import deduce_separator_counts as ds
+import deduce_special_options as dso
 import deduce_value_types as dvt
 import deduce_values as dv
 import make_members as mm
@@ -135,12 +135,14 @@ def update_properties(existing_properties, new_properties):
 
 def make_deductions(session):
     dfam.deduce_flags_and_metavars(session)
+    dso.deduce_special_options(session)
     da.deduce_arguments(session)
     dmn.deduce_member_names(session)
     ds.deduce_separator_counts(session)
+    if session.has_errors():
+        return
     mm.make_members(session)
     di.deduce_indices(session)
-    dho.deduce_help_option(session)
     dv.deduce_values(session)
     do.deduce_operations(session)
     dvt.deduce_value_types(session)

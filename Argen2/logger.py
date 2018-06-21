@@ -26,7 +26,7 @@ class Logger:
         self.stream = stream
         self.error_level = error_level
         self.file_name = None
-        self.line_number = None,
+        self.line_number = None
         self.argument = None
         self.counters = [0] * 4
 

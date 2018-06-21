@@ -8,23 +8,24 @@
 # ===========================================================================
 import deduce_value_types as dvt
 import deducedtype as dt
-import helpfilesyntax as hfs
+import logger
 
 
 def test_deduce_type_from_values_part():
-    typ = dvt.deduce_type_from_values_part([("-10", "20")])
+    log = logger.Logger()
+    typ = dvt.deduce_type_from_values_part([("-10", "20")], log)
     assert typ.category == dt.Category.NUMBER
 
-    typ = dvt.deduce_type_from_values_part([("-10", "20.5")])
+    typ = dvt.deduce_type_from_values_part([("-10", "20.5")], log)
     assert typ.category == dt.Category.REAL
 
     typ = dvt.deduce_type_from_values_part(
-        [("Foo(2)", "Foo(2)"), ("Foo(3)", "Foo(3)"), ("Foo(5)", "Foo(5)")])
+        [("Foo(2)", "Foo(2)"), ("Foo(3)", "Foo(3)"), ("Foo(5)", "Foo(5)")], log)
     assert typ.explicit == "Foo"
 
     typ = dvt.deduce_type_from_values_part([
         ("{1, 2, \"g\"}", "{1, 2, \"g\"}"),
-        ("{3, 4.0f, \"h\"}", "{3, 4.0f, \"h\"}")])
+        ("{3, 4.0f, \"h\"}", "{3, 4.0f, \"h\"}")], log)
     assert typ.category == dt.Category.COMPOSITE
     assert len(typ.subtypes) == 3
     assert typ.subtypes[0].category == dt.Category.NUMBER
@@ -33,9 +34,10 @@ def test_deduce_type_from_values_part():
 
 
 def test_deduce_type_from_values():
+    log = logger.Logger()
     typ = dvt.deduce_type_from_valid_values([[("0", "10"), ("99", "99")],
                                              [("'a'", "'a'"), ("'b'", "'b'")],
-                                             [("1UL", "1UL"), ("5", "5")]])
+                                             [("1UL", "1UL"), ("5", "5")]], log)
     assert typ.category == dt.Category.COMPOSITE
     assert len(typ.subtypes) == 3
     assert typ.subtypes[0].category == dt.Category.NUMBER

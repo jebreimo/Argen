@@ -32,7 +32,7 @@ def make_member(member_name, arguments, session):
         prev_arg = None
         prev_value = None
         for arg in arguments:
-            value = arg.given_properties.get(prop_name)
+            value = arg.properties.get(prop_name)
             if value is not None:
                 if prev_arg and value != prev_value:
                     session.logger.error("Conflicting values for member"

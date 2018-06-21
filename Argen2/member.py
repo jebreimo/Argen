@@ -14,7 +14,7 @@ from helpfileerror import HelpFileError
 class Member:
     def __init__(self, name, properties):
         self.name = name
-        self.given_properties = properties
+        self.properties = properties
         self.arguments = None
         self.count = None
         self.default_value = None
@@ -35,11 +35,11 @@ class Member:
 def make_member(name, properties, arguments, session):
     mem = Member(name, properties)
     mem.arguments = arguments
-    mem.given_properties = properties
+    mem.properties = properties
     try:
         mem.count = parser_tools.get_int_range(properties.get("count"))
     except ValueError:
-        args = [a for a in arguments if "count" in a.given_properties] or [None]
+        args = [a for a in arguments if "count" in a.properties] or [None]
         session.logger.error("Invalid count: %s. The value must be an integer "
                              "or a range of integers (from..[to])"
                              % properties["count"], argument=args[0])
