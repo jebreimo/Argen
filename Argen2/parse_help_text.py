@@ -21,7 +21,7 @@ def find_argument(text, start_pos, syntax):
                               syntax.argument_end)
     if end < 0:
         ex = HelpFileError("Argument has no end tag.")
-        ex.line_number = text[:start].count("\n")
+        ex.line_number = text[:start].count("\n") + 1
         raise ex
     return start, end + len(syntax.argument_end)
 
@@ -70,7 +70,8 @@ def parse_help_text_impl(text, session, file_name, line_number):
             from_pos = arg_range[1]
         return "".join(out_text)
     except HelpFileError as ex:
-        ex.line_number = text[:to_pos].count("\n")
+        if ex.line_number == -1:
+            ex.line_number = text[:to_pos].count("\n") + 1
         raise
 
 
