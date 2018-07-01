@@ -6,3 +6,8 @@
 + See if it's possible to deduce a value/member type for --cuboid.
 + Automatically detect that -- is used to mark the end of options
 - Display a warning if there is no help option
+- Produce synopsis
+- Produce help text
+- Deduce names for flags (to be used in enumerations)
+- Have two modes for generated parse_arguments: one that leaves argc and argv unchanged, one that removes all known options and arguments.
+- Deduce inline and member_inline, that is, replace member references with variable.member.

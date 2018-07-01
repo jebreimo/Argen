@@ -8,16 +8,6 @@
 # ===========================================================================
 
 
-# def compare_indices(arg1, arg2):
-#     index1 = arg1.index if arg1.index is not None else arg1.auto_index
-#     index2 = arg2.index if arg2.index is not None else arg2.auto_index
-#     if index1 != index2:
-#         return index1 - index2
-#     if arg1.index == arg2.index:
-#         return 0
-#     return -1 if arg1.index is not None else 1
-
-
 def find_conflicting_indices(session):
     result = False
     taken_indices = {}

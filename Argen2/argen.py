@@ -103,36 +103,6 @@ def parse_sections(sections, session):
         session.end_processing_file()
 
 
-class HelpText:
-    def __init__(self):
-        pass
-
-
-def make_argument_parser():
-    ap = argparse.ArgumentParser(description='Generates source files for a C++ command line argument parser.')
-    ap.add_argument("helpfiles", metavar="text file", action="append",
-                    help="text files containing the help text")
-    ap.add_argument("-i", "--indent", metavar="N", type=int, default=-1,
-                    help="indentation width when option help text is word-wrapped")
-    ap.add_argument("-d", "--define", metavar="NAME=VALUE", action="append",
-                    help="define a value that can be used in the helpfiles")
-    ap.add_argument("--no-pragma-once", action="store_const", const=True,
-                    default=False,
-                    help="don't insert a pragma once at the beginning of the header file")
-    ap.add_argument("--section-prefix", default="$$$",
-                    help="set the section prefix that are used to define sections in helpfiles")
-    ap.add_argument("--debug", action="store_const", const=True,
-                    default=False,
-                    help="show debug messages")
-    return ap
-
-
-def update_properties(existing_properties, new_properties):
-    for key in new_properties:
-        if key not in existing_properties:
-            existing_properties[key] = new_properties[key]
-
-
 def make_deductions(session):
     dfam.deduce_flags_and_metavars(session)
     dso.deduce_special_options(session)
@@ -147,55 +117,6 @@ def make_deductions(session):
     do.deduce_operations(session)
     dvt.deduce_value_types(session)
     dmt.deduce_member_types(session)
-
-
-def find_duplicated_flags(args):
-    visited_flags = {}
-    for arg in args:
-        flags = arg.properties.get("flags")
-        if flags:
-            for flag in flags.split():
-                if flag not in visited_flags:
-                    visited_flags[flag] = {arg}
-                else:
-                    visited_flags[flag].add(arg)
-    conflicts = {}
-    for flag in visited_flags:
-        if len(visited_flags[flag]) != 1:
-            conflicts[flag] = visited_flags[flag]
-    return conflicts
-
-
-# def list_conflicting_flags(conflicting_flags):
-#     for flag in conflicting_flags:
-#         print("Error: the flag '%s' is defined by multiple options:")
-#         for a in conflicting_flags[flag]:
-#             print("  Line %d: '%s'" % (a.line_number, a.properties["flags"]))
-
-
-# def print_error(file_name, line_number, message):
-#     if file_name and line_number:
-#         print(f"{file_name}:{line_number}: {message}", file=sys.stderr)
-#     elif file_name:
-#         print(f"{file_name}: {message}", file=sys.stderr)
-#     elif line_number:
-#         print(f"line {line_number}: {message}", file=sys.stderr)
-#     else:
-#         print(message, file=sys.stderr)
-
-
-# def print_member_property_conflicts(conflicts):
-#     for conflict in conflicts:
-#         arg1, arg2 = conflict["arguments"]
-#         name = conflict["property"]
-#         value1, value2 = conflict["values"]
-#         if arg2.file_name:
-#             other_pos = "%s:%d" % (arg2.file_name, arg2.line_number)
-#         else:
-#             other_pos = "line %d" % arg2.line_number
-#         print_error(arg1.file_name, arg1.line_number,
-#                     f"The value of property {name} ({value1}) conflicts with"
-#                     + f"the value given at {other_pos} ({value2}).")
 
 
 def process_files(file_names, session):
@@ -217,6 +138,25 @@ def print_result(result, session):
              session.logger.counters[Logger.WARNING]))
 
 
+def make_argument_parser():
+    ap = argparse.ArgumentParser(description='Generates source files for a C++ command line argument parser.')
+    ap.add_argument("helpfiles", metavar="text file", action="append",
+                    help="text files containing the help text")
+    ap.add_argument("-i", "--indent", metavar="N", type=int, default=-1,
+                    help="indentation width when option help text is word-wrapped")
+    ap.add_argument("-d", "--define", metavar="NAME=VALUE", action="append",
+                    help="define a value that can be used in the helpfiles")
+    ap.add_argument("--no-pragma-once", action="store_const", const=True,
+                    default=False,
+                    help="don't insert a pragma once at the beginning of the header file")
+    ap.add_argument("--section-prefix", default="$$$",
+                    help="set the section prefix that are used to define sections in helpfiles")
+    ap.add_argument("--debug", action="store_const", const=True,
+                    default=False,
+                    help="show debug messages")
+    return ap
+
+
 def main():
     args = make_argument_parser().parse_args()
     session = Session()
@@ -227,10 +167,6 @@ def main():
         print_result("Failure.", session)
         return 1
     print_result("Success.", session)
-    # conflicting_flags = find_duplicated_flags(session.arguments)
-    # if conflicting_flags:
-    #     list_conflicting_flags(conflicting_flags)
-    #     return 1
     # member_arguments = get_arguments_by_member_name(session.arguments)
     # members, conflicts = make_members(member_arguments)
     # if conflicts:

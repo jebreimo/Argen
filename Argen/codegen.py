@@ -197,7 +197,7 @@ class TemplateProcessor:
         if len(parts) == 1 or not parts[0]:
             raise Error('"SET %s": invalid format for SET. '
                         'Correct format is "SET identifier=value".' % text)
-        self.expander._assign_value_(parts[0], parts[1])
+        self.expander.assign_value_(parts[0], parts[1])
 
     def pushAlignment(self):
         self.alignments.append(self._alignment())

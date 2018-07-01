@@ -63,4 +63,3 @@ def deduce_final_option(session):
 def deduce_special_options(session):
     deduce_help_option(session)
     deduce_final_option(session)
-
