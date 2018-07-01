@@ -16,18 +16,18 @@ def deduce_member_type_fom_operation(member):
             typ = dt.DeducedType(dt.Category.LIST,
                                  subtypes=[dt.DeducedType()])
         elif dt.is_list(member.value_type):
-            typ = member.value_type
+            typ = dt.DeducedType(prototype=member.value_type)
         else:
             typ = dt.DeducedType(dt.Category.LIST, subtypes=[member.value_type])
     elif "append" in operations:
         subtypes = [member.value_type or dt.DeducedType()]
         typ = dt.DeducedType(dt.Category.LIST, subtypes=subtypes)
     elif "assign" in operations:
-        typ = member.value_type
+        typ = dt.DeducedType(prototype=member.value_type)
     else:
         typ = None
     if typ:
-        typ.source = "operatiom"
+        typ.source = "operation"
     return typ
 
 
@@ -68,8 +68,8 @@ def deduce_member_type(member, logger):
     if member.count:
         if member.count[1] != 1:
             subtypes = [member.value_type or dt.DeducedType()]
-            types.append(dt.DeducedType(dt.Category.LIST,
-                                        subtypes=subtypes))
+            types.append(dt.DeducedType(dt.Category.LIST, subtypes=subtypes,
+                                        source="count"))
     typ = deduce_member_type_fom_operation(member)
     if typ:
         types.append(typ)
@@ -84,8 +84,9 @@ def deduce_member_types(session):
             typ = deduce_member_type(member, session.logger)
             if typ:
                 member.member_type = typ
-                session.logger.debug("Deduced member type for %s: %s."
-                                     % (member.name, member.value_type),
+                session.logger.debug("Deduced member type for %s from %s: %s."
+                                     % (member.name, typ.source,
+                                        member.member_type),
                                      argument=member.arguments[0])
                 for arg in member.arguments[1:]:
                     session.logger.debug("...also defined here.", argument=arg)

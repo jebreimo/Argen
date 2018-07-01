@@ -211,6 +211,7 @@ def join_deduced_types(deduced_type1, deduced_type2, logger):
                         % (deduced_type1, deduced_type2))
             return None
     subtypes = None
+    source = None
     if deduced_type1.subtypes and deduced_type2.subtypes:
         if len(deduced_type1.subtypes) == len(deduced_type2.subtypes):
             subtypes = []
@@ -218,6 +219,11 @@ def join_deduced_types(deduced_type1, deduced_type2, logger):
                 st = join_deduced_types(st1, st2, logger)
                 if not st:
                     return None
+                if not source and st1.category != st2.category:
+                    if st.category == st1.category:
+                        source = deduced_type1.source
+                    else:
+                        source = deduced_type2.source
                 subtypes.append(st)
         else:
             common_type1 = join_list_of_deduced_types(deduced_type1.subtypes, logger)
@@ -226,13 +232,26 @@ def join_deduced_types(deduced_type1, deduced_type2, logger):
             if common_type:
                 subtypes = [common_type]
                 category = Category.LIST
+                if not common_type2:
+                    source = deduced_type1.source
+                elif not common_type1:
+                    source = deduced_type2.source
         if not subtypes:
             logger.warn("Conflicting lists of subtypes: %s and %s."
                         % (deduced_type1, deduced_type2))
             return None
-    else:
-        subtypes = deduced_type1.subtypes or deduced_type2.subtypes
-    return DeducedType(category, subtypes=subtypes)
+    elif deduced_type1.subtypes:
+        subtypes = deduced_type1.subtypes
+        source = deduced_type1.source
+    elif deduced_type2.subtypes:
+        subtypes = deduced_type2.subtypes
+        source = deduced_type2.source
+    if not source:
+        if category == deduced_type1.category:
+            source = deduced_type1.source
+        else:
+            source = deduced_type2.source
+    return DeducedType(category, subtypes=subtypes, source=source)
 
 
 def join_list_of_deduced_types(deduced_types, logger):

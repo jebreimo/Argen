@@ -23,6 +23,7 @@ def deduce_type_from_values_part(ranges, logger):
         result = dt.join_deduced_types(result, value_types[i], logger)
         if not result:
             return None
+    result.source = "valid_values"
     return result
 
 
@@ -38,7 +39,8 @@ def deduce_type_from_valid_values(values, logger):
     if len(types) == 1:
         return types[0]
     else:
-        return dt.DeducedType(dt.Category.COMPOSITE, subtypes=types)
+        return dt.DeducedType(dt.Category.COMPOSITE, subtypes=types,
+                              source="valid_values")
 
 
 def deduce_type_from_value(value, separator, max_separators):
@@ -62,14 +64,16 @@ def deduce_type_from_value(value, separator, max_separators):
 
 def deduce_type_from_separator_count(count):
     if not count:
-        return None, None
+        return None
     if count[0] == count[1]:
         if count[0] == 0:
             return dt.DeducedType()
-        return dt.DeducedType(dt.Category.COMPOSITE,
-                              subtypes=[dt.DeducedType()] * (count[0] + 1))
+        subtypes = [dt.DeducedType()] * (count[0] + 1)
+        return dt.DeducedType(dt.Category.COMPOSITE, subtypes=subtypes,
+                              source="separator_count")
     else:
-        return dt.DeducedType(dt.Category.LIST, subtypes=[dt.DeducedType()])
+        return dt.DeducedType(dt.Category.LIST, subtypes=[dt.DeducedType()],
+                              source="separator_count")
 
 
 def deduce_value_type(member, logger):
@@ -81,7 +85,6 @@ def deduce_value_type(member, logger):
         if argument.valid_values:
             typ = deduce_type_from_valid_values(argument.valid_values, logger)
             if typ:
-                typ.source = "valid_values"
                 deduced_types.append(typ)
         if argument.value:
             if argument.separator_count:
@@ -97,7 +100,6 @@ def deduce_value_type(member, logger):
         if argument.separator_count:
             typ = deduce_type_from_separator_count(argument.separator_count)
             if typ:
-                typ.source = "separator_count"
                 deduced_types.append(typ)
     result = dt.join_list_of_deduced_types(deduced_types, logger)
     logger.argument = None
