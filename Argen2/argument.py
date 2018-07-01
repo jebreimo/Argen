@@ -25,13 +25,14 @@ def parse_valid_values(text):
     for part in parts:
         values = []
         subparts = parser_tools.split_text(part, ",")
-        for subpart in subparts:
-            from_to = parser_tools.split_text(subpart, "..")
-            if len(from_to) == 2:
-                values.append((from_to[0].strip(), from_to[1].strip()))
-            else:
-                subpart = subpart.strip()
+        for subpart in (s.strip() for s in subparts):
+            from_to = parser_tools.split_range(subpart)
+            if from_to:
+                values.append((from_to[0], from_to[1]))
+            elif subpart:
                 values.append((subpart, subpart))
+            else:
+                values.append((None, None))
         result.append(values)
     return result
 
@@ -73,6 +74,10 @@ class Argument:
         return len(self.flags) != 0
 
 
+def is_valid_separator(sep):
+    return len(sep) == 1 and sep[0] != " "
+
+
 def make_argument(raw_text, properties, session, file_name, line_number):
     arg = Argument(raw_text, dict(properties))
     arg.line_number = line_number
@@ -87,6 +92,11 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     arg.operation = properties.get("operation")
     arg.post_operation = properties.get("post_operation")
     arg.separator = properties.get("separator")
+    if arg.separator is not None:
+        if len(arg.separator) != 1:
+            session.logger.error("Invalid separator: \"%s\". Separators must "
+                                 "be a single non-space character."
+                                 % arg.separator, argument=arg)
     try:
         arg.separator_count = parser_tools.get_int_range(
             properties.get("separator_count"))

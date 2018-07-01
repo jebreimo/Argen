@@ -41,3 +41,9 @@ def test_parse_valid_values():
     assert vals[0] == [("1", "10")]
     assert vals[1] == [("A::B()", "A::B()")]
     assert vals[2] == [('"A,B"', '"A,B"'), ('"A::B"', '"A::B"')]
+
+
+def test_parse_empty_valid_values():
+    vals = a.parse_valid_values(' : : 1..')
+    assert len(vals) == 3
+    assert vals[0] == [(None, None)]
