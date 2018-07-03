@@ -22,6 +22,7 @@ import deduce_indices as di
 import deduce_member_names as dmn
 import deduce_member_types as dmt
 import deduce_operations as do
+import deduce_option_names as don
 import deduce_separator_counts as ds
 import deduce_special_options as dso
 import deduce_value_types as dvt
@@ -105,6 +106,7 @@ def parse_sections(sections, session):
 
 def make_deductions(session):
     dfam.deduce_flags_and_metavars(session)
+    don.deduce_option_names(session)
     dso.deduce_special_options(session)
     da.deduce_arguments(session)
     dmn.deduce_member_names(session)

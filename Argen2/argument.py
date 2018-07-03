@@ -60,7 +60,7 @@ class Argument:
         self.text = None
         self.valid_values = None
         self.value = None
-        self.arguments = None
+        self.option_name = None
         self.member = None
 
     def __str__(self):
