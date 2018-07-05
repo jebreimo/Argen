@@ -74,10 +74,6 @@ class Argument:
         return len(self.flags) != 0
 
 
-def is_valid_separator(sep):
-    return len(sep) == 1 and sep[0] != " "
-
-
 def make_argument(raw_text, properties, session, file_name, line_number):
     arg = Argument(raw_text, dict(properties))
     arg.line_number = line_number

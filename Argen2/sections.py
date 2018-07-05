@@ -68,14 +68,6 @@ def read_sections(file_name, syntax):
     return sections
 
 
-def read_all_sections(file_names, syntax):
-    sections = []
-    for file_name in file_names:
-        print(file_name)
-        sections.extend(read_sections(file_name, syntax))
-    return sections
-
-
 if __name__ == "__main__":
     import sys
     from helpfilesyntax import HelpFileSyntax

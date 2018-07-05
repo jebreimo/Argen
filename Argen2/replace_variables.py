@@ -19,7 +19,7 @@ def find_variable(text, startPos, syntax):
     return start, end + len(syntax.variable_end)
 
 
-def replace_variables(text, session):
+def replace_variables(text, session, internal_variables=None):
     syntax = session.syntax
     output = []
     pos = 0
@@ -31,7 +31,9 @@ def replace_variables(text, session):
         nameEnd = var[1] - len(syntax.variable_end)
         name = text[nameStart:nameEnd]
         if name in session.syntax.internal_variables:
-            pass
+            if internal_variables and name in internal_variables:
+                output.append(text[pos:var[0]])
+                output.append(internal_variables[name])
         elif name in session.variables:
             output.append(text[pos:var[0]])
             output.append(session.variables[name])

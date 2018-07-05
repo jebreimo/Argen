@@ -15,3 +15,4 @@
     - "event-mode" where arguments are processed when they are first encountered
     - "batch-mode" where all arguments are read into a list before they are processed
     - Report warnings when arguments have callbacks, but the list of arguments requires batch-mode
+- Support case-insensitive options

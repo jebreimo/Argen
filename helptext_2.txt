@@ -77,12 +77,14 @@ ${FileHeader}
 #pragma once
 #include <cstdint>
 
-${CONTENTS}
+${HEADER_CONTENTS}
 
 $$$ Source
 ${FileHeader}
 #include "StdAfx.h"
-${CONTENTS}
+
+
+${SOURCE_CONTENTS}
 
 $$$ Settings
 HeaderExtension = "hpp"

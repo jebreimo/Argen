@@ -28,6 +28,7 @@ import deduce_special_options as dso
 import deduce_value_types as dvt
 import deduce_values as dv
 import make_members as mm
+import generate_h_file
 
 
 def tokenize_setting(line, logger):
@@ -74,12 +75,15 @@ def parse_definition(section, session):
     lines = []
     for i, line in enumerate(section.lines):
         try:
-            lines.append(replace_variables(line, session))
+            lines.append(replace_variables(line.rstrip(), session))
         except HelpFileError as ex:
             ex.file_name = section.file_name
             ex.line_number = section.line_number + i + 1
             raise
-    session.variables[section.parameter] = "".join(lines)
+    for i in range(2):
+        if len(lines) > 1 and not lines[-1]:
+            del lines[-1]
+    session.variables[section.parameter] = "\n".join(lines)
 
 
 # def create_code_properties(arguments, options, members):
@@ -169,11 +173,9 @@ def main():
         print_result("Failure.", session)
         return 1
     print_result("Success.", session)
-    # member_arguments = get_arguments_by_member_name(session.arguments)
-    # members, conflicts = make_members(member_arguments)
-    # if conflicts:
-    #     print_member_property_conflicts(conflicts)
-    #     return 1
+
+    # print(generate_h_file.generate_h_file(session))
+    print(session.get_header())
 
     # for section in sections:
     #     print(section)
