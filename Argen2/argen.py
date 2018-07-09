@@ -28,7 +28,8 @@ import deduce_special_options as dso
 import deduce_value_types as dvt
 import deduce_values as dv
 import make_members as mm
-import generate_h_file
+import code_properties
+import generate_header
 
 
 def tokenize_setting(line, logger):
@@ -173,9 +174,10 @@ def main():
         print_result("Failure.", session)
         return 1
     print_result("Success.", session)
+    session.code_properties = code_properties.make_code_properties(session)
+    # print(session.code_properties.source_template)
+    print(generate_header.generate_header(session))
 
-    # print(generate_h_file.generate_h_file(session))
-    print(session.get_header())
 
     # for section in sections:
     #     print(section)

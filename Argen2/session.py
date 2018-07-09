@@ -8,11 +8,9 @@
 # ===========================================================================
 import datetime
 import os
-import os.path
 
 import properties
 import logger
-import replace_variables
 from helpfileerror import HelpFileError
 from helpfilesyntax import HelpFileSyntax
 
@@ -24,29 +22,6 @@ def make_default_variables():
                      DAY="%02d" % today.day)
     variables.update(dict(os.environ))
     return variables
-
-
-def get_internal_variables(session):
-    internals = {
-        "SOURCE_CONTENTS": lambda err: err**2,
-        "HEADER_CONTENTS": "${HEADER_INCLUDES}\n\n${HEADER_CODE}",
-        "SOURCE_INCLUDES": lambda err: err**2,
-        "HEADER_INCLUDES": "[[[header_includes]]]",
-        "SOURCE_CODE": lambda err: err**2,
-        "HEADER_CODE": "[[[header_code]]]",
-        "HEADER": "#pragma once\n${HEADER_CONTENTS}",
-        "SOURCE": lambda err: err**2,
-        "PROGRAM": "[[[program_name]]]",
-        "HEADER_NAME": session.get_header_file_name(),
-        "SOURCE_NAME": lambda err: err**2,
-        "OPTIONS": "[[[options]]]",
-        "ARGUMENTS": "[[[arguments]]]",
-        "ERROR": ""
-    }
-    for key in internals:
-        if key in session.variables:
-            internals[key] = session.variables[key]
-    return internals
 
 
 def parse_bool(value):
@@ -71,7 +46,7 @@ class Settings:
         self.header_dir_name = None
         self.source_dir_name = None
         self.header_only = False
-        self.namespace = ""
+        self.namespace = None
         self.function_name = "parse_arguments"
         self.line_width = 79
         self.add_test = False
@@ -90,6 +65,7 @@ class Session:
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.arguments = []
         self.members = []
+        self.code_properties = None
         self.logger = logger.Logger()
 
     def begin_processing_file(self, file_name):
@@ -102,31 +78,6 @@ class Session:
 
     def has_errors(self):
         return self.logger.counters[logger.Logger.ERROR] != 0
-
-    def get_header_file_name(self):
-        return self.settings.file_name + self.settings.header_extension
-
-    def get_header_file_path(self):
-        name = self.get_header_file_name()
-        if self.settings.header_dir_name:
-            name = os.path.join(self.settings.header_dir_name, name)
-        return name
-
-    def get_source_file_name(self):
-        name = self.settings.file_name + self.settings.source_extension
-        if self.settings.source_dir_name:
-            name = os.path.join(self.settings.source_dir_name,
-                                self.settings.file_name)
-        return name
-
-    def get_header(self):
-        variables = get_internal_variables(self)
-        prev_text = None
-        text = variables["HEADER"]
-        while text != prev_text:
-            prev_text = text
-            text = replace_variables.replace_variables(text, self, variables)
-        return text
 
     def set_setting(self, name, value):
         if name == "ArgumentPrefix":

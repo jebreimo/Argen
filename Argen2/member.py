@@ -31,6 +31,10 @@ class Member:
         kvs = ("%s: %s" % (k, values[k]) for k in keys if values[k] is not None)
         return "%s\n    %s" % (self.name, "\n    ".join(kvs))
 
+    def is_option(self):
+        for arg in self.arguments:
+            if arg.flags:
+                return True
 
 def make_member(name, properties, arguments, session):
     mem = Member(name, properties)

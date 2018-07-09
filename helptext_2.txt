@@ -75,19 +75,20 @@ $$$ Set FileHeader
 $$$ Header
 ${FileHeader}
 #pragma once
-#include <cstdint>
+${HEADER_INCLUDES}
 
-${HEADER_CONTENTS}
+namespace Roger
+{
+    ${HEADER_CODE}
+}
 
 $$$ Source
 ${FileHeader}
 #include "StdAfx.h"
-
-
 ${SOURCE_CONTENTS}
 
 $$$ Settings
-HeaderExtension = "hpp"
+HeaderExtension = ".hpp"
 FunctionName = "parseArguments"
 Namespace = Foo::Bar
 
