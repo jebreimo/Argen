@@ -38,8 +38,10 @@ def test_parse_complex():
     assert props["count"] == "2.."
 
 
-def test_find_argument():
+def test_find_tokens():
     syntax = helpfilesyntax.HelpFileSyntax()
-    assert pht.find_argument("..{{ abcd }}", 0, syntax) == (2, 12)
-    assert pht.find_argument("..{{ abcd }} {{ efgh }}", 6, syntax) == (13, 23)
-    assert pht.find_argument("..{{-t | Default: {1, {2, 3}} }} g h", 0, syntax) == (2, 32)
+    it = pht.find_tokens("..{{-t | Default: {1, {2, 3}} }} g\nh", syntax)
+    assert next(it) == (pht.TEXT_TOKEN, 0, 2)
+    assert next(it) == (pht.ARGUMENT_TOKEN, 2, 32)
+    assert next(it) == (pht.TEXT_TOKEN, 32, 35)
+    assert next(it) == (pht.TEXT_TOKEN, 35, 36)

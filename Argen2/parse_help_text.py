@@ -13,17 +13,32 @@ from properties import LEGAL_PROPERTIES, PROPERTY_ALIASES
 from parser_tools import split_and_unescape_text, find_next_separator
 
 
-def find_argument(text, start_pos, syntax):
-    start = text.find(syntax.argument_start, start_pos)
-    if start < 0:
-        return None
-    end = find_next_separator(text, start + len(syntax.argument_start),
-                              syntax.argument_end)
-    if end < 0:
-        ex = HelpFileError("Argument has no end tag.")
-        ex.line_number = text[:start].count("\n") + 1
-        raise ex
-    return start, end + len(syntax.argument_end)
+TEXT_TOKEN = 0
+ARGUMENT_TOKEN = 1
+
+
+def find_tokens(text, syntax):
+    start_pos = 0
+    while True:
+        arg_pos = text.find(syntax.argument_start, start_pos)
+        while start_pos != arg_pos:
+            n_pos = text.find("\n", start_pos, arg_pos)
+            if n_pos != -1:
+                yield TEXT_TOKEN, start_pos, n_pos + 1
+                start_pos = n_pos + 1
+            else:
+                yield TEXT_TOKEN, start_pos, arg_pos if arg_pos != -1 else len(text)
+                start_pos = arg_pos
+        if start_pos == -1:
+            return
+        end_pos = find_next_separator(text,
+                                      arg_pos + len(syntax.argument_start),
+                                      syntax.argument_end)
+        if end_pos == -1:
+            ex = HelpFileError("Argument has no end tag.")
+            raise ex
+        start_pos = end_pos + len(syntax.argument_end)
+        yield ARGUMENT_TOKEN, arg_pos, start_pos
 
 
 def parse_argument(text, session):
@@ -46,32 +61,30 @@ def parse_argument(text, session):
 
 
 def parse_help_text_impl(text, session, file_name, line_number):
-    from_pos = to_pos = 0
     out_text = []
     syntax = session.syntax
     try:
-        while True:
-            arg_range = find_argument(text, from_pos, syntax)
-            if not arg_range:
-                out_text.append(text[from_pos:])
-                break
-            to_pos = arg_range[0]
-            out_text.append(text[from_pos:to_pos])
-            arg_start = to_pos + len(syntax.argument_start)
-            arg_end = arg_range[1] - len(syntax.argument_end)
-            line_number += text.count("\n", from_pos, arg_range[0])
-            session.logger.line_number = line_number
-            arg_text, props = parse_argument(text[arg_start:arg_end], session)
-            argument = make_argument(arg_text, props, session,
-                                     file_name, line_number)
-            line_number += text.count("\n", arg_range[0], arg_range[1])
-            out_text.append(arg_text)
-            session.arguments.append(argument)
-            from_pos = arg_range[1]
+        for token, start, end in find_tokens(text, syntax):
+            if token == TEXT_TOKEN:
+                token_text = text[start:end]
+                out_text.append(token_text)
+                if token_text[-1] == "\n":
+                    line_number += 1
+            else:
+                arg_start = start + len(syntax.argument_start)
+                arg_end = end - len(syntax.argument_end)
+                token_text = text[arg_start:arg_end]
+                line_number += token_text.count("\n")
+                session.logger.line_number = line_number
+                arg_text, props = parse_argument(token_text, session)
+                argument = make_argument(arg_text, props, session,
+                                         file_name, line_number)
+                out_text.append(arg_text)
+                session.arguments.append(argument)
         return "".join(out_text)
     except HelpFileError as ex:
         if ex.line_number == -1:
-            ex.line_number = text[:to_pos].count("\n") + 1
+            ex.line_number = line_number
         raise
 
 
