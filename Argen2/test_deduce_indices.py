@@ -19,6 +19,7 @@ def test_ordering():
     args[0].index = 2
     args[3].index = 0
     s = session.Session()
+    s.logger.error_level = 99
     s.arguments = args
     di.deduce_indices(s)
     assert args[0].index == 2
