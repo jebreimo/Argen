@@ -19,20 +19,22 @@ class CodeProperties:
         self.source_file_path = ""
         self.header_file_name = ""
         self.header_file_path = ""
-        self.class_name = None
-        self.parse_function_name = None
-        self.expose_helptext_functions = None
-        self.has_short_options = None
-        self.shortest_option_length = 0
-        self.case_sensitive_flags = False
-        self.abbreviated_options = True
-        self.non_short_options = True
-        self.special_options = True
+        # self.class_name = None
+        # self.parse_function_name = None
+        # self.expose_helptext_functions = None
+        # self.shortest_option_length = 0
+        # self.case_sensitive_flags = False
+        # self.abbreviated_options = True
+        # self.non_short_options = True
+        # self.special_options = True
         self.header_template = None
         self.source_template = None
         self.tracked_members = None
         self.namespace_start = None
         self.namespace_end = None
+        self.short_options = None
+        self.options = None
+        self.arguments = None
 
 
 def get_internal_variables(session):
@@ -114,6 +116,27 @@ def get_counted_members(session):
             if m.count and has_count(*m.count) and m.is_option()]
 
 
+def get_argument_groups(session):
+    short_options = {}
+    options = {}
+    arguments = []
+    for arg in session.arguments:
+        if not arg.flags:
+            arguments.append(arg)
+        else:
+            for flag in arg.flags:
+                if short_options is not None and len(flag) == 2 \
+                        and flag[0] == '-':
+                    short_options[flag] = arg
+                else:
+                    if short_options is not None and len(flag) > 2 \
+                            and flag[0] == '-' and flag[1] != '-':
+                        options.update(short_options)
+                        short_options = None
+                    options[flag] = arg
+    return short_options, options, arguments
+
+
 def make_code_properties(session):
     settings = session.settings
 
@@ -140,8 +163,14 @@ def make_code_properties(session):
     result.header_includes = get_header_includes(session)
     result.counted_members = get_counted_members(session)
 
+    result.source_includes = ["<iostream>"]
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
         result.namespace_start = ["namespace " + ns, "{"]
         result.namespace_end = "}" * len(session.settings.namespace)
+
+    groups = get_argument_groups(session)
+    result.short_options = groups[0]
+    result.options = groups[1]
+    result.arguments = groups[2]
     return result

@@ -30,6 +30,7 @@ import deduce_values as dv
 import make_members as mm
 import code_properties
 import generate_header
+import generate_source
 
 
 def tokenize_setting(line, logger):
@@ -176,7 +177,8 @@ def main():
     print_result("Success.", session)
     session.code_properties = code_properties.make_code_properties(session)
     # print(session.code_properties.source_template)
-    print(generate_header.generate_header(session))
+    # print(generate_header.generate_header(session))
+    print(generate_source.generate_source(session))
 
 
     # for section in sections:
