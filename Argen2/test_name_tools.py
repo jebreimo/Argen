@@ -6,25 +6,25 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-import deduce_member_names as mnd
+import name_tools
 import argument
 
 
 def test_make_member_name():
-    assert mnd._make_name("_test") == "_test"
-    assert mnd._make_name("+test") == "test"
-    assert mnd._make_name("test_") == "test_"
-    assert mnd._make_name("test+=") == "test"
-    assert mnd._make_name("123test") == "_123test"
-    assert mnd._make_name("12+t-p_s**2") == "_12_t_p_s_2"
-    assert mnd._make_name("t_$_t") == "t_t"
-    assert mnd._make_name("foo faa") == "foo_faa"
-    assert mnd._make_name("--") == "_"
+    assert name_tools.make_name("_test") == "_test"
+    assert name_tools.make_name("+test") == "test"
+    assert name_tools.make_name("test_") == "test_"
+    assert name_tools.make_name("test+=") == "test"
+    assert name_tools.make_name("123test") == "_123test"
+    assert name_tools.make_name("12+t-p_s**2") == "_12_t_p_s_2"
+    assert name_tools.make_name("t_$_t") == "t_t"
+    assert name_tools.make_name("foo faa") == "foo_faa"
+    assert name_tools.make_name("--") == "_"
 
 
 def test_get_longest_flags():
-    assert mnd._get_longest_flag(["-a", "--="]) == "-a"
-    assert mnd._get_longest_flag(["-z"]) == "-z"
+    assert name_tools.get_longest_flag(["-a", "--="]) == "-a"
+    assert name_tools.get_longest_flag(["-z"]) == "-z"
 
 
 # def test_deduce_member_name():
