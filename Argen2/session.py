@@ -53,6 +53,8 @@ class Settings:
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.detect_separators = False
         self.case_sensitive = True
+        self.auto_format = True
+        self.word_wrap = True
 
 
 class Session:
@@ -125,6 +127,10 @@ class Session:
             self.settings.source_dir_name = value
         elif name == "HeaderOnly":
             self.settings.header_only = parse_bool(value)
+        elif name == "AutoFormat":
+            self.settings.auto_format = parse_bool(value)
+        elif name == "WordWrap":
+            self.settings.word_wrap = parse_bool(value)
         else:
             return False
         return True
