@@ -21,46 +21,46 @@ ARGUMENTS
         * fem og seks
 
 GENERAL OPTIONS
-  {{-e, --exclude           }}  Exclude the tests whose names appear after the options and run everything else. This is the opposite of the default behavior.
-  {{-h, --help              }}  Show program help.
+  {{-e, --exclude}}  Exclude the tests whose names appear after the options and run everything else. This is the opposite of the default behavior.
+  {{-h, --help}}  Show program help.
   {{-l FILE, --log-file=FILE}}  Redirect all the output the tests normally write to stdout or stderr to a file named FILE instead. (This does not affect the test reports).
-  {{-q, --quiet             | member: verbose | value: false}}  Don't display extra information while running tests. (Opposite of -v.)
-  {{-v, --verbose           }}  Display extra information while running tests.
-  {{--version               | postop: abort}}
-  {{--info                  | postop: abort}}
-  {{--version2              | member: version | postop: abort}}
+  {{-q, --quiet| member: verbose | value: false}}  Don't display extra information while running tests. (Opposite of -v.)
+  {{-v, --verbose}}  Display extra information while running tests.
+  {{--version| postop: abort}}
+  {{--info| postop: abort}}
+  {{--version2| member: version | postop: abort}}
 
 REPORT OPTIONS
-  {{--junit                 }}  Produce a test report in the JUnit XML format.
-  {{--text                  }}  Produce a plain text test report that only list failed tests. This is the default.
-  {{--fulltext              }}  Produce a plain text test report that lists all tests.
-  {{-f FILE, --file=FILE    | count: 1}}  The name of the report file. If multiple report files are produced, FILE will have the suitable file type extension appended to it (txt, xml etc.). Test reports are written to stdout if this option isn't used.
-  {{--host=HOST             }}  Set the host name. This option has no effect on tests, it is only used in the export.
+  {{--junit}}  Produce a test report in the JUnit XML format.
+  {{--text}}  Produce a plain text test report that only list failed tests. This is the default.
+  {{--fulltext}}  Produce a plain text test report that lists all tests.
+  {{-f FILE, --file=FILE| count: 1}}  The name of the report file. If multiple report files are produced, FILE will have the suitable file type extension appended to it (txt, xml etc.). Test reports are written to stdout if this option isn't used.
+  {{--host=HOST}}  Set the host name. This option has no effect on tests, it is only used in the export.
 
 OTHER OPTIONS
-  {{--ting                  | value: 10.0 | count: 1}}  Text
-  {{--tang=N                | member:ting | count: 1}}  Text
-  {{-@                      | member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
-  {{--flag                  | default: true}}  Text
-  {{--size=ROWSxCOLS        | separator: x | default: {800, 600}}}
-  {{--cuboid=LENxWIDxHEI    | separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | count:1}}
-  {{--rect=LENxWID          | separator: x | member: cuboid}}
-  {{--line=LEN              | member: cuboid }}
-  {{--antiflag              | member: flag | value: false}}
-  {{--percentage=N          | type: int | values: 0..100, 200..| default: 50}}
-  {{-s TEXT                 | count: ..10 | default: {"Kjakan Gundersen"}}}
-  {{--special               | member: s | value: "$spec$"}}
-  {{-n X,Y                  | type: double | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
-  {{-p X,Y,Z                | type: double | values: -1000..1000 : -1000..1000 : 0..500}}
-  {{-m NUM, --month=NUM     | type: unsigned | values: 1..12 | count: 3}}
-  {{--string=STR            | default: "Two words"}}
-  {{--kjell                 | type:int | value: 10}}  Option that specify non-boolean type, but no argument or value
-  {{--                      }}  End of options
-  {{-i PATH, --include=PATH | op: extend | separator: : | default: {"foo", "bar", "baz"}}}
-  {{--sysinclude            | member: include | value: {"foo", "bar", "baz"}}}
-  {{--stygg=N               | type: uint64_t}}
-  {{-u, --user=NAME:ID      | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
-  {{-                       | op: none}} Read input from stdin.
+  {{--ting| value: 10.0 | count: 1}}  Text
+  {{--tang=N| member:ting | count: 1}}  Text
+  {{-@| member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
+  {{--flag| default: true}}  Text
+  {{--size=ROWSxCOLS| separator: x | default: {800, 600}}}
+  {{--cuboid=LENxWIDxHEI| separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | count:1}}
+  {{--rect=LENxWID| separator: x | member: cuboid}}
+  {{--line=LEN| member: cuboid }}
+  {{--antiflag| member: flag | value: false}}
+  {{--percentage=N| type: int | values: 0..100, 200..| default: 50}}
+  {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
+  {{--special| member: s | value: "$spec$"}}
+  {{-n X,Y| type: double | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
+  {{-p X,Y,Z| type: double | values: -1000..1000 : -1000..1000 : 0..500}}
+  {{-m NUM, --month=NUM| type: unsigned | values: 1..12 | count: 3}}
+  {{--string=STR| default: "Two words"}}
+  {{--kjell| type:int | value: 10}}  Option that specify non-boolean type, but no argument or value
+  {{--}}  End of options
+  {{-i PATH, --include=PATH| op: extend | separator: : | default: {"foo", "bar", "baz"}}}
+  {{--sysinclude| member: include | value: {"foo", "bar", "baz"}}}
+  {{--stygg=N| type: uint64_t}}
+  {{-u, --user=NAME:ID| values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
+  {{-| op: none}}  Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 
 $$$ Set FileHeader

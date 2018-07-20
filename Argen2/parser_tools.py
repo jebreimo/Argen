@@ -66,20 +66,20 @@ def find_next_separator(text, start_pos, separator):
             start_pos += 1
 
 
-def find_first_not_of(text, char, start=0):
+def find_first_not_of(text, chars, start=0):
     if not text:
         return -1
     for i in range(start, len(text)):
-        if text[i] != char:
+        if text[i] not in chars:
             return i
     return -1
 
 
-def find_last_not_of(text, char):
+def find_last_not_of(text, chars):
     if not text:
         return -1
     for i in range(len(text) - 1, -1, -1):
-        if text[i] != char:
+        if text[i] not in chars:
             break
     else:
         i = -1
