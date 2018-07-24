@@ -93,6 +93,6 @@ FunctionName = "parseArguments"
 Namespace = Foo::Bar
 
 $$$ ErrorText
-${PROGRAM} ${OPTIONS} ${ARGUMENTS}
+${SYNOPSIS}
 
 ${ERROR}

@@ -18,6 +18,8 @@ class HelpFileSyntax:
         self.variable_end = "}"
         self.values_entry_separator = "$"
         self.value_separator = ","
+        self.alignment_char = "\x01"
+        self.non_breaking_space = "\x02"
         self.internal_variables = {"SOURCE_CONTENTS", "HEADER_CONTENTS",
                                    "SOURCE_INCLUDES", "HEADER_INCLUDES",
                                    "SOURCE_CODE", "HEADER_CODE",

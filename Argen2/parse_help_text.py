@@ -96,7 +96,9 @@ class HelpTextTokenHandlers:
             return AT_START_OF_LINE if newline else AFTER_TEXT
         pos = match.span()[1]
         if self.word_wrap and pos:
-            self.output_text.extend((token[:pos], "\\x01", token[pos:]))
+            self.output_text.append(token[:pos])
+            self.output_text.append(self.session.syntax.alignment_char)
+            self.output_text.append(token[pos:])
         else:
             self.output_text.append(token)
         if newline:
@@ -116,7 +118,6 @@ class HelpTextTokenHandlers:
             self.output_text.append(token)
             return AT_START_OF_LINE
 
-        pos = parser_tools.find_first_not_of(token, " \t\r\n")
         if self.whitespace != self.arg_group[0]:
             self.arg_group = (self.whitespace,
                               [(len(self.output_text) - 1,
@@ -126,10 +127,14 @@ class HelpTextTokenHandlers:
             self.arg_group[1].append((len(self.output_text) - 1,
                                       self.line_number))
         if self.word_wrap:
+            pos = parser_tools.find_first_not_of(token, " \t\r\n")
             if pos:
-                self.output_text.extend((token[:pos], "\\x01", token[pos:]))
+                self.output_text.append(token[:pos])
+                self.output_text.append(self.session.syntax.alignment_char)
+                self.output_text.append(token[pos:])
             else:
-                self.output_text.extend(("\\x01", token))
+                self.output_text.append(self.session.syntax.alignment_char),
+                self.output_text.append(token)
         return AT_START_OF_LINE
 
     def on_text(self, event, start, end):

@@ -35,6 +35,7 @@ class CodeProperties:
         self.short_options = None
         self.options = None
         self.arguments = None
+        self.equal_is_separator = False
 
 
 def get_internal_variables(session):
@@ -137,6 +138,25 @@ def get_argument_groups(session):
     return short_options, options, arguments
 
 
+def can_use_equal_as_separator(session, code_properties):
+    if not code_properties.options:
+        return False
+    if code_properties.short_options:
+        is_non_short_option = lambda s: len(s) != 2 or s[0] != "-"
+    else:
+        is_non_short_option = lambda s: True
+    has_option_arguments = False
+    for arg in session.arguments:
+        if arg.flags:
+            for flag in arg.flags:
+                if is_non_short_option(flag):
+                    if "=" in flag:
+                        return False
+                    if arg.metavar:
+                        has_option_arguments = True
+    return has_option_arguments
+
+
 def make_code_properties(session):
     settings = session.settings
 
@@ -173,4 +193,6 @@ def make_code_properties(session):
     result.short_options = groups[0]
     result.options = groups[1]
     result.arguments = groups[2]
+    if result.options:
+        result.equal_is_separator = can_use_equal_as_separator(session, result)
     return result

@@ -19,7 +19,8 @@ def make_default_variables():
     today = datetime.date.today()
     variables = dict(YEAR=str(today.year),
                      MONTH="%02d" % today.month,
-                     DAY="%02d" % today.day)
+                     DAY="%02d" % today.day,
+                     SYNOPSIS="${PROGRAM} ${OPTIONS} ${ARGUMENTS}")
     variables.update(dict(os.environ))
     return variables
 

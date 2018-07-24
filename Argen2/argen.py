@@ -188,8 +188,8 @@ def main():
     #     print("%s=%s" % (variable, session.variables[variable]))
     # print("==== ERROR_TEXT ====")
     # print(session.error_text)
-    print("==== HELP_TEXT ====")
-    print(session.help_text)
+    # print("==== HELP_TEXT ====")
+    # print(session.help_text)
     # print("==== ARGUMENTS ====")
     # for arg in session.arguments:
     #     print(arg)

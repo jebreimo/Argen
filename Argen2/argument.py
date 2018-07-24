@@ -62,6 +62,7 @@ class Argument:
         self.value = None
         self.option_name = None
         self.member = None
+        self.arguments = None
 
     def __str__(self):
         vals = self.__dict__

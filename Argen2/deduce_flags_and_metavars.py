@@ -104,13 +104,13 @@ def deduce_flags_and_metavars(session):
         taken_metavars = {a.metavar for a in session.arguments if a.metavar}
         i = 0
         for arg in undetermined:
-            metavar = "<unnamed>" if i == 0 else "<unnamed_%d>" % i
+            name = "unnamed" if i == 0 else "unnamed_%d" % i
             i += 1
-            while metavar in taken_metavars:
-                metavar = "<unnamed_%d>" % i
+            while name in taken_metavars:
+                name = "unnamed_%d" % i
                 i += 1
-            arg.metavar = metavar
-            taken_metavars.add(metavar)
+            arg.metavar = name
+            taken_metavars.add(name)
             session.logger.debug("Deduced variable: %s" % arg.metavar,
                                  argument=arg)
     report_duplicate_flags(session)
