@@ -25,6 +25,10 @@ def generate_header(session):
                                        HeaderFileGenerator(session))
 
 
+def join_strings(strings, conjunction):
+    return "%s %s %s" % (", ".join(strings[:-1]), conjunction, strings[-1])
+
+
 class HeaderContentsGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
@@ -43,7 +47,29 @@ class HeaderContentsGenerator(templateprocessor.Expander):
         lines = []
         for mem in self._session.members:
             if mem.name and mem.member_type:
-                lines.append("%s %s;" % (mem.member_type, mem.name))
+                options = []
+                arguments = []
+                for a in mem.arguments:
+                    if a.flags:
+                        options.extend(a.flags)
+                    else:
+                        arguments.append(a.metavar)
+                texts = []
+                if len(options) > 1:
+                    texts.append("options %s" % join_strings(options, "and"))
+                elif len(options) == 1:
+                    texts.append("option %s" % options[0])
+                if len(arguments) > 1:
+                    texts.append("arguments %s" % join_strings(arguments, "and"))
+                elif len(arguments) == 1:
+                    texts.append("argument %s" % arguments[0])
+                lines.append("/** @brief Member for %s." % ", and ".join(texts))
+                lines.append("  */")
+                if mem.default_value:
+                    lines.append("%s %s = %s;" % (mem.member_type, mem.name, mem.default_value))
+                else:
+                    lines.append("%s %s;" % (mem.member_type, mem.name))
+                lines.append("")
         return lines
 
     def result_enums(self, params, context):
