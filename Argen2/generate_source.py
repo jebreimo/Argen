@@ -8,7 +8,7 @@
 # ===========================================================================
 import templateprocessor
 from generate_argument_iterator import generate_argument_iterator
-import generate_synopsis
+from generate_write_help_text import generate_write_help_text
 
 
 class SourceFileGenerator(templateprocessor.Expander):
@@ -44,13 +44,16 @@ class SurceContentsGenerator(templateprocessor.Expander):
     def argument_iterator(self, params, context):
         return generate_argument_iterator(self._session)
 
-    def help_text_string(self, params, context):
-        return generate_synopsis.generate_help_text_string(self._session.help_text,
-                                                           self._session)
+    # def help_text_string(self, params, context):
+    #     return generate_synopsis.generate_help_text_string(self._session.help_text,
+    #                                                        self._session)
 
     def help_text(self, params, context):
         return templateprocessor.make_lines(
             "const char helpText[] =\n    [[[help_text_string]]];", self)
+
+    def write_help_text_function(self, params, context):
+        return generate_write_help_text(self._session)
 
 
 def generate_source_contents(session):
@@ -73,10 +76,9 @@ SOURCE_CONTENTS_TEMPLATE = """\
 [[string_view_class]]
 [[argument_class]]
 [[[argument_iterator]]]
-[[[help_text]]]
 [[synopsis_text]]
 [[get_console_width]]
-[[print_text_function]]
+[[[write_help_text_function]]]
 [[option_enum]]
 [[short_option_string]]
 [[option_strinigs]]

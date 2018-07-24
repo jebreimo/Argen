@@ -63,8 +63,8 @@ class Session:
         self.settings = Settings()
         self.variables = make_default_variables()
         self.syntax = HelpFileSyntax()
-        self.help_text = ""
-        self.error_text = ""
+        self.help_text = "usage: ${SYNOPSIS}\n"
+        self.error_text = "usage: ${SYNOPSIS}\n\n${ERROR}\n"
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.arguments = []
         self.members = []
