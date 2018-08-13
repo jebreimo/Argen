@@ -32,10 +32,12 @@ class CodeProperties:
         self.tracked_members = None
         self.namespace_start = None
         self.namespace_end = None
+        self.namespace = None
         self.short_options = None
         self.options = None
         self.arguments = None
         self.equal_is_separator = False
+        self.has_program_name = False
 
 
 def get_internal_variables(session):
@@ -183,11 +185,13 @@ def make_code_properties(session):
     result.header_includes = get_header_includes(session)
     result.counted_members = get_counted_members(session)
 
-    result.source_includes = ["<iostream>"]
+    result.source_includes = ['"%s"' % session.header_file_name(),
+                              "<iostream>"]
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
         result.namespace_start = ["namespace " + ns, "{"]
         result.namespace_end = "}" * len(session.settings.namespace)
+        result.namespace = "::".join(session.settings.namespace)
 
     groups = get_argument_groups(session)
     result.short_options = groups[0]
@@ -195,4 +199,7 @@ def make_code_properties(session):
     result.arguments = groups[2]
     if result.options:
         result.equal_is_separator = can_use_equal_as_separator(session, result)
+
+    result.has_program_name = ("${PROGRAM}" in session.help_text
+                               or "${PROGRAM}" in session.error_text)
     return result

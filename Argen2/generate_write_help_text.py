@@ -24,12 +24,16 @@ class WriteHelpTextGenerator(templateprocessor.Expander):
         self.has_program_name = any("${PROGRAM}" in s for s in self.help_text)
 
 
-def generate_write_help_text(session):
+def  generate_write_help_text(session):
     return templateprocessor.make_lines(WRITE_HELP_TEXT_TEMPLATE,
                                         WriteHelpTextGenerator(session))
 
 
 WRITE_HELP_TEXT_TEMPLATE = """\
+[[[IF has_program_name]]]
+std::string programName = "<program>";
+
+[[[ENDIF]]]
 const char helpText[] =
     [[[help_text]]];
 
@@ -50,7 +54,7 @@ public:
     {}
 [[[ENDIF]]]
 
-    void writeCharacter(char c)
+    void write_character(char c)
     {
         m_Buffer.push_back(c);
         ++m_Column;
@@ -74,7 +78,7 @@ public:
         }
     }
 
-    void writeWhitespace(char c)
+    void write_whitespace(char c)
     {
         if (m_WhitespaceSize != m_Buffer.size())
         {
@@ -99,7 +103,7 @@ public:
     }
 [[[ENDIF]]]
 
-    void newline()
+    void new_line()
     {
         m_Stream.write(m_Buffer.data(), m_Buffer.size());
         m_Stream.put('\\n');
@@ -123,22 +127,24 @@ private:
     bool m_EmptyLine = true;
 };
 
-void print_help_text(std::ostream& stream, const char* text, size_t line_width)
+void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
 {
-    HelpTextWriter writer(stream, line_width);
+    if (lineWidth == 0)
+        lineWidth = 80;
+    HelpTextWriter writer(stream, lineWidth);
     for (size_t i = 0; text[i]; ++i)
     {
         switch (text[i])
         {
         case '\\n':
-            writer.newline();
+            writer.new_line();
             break;
         case ' ':
 [[[IF has_tabs]]]
         case '\\t':
-            writer.writeWhitespace(' ');
-            break;
 [[[ENDIF]]]
+            writer.write_whitespace(' ');
+            break;
 [[[IF has_alignment]]]
         case '\\001':
             writer.align();
@@ -146,7 +152,7 @@ void print_help_text(std::ostream& stream, const char* text, size_t line_width)
 [[[ENDIF]]]
 [[[IF has_non_breaking_space]]]
         case '\\002':
-            writer.writeCharacter(' ');
+            writer.write_character(' ');
             break;
 [[[ENDIF]]]
 [[[IF has_program_name]]]
@@ -155,18 +161,26 @@ void print_help_text(std::ostream& stream, const char* text, size_t line_width)
             {
                 writer.align();
                 for (size_t j = 0; programName[j]; ++j)
-                    writer.writeCharacter(programName[j]);
+                    writer.write_character(programName[j]);
                 i += 9;
             }
             else
             {
-                writer.writeCharacter(text[i]);
+                writer.write_character(text[i]);
             }
             break;
 [[[ENDIF]]]
         default:
-            writer.writeCharacter(text[i]);
+            writer.write_character(text[i]);
             break;
         }
     }
-}"""
+}
+
+void write_help_text(std::ostream& stream, size_t lineWidth)
+{
+    if (lineWidth == 0)
+        lineWidth = get_console_width();
+    write_help_text(stream, helpText, lineWidth);  
+}
+"""

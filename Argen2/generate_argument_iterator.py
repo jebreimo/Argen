@@ -71,9 +71,9 @@ inline bool resemblesOption(const char* s)
 [[[IF has_both_options]]]
     return (s[0] == '-' || s[0] == '/') && s[1] != 0;
 [[[ELIF has_dash_options]]]
-    s[0] == '-' && s[1] != 0;
+    return s[0] == '-' && s[1] != 0;
 [[[ELSE]]]
-    s[0] == '/' && s[1] != 0;
+    return s[0] == '/' && s[1] != 0;
 [[[ENDIF]]]
 }
 [[[ENDIF]]]

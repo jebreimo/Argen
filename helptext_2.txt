@@ -1,17 +1,17 @@
 #! /usr/env argen
 USAGE
-${PROGRAM} ${OPTIONS} ${ARGUMENTS}
+  ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
 
 Executes unit tests.
 
 ARGUMENTS
-{{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19 | index: 2 | count: 0..1}}
-{{<test name> | count: 2..4 | values: "p1", "p2", "p3", "p4"}}
+  {{| type: int | values: -10..0, 2, 3, 5, 7, 11, 13, 17, 19 | index: 2 | count: 0..1}}
+  {{<test name> | count: 2..4 | values: "p1", "p2", "p3", "p4"}}
     The name of the test or tests that will be run. All tests are run if no test names are given. If the --exclude option is used, all tests except the given ones are run.
 
     Tests are typically arranged in a two-level hierarchy with a parent and several child-tests. To disable a parent test and all its children, just enter the name of the parent. To disable a spesific child enter the names of both the parent and the child, separated with a single "/".
-{{<the-list>|separator: :}}
-{{<out-file>}}
+  {{<the-list>|separator: :}}
+  {{<out-file>}}
     The name of the file that some kind of output will be written to. This is a text file.
 
     Here's a backslash: \
@@ -77,10 +77,7 @@ ${FileHeader}
 #pragma once
 ${HEADER_INCLUDES}
 
-namespace Roger
-{
-    ${HEADER_CODE}
-}
+${HEADER_CODE}
 
 $$$ Source
 ${FileHeader}
@@ -91,6 +88,7 @@ $$$ Settings
 HeaderExtension = ".hpp"
 FunctionName = "parseArguments"
 Namespace = Foo::Bar
+Test = true
 
 $$$ ErrorText
 usage: ${SYNOPSIS}

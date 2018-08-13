@@ -177,7 +177,12 @@ def main():
     print_result("Success.", session)
     session.code_properties = code_properties.make_code_properties(session)
     # print(session.code_properties.source_template)
-    print(generate_header.generate_header(session))
+    file = open(session.header_file_path(), "w")
+    file.write(generate_header.generate_header(session))
+    file.close()
+    file = open(session.source_file_path(), "w")
+    file.write(generate_source.generate_source(session))
+    file.close()
     # print(generate_source.generate_source(session))
 
 

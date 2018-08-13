@@ -9,22 +9,31 @@
 import templateprocessor
 from generate_argument_iterator import generate_argument_iterator
 from generate_write_help_text import generate_write_help_text
+from generate_test_code import generate_test_code
+import generate_get_console_width
 
 
 class SourceFileGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
         self._session = session
-        self.source_includes = ["#include " + s for s in
-                                session.code_properties.source_includes]
+
+    def source_includes(self, params, context):
+        result = ["#include " + s for s in
+                  self._session.code_properties.source_includes]
+        result.extend(generate_get_console_width.generate_include_files())
+        return result
 
     def source_code(self, params, context):
         return generate_source_contents(self._session)
 
 
 def generate_source(session):
-    return templateprocessor.make_text(session.code_properties.source_template,
-                                       SourceFileGenerator(session))
+    code = templateprocessor.make_lines(session.code_properties.source_template,
+                                        SourceFileGenerator(session))
+    if session.settings.add_test:
+        code.extend(generate_test_code(session))
+    return "\n".join(code)
 
 
 class SurceContentsGenerator(templateprocessor.Expander):
@@ -47,6 +56,9 @@ class SurceContentsGenerator(templateprocessor.Expander):
     # def help_text_string(self, params, context):
     #     return generate_synopsis.generate_help_text_string(self._session.help_text,
     #                                                        self._session)
+
+    def get_console_width(self, params, context):
+        return generate_get_console_width.generate_get_console_width()
 
     def help_text(self, params, context):
         return templateprocessor.make_lines(
@@ -73,18 +85,18 @@ SOURCE_NAMESPACE_TEMPLATE = """\
 
 
 SOURCE_CONTENTS_TEMPLATE = """\
-[[string_view_class]]
-[[argument_class]]
+//[[string_view_class]]
+//[[argument_class]]
 [[[argument_iterator]]]
-[[synopsis_text]]
-[[get_console_width]]
+//[[synopsis_text]]
+[[[get_console_width]]]
 [[[write_help_text_function]]]
-[[option_enum]]
-[[short_option_string]]
-[[option_strinigs]]
-[[error_messages]]
-[[set_value_functions]]
-[[check_value_functions]]\
+//[[option_enum]]
+//[[short_option_string]]
+//[[option_strinigs]]
+//[[error_messages]]
+//[[set_value_functions]]
+//[[check_value_functions]]\
 """
 
 SOURCE_CONTENTS = """\

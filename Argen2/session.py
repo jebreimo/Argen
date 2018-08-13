@@ -82,6 +82,26 @@ class Session:
     def has_errors(self):
         return self.logger.counters[logger.Logger.ERROR] != 0
 
+    def header_file_name(self):
+        return self.settings.file_name + self.settings.header_extension
+
+    def source_file_name(self):
+        return self.settings.file_name + self.settings.source_extension
+
+    def header_file_path(self):
+        file_name = self.header_file_name()
+        if self.settings.header_dir_name:
+            return os.path.join(self.settings.header_dir_name, file_name)
+        else:
+            return file_name
+
+    def source_file_path(self):
+        file_name = self.source_file_name()
+        if self.settings.source_dir_name:
+            return os.path.join(self.settings.source_dir_name, file_name)
+        else:
+            return file_name
+
     def set_setting(self, name, value):
         if name == "ArgumentPrefix":
             self.syntax.argument_start = value
