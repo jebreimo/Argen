@@ -56,6 +56,7 @@ class Settings:
         self.case_sensitive = True
         self.auto_format = True
         self.word_wrap = True
+        self.immediate_callbacks = False
 
 
 class Session:
@@ -152,6 +153,8 @@ class Session:
             self.settings.auto_format = parse_bool(value)
         elif name == "WordWrap":
             self.settings.word_wrap = parse_bool(value)
+        elif name == "ImmediateCallbacks":
+            self.settings.immediate_callbacks = parse_bool(value)
         else:
             return False
         return True

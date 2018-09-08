@@ -144,9 +144,9 @@ def can_use_equal_as_separator(session, code_properties):
     if not code_properties.options:
         return False
     if code_properties.short_options:
-        is_non_short_option = lambda s: len(s) != 2 or s[0] != "-"
+        def is_non_short_option(s): return len(s) != 2 or s[0] != "-"
     else:
-        is_non_short_option = lambda s: True
+        def is_non_short_option(s): return True
     has_option_arguments = False
     for arg in session.arguments:
         if arg.flags:
@@ -157,6 +157,21 @@ def can_use_equal_as_separator(session, code_properties):
                     if arg.metavar:
                         has_option_arguments = True
     return has_option_arguments
+
+
+def find_problematic_argument_callbacks(arguments):
+    problematic_arguments = []
+    known_index = True
+    for i, arg in enumerate(arguments):
+        count = arg.member.count
+        if arg.callback:
+            if not known_index:
+                problematic_arguments.append(arg)
+            elif count and count[0] != count[1] and i + 1 != len(arguments):
+                problematic_arguments.append(arg)
+        if count and count[0] != count[1]:
+            known_index = False
+    return problematic_arguments
 
 
 def make_code_properties(session):
@@ -196,9 +211,22 @@ def make_code_properties(session):
     groups = get_argument_groups(session)
     result.short_options = groups[0]
     result.options = groups[1]
-    result.arguments = groups[2]
+    result.arguments = sorted(groups[2], key=lambda a: a.index)
     if result.options:
         result.equal_is_separator = can_use_equal_as_separator(session, result)
+
+    if settings.immediate_callbacks:
+        problematic_args = find_problematic_argument_callbacks(result.arguments)
+        for arg in problematic_args:
+            count = arg.member.count
+            is_are = "s are" if count[1] != 1 else " is"
+            session.logger.warn("It is necessary to read all the arguments and"
+                                " options to determine which argument%s %s."
+                                " The callback for this argument will therefore"
+                                " see the final state of the options, not"
+                                " necessarily the state when the argument"
+                                " appears on the command line."
+                                % (is_are, arg.metavar))
 
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.error_text)

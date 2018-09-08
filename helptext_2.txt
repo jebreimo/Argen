@@ -11,7 +11,7 @@ ARGUMENTS
 
     Tests are typically arranged in a two-level hierarchy with a parent and several child-tests. To disable a parent test and all its children, just enter the name of the parent. To disable a spesific child enter the names of both the parent and the child, separated with a single "/".
   {{<the-list>|separator: :}}
-  {{<out-file>}}
+  {{<out-file>| callback: foo_bar | count: 0..}}
     The name of the file that some kind of output will be written to. This is a text file.
 
     Here's a backslash: \

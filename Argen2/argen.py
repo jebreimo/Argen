@@ -174,7 +174,6 @@ def main():
     if not process_files(args.helpfiles, session):
         print_result("Failure.", session)
         return 1
-    print_result("Success.", session)
     session.code_properties = code_properties.make_code_properties(session)
     # print(session.code_properties.source_template)
     file = open(session.header_file_path(), "w")
@@ -184,6 +183,7 @@ def main():
     file.write(generate_source.generate_source(session))
     file.close()
     # print(generate_source.generate_source(session))
+    print_result("Success.", session)
 
 
     # for section in sections:

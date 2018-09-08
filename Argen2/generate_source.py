@@ -8,9 +8,10 @@
 # ===========================================================================
 import templateprocessor
 from generate_argument_iterator import generate_argument_iterator
-from generate_write_help_text import generate_write_help_text
-from generate_test_code import generate_test_code
 import generate_get_console_width
+from generate_option_list import generate_options
+from generate_test_code import generate_test_code
+from generate_write_help_text import generate_write_help_text
 
 
 class SourceFileGenerator(templateprocessor.Expander):
@@ -67,6 +68,9 @@ class SurceContentsGenerator(templateprocessor.Expander):
     def write_help_text_function(self, params, context):
         return generate_write_help_text(self._session)
 
+    def options(self, params, context):
+        return generate_options(self._session)
+
 
 def generate_source_contents(session):
     return templateprocessor.make_lines(SOURCE_NAMESPACE_TEMPLATE,
@@ -85,18 +89,13 @@ SOURCE_NAMESPACE_TEMPLATE = """\
 
 
 SOURCE_CONTENTS_TEMPLATE = """\
-//[[string_view_class]]
-//[[argument_class]]
 [[[argument_iterator]]]
-//[[synopsis_text]]
 [[[get_console_width]]]
 [[[write_help_text_function]]]
-//[[option_enum]]
-//[[short_option_string]]
-//[[option_strinigs]]
-//[[error_messages]]
-//[[set_value_functions]]
-//[[check_value_functions]]\
+[[[options]]]
+//[ [[error_messages]]]
+//[ [[set_value_functions]]]
+//[ [[check_value_functions]]\]
 """
 
 SOURCE_CONTENTS = """\
