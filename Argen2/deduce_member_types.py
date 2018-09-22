@@ -9,26 +9,26 @@
 import deducedtype as dt
 
 
-def deduce_member_type_fom_operation(member):
-    operations = {a.operation for a in member.arguments if a.operation}
-    if "extend" in operations:
-        if not member.value_type:
-            typ = dt.DeducedType(dt.Category.LIST,
-                                 subtypes=[dt.DeducedType()])
-        elif dt.is_list(member.value_type):
-            typ = dt.DeducedType(prototype=member.value_type)
-        else:
-            typ = dt.DeducedType(dt.Category.LIST, subtypes=[member.value_type])
-    elif "append" in operations:
-        subtypes = [member.value_type or dt.DeducedType()]
-        typ = dt.DeducedType(dt.Category.LIST, subtypes=subtypes)
-    elif "assign" in operations:
-        typ = dt.DeducedType(prototype=member.value_type)
-    else:
-        typ = None
-    if typ:
-        typ.source = "operation"
-    return typ
+def deduce_member_types_fom_operations(member, logger):
+    types = []
+    for arg in member.arguments:
+        if arg.operation == "extend":
+            if not arg.value_type:
+                types.append(dt.DeducedType(dt.Category.LIST,
+                                            subtypes=[dt.DeducedType()]))
+            elif dt.is_list(arg.value_type, logger):
+                types.append(dt.DeducedType(prototype=arg.value_type))
+            else:
+                types.append(dt.DeducedType(dt.Category.LIST,
+                                            subtypes=[arg.value_type]))
+        elif arg.operation == "append":
+            subtypes = [arg.value_type or dt.DeducedType()]
+            types.append(dt.DeducedType(dt.Category.LIST, subtypes=subtypes))
+        elif arg.operation == "assign":
+            types.append(dt.DeducedType(prototype=arg.value_type))
+    for type_ in types:
+        type_.source = "operation"
+    return types
 
 
 def _get_separator(arguments):
@@ -67,12 +67,10 @@ def deduce_member_type(member, logger):
             types.append(typ)
     if member.count:
         if member.count[1] != 1:
-            subtypes = [member.value_type or dt.DeducedType()]
-            types.append(dt.DeducedType(dt.Category.LIST, subtypes=subtypes,
+            types.append(dt.DeducedType(dt.Category.LIST,
+                                        subtypes=[dt.DeducedType()],
                                         source="count"))
-    typ = deduce_member_type_fom_operation(member)
-    if typ:
-        types.append(typ)
+    types.extend(deduce_member_types_fom_operations(member, logger))
     result = dt.join_list_of_deduced_types(types, logger)
     logger.argument = None
     return result

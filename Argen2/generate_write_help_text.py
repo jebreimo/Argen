@@ -7,13 +7,18 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import templateprocessor
-from generate_synopsis import generate_help_text_string, escape_text
+from generate_help_text_string import generate_help_text_string, escape_text
 
 
 class WriteHelpTextGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
         self._session = session
+        self.line_width = session.settings.line_width
+        self.min_line_width = session.code_properties.min_line_width
+        self.max_line_width = session.code_properties.max_line_width
+        self.has_min_max_line_width = self.min_line_width \
+                                      and self.max_line_width
         self.help_text = generate_help_text_string(session.help_text, session)
         self.error_text = generate_help_text_string(session.error_text, session)
         alignment_char = escape_text(session.syntax.alignment_char)
@@ -130,7 +135,7 @@ private:
 void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
 {
     if (lineWidth == 0)
-        lineWidth = 80;
+        lineWidth = [[[line_width]]];
     HelpTextWriter writer(stream, lineWidth);
     for (size_t i = 0; text[i]; ++i)
     {
@@ -180,7 +185,15 @@ void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
 void write_help_text(std::ostream& stream, size_t lineWidth)
 {
     if (lineWidth == 0)
-        lineWidth = get_console_width();
+[[[IF has_min_max_line_width]]]
+        lineWidth = std::min(std::max(get_console_width(), [[[min_line_width]]]), [[[max_line_width]]]);
+[[[ELIF min_line_width]]]
+        lineWidth = std::max(get_console_width(), [[[min_line_width]]]);
+[[[ELIF max_line_width]]]
+        lineWidth = std::min(get_console_width(), [[[max_line_width]]]);
+[[[ELSE]]]
+        lineWidth = get_console_width());
+[[[ENDIF]]]
     write_help_text(stream, helpText, lineWidth);  
 }
 """

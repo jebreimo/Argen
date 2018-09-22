@@ -38,6 +38,10 @@ class CodeProperties:
         self.arguments = None
         self.equal_is_separator = False
         self.has_program_name = False
+        self.default_line_width = 79
+        self.max_line_width = 0
+        self.min_line_width = 40
+        self.dynamic_line_width = True
 
 
 def get_internal_variables(session):
@@ -214,6 +218,21 @@ def make_code_properties(session):
     result.arguments = sorted(groups[2], key=lambda a: a.index)
     if result.options:
         result.equal_is_separator = can_use_equal_as_separator(session, result)
+
+    min_width = max(settings.min_line_width, 0)
+    max_width = max(settings.max_line_width, 0)
+    if min_width == max_width and min_width != 0:
+        result.dynamic_line_width = False
+        result.default_line_width = min_width
+        result.min_line_width = min_width
+        result.max_line_width = max_width
+    else:
+        result.default_line_width = max(settings.line_width, min_width, 40)
+        result.min_line_width = max(min_width, 40)
+        if max_width != 0:
+            result.max_line_width = max(max_width, result.default_line_width)
+        else:
+            result.max_line_width = 2 * result.default_line_width
 
     if settings.immediate_callbacks:
         problematic_args = find_problematic_argument_callbacks(result.arguments)

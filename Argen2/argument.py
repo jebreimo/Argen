@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import parser_tools
+from deducedtype import DeducedType
 
 
 def get_int_property(dict, key):
@@ -63,13 +64,21 @@ class Argument:
         self.option_name = None
         self.member = None
         self.arguments = None
+        self.value_type = None
 
-    def __str__(self):
+    def __repr__(self):
         vals = self.__dict__
         keys = list(vals.keys())
         keys.sort()
         kvs = ("%s: %s" % (k, vals[k]) for k in keys if vals[k] is not None)
         return "%s\n    %s" % (self.raw_text, "\n    ".join(kvs))
+
+    def __str__(self):
+        if self.flags:
+            return " ".join(self.flags)
+        if self.metavar:
+            return self.metavar
+        return "unnamed argument"
 
     def is_option(self):
         return len(self.flags) != 0
@@ -104,6 +113,8 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     arg.text = properties.get("text", raw_text)
     arg.valid_values = parse_valid_values(properties.get("valid_values"))
     arg.value = properties.get("value")
+    if "value_type" in properties:
+        arg.value_type = DeducedType(explicit=properties["value_type"])
     return arg
 
 # def compare_metavar_properties(aprops, bprops):

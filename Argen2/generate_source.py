@@ -12,6 +12,7 @@ import generate_get_console_width
 from generate_option_list import generate_options
 from generate_test_code import generate_test_code
 from generate_write_help_text import generate_write_help_text
+from generate_parse_arguments import generate_parse_arguments
 
 
 class SourceFileGenerator(templateprocessor.Expander):
@@ -71,6 +72,9 @@ class SurceContentsGenerator(templateprocessor.Expander):
     def options(self, params, context):
         return generate_options(self._session)
 
+    def parse_arguments(self, params, context):
+        return generate_parse_arguments(self._session)
+
 
 def generate_source_contents(session):
     return templateprocessor.make_lines(SOURCE_NAMESPACE_TEMPLATE,
@@ -93,6 +97,7 @@ SOURCE_CONTENTS_TEMPLATE = """\
 [[[get_console_width]]]
 [[[write_help_text_function]]]
 [[[options]]]
+[[[parse_arguments]]]
 //[ [[error_messages]]]
 //[ [[set_value_functions]]]
 //[ [[check_value_functions]]\]

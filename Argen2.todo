@@ -7,8 +7,8 @@
 + Automatically detect that -- is used to mark the end of options
 + Deduce names for flags (to be used in enumerations)
 - Display a warning if there is no help option
-- Produce synopsis
-- Produce help text
++ Produce synopsis
++ Produce help text
 - Have two modes for generated parse_arguments: one that leaves argc and argv unchanged, one that removes all known options and arguments.
 - Deduce inline and member_inline, that is, replace member references with variable.member.
 - Support two different argument modes:
@@ -16,3 +16,5 @@
     - "batch-mode" where all arguments are read into a list before they are processed
     - Report warnings when arguments have callbacks, but the list of arguments requires batch-mode
 - Support case-insensitive options
++ Type deduction:
+    + how value-type is interpreted must depend on the argument's operation

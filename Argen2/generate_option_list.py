@@ -69,8 +69,11 @@ class OptionGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
         self._session = session
-        self._short_flags = []
         self._flags = []
+        if session.code_properties.short_options:
+            self._short_flags = []
+        else:
+            self._short_flags = self._flags
         self._options = []
         for opt in (a for a in self._session.arguments if a.flags):
             self._options.append(opt)
@@ -121,8 +124,7 @@ def generate_options(session):
     generator = OptionGenerator(session)
     if not generator.has_any_options():
         return None
-    return templateprocessor.make_lines(OPTIONS_TEMPLATE,
-                                        generator)
+    return templateprocessor.make_lines(OPTIONS_TEMPLATE, generator)
 
 
 OPTIONS_TEMPLATE = """\
@@ -173,10 +175,12 @@ int compareFlag(const StringWrapper& flag, const char* pattern)
         ++i;
     }
 
-    for (; flag.size < i; ++i)
+    for (; i < flag.size; ++i)
     {
         if (flag.data[i] != pattern[i + 1])
             return flag.data[i] - pattern[i + 1];
+        else if (pattern[i + 1] == 0)
+            break;
     }
     return 0;
 }
@@ -199,6 +203,27 @@ RndAccIt findFlag(RndAccIt begin, RndAccIt end, const StringWrapper& flag)
     return originalEnd;
 }
 [[[ENDIF]]]
+
+int findOptionCode(const Argument& argument)
+{
+    auto str = argument.string;
+    if (argument.isShortOption)
+    {
+        char c = str.data[str.size - 1];
+        auto pos = std::lower_bound(std::begin(shortOptions),
+                                    std::end(shortOptions),
+                                    c);
+        if (pos == std::end(shortOptions))
+            return -1;
+        return int(shortOptionIndices[pos - std::begin(shortOptions)]);
+    }
+    auto pos = findFlag(std::begin(optionStrings),
+                        std::end(optionStrings),
+                        argument.string);
+    if (pos == std::end(optionStrings))
+        return -1;
+    return int(optionIndices[pos - std::begin(optionStrings)]);
+}
 """
 
 # def option_enum(self, params, context):

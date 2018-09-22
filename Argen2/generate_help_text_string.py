@@ -108,7 +108,9 @@ def find_all(text, pattern, start_pos=0):
         positions.append(pos)
         pos += len(pattern)
 
+
 MAX_LINE_WIDTH = 72
+
 
 def split_text(text, max_line_width=MAX_LINE_WIDTH):
     lines = []

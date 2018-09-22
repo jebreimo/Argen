@@ -10,10 +10,10 @@
 ARGUMENT_PROPERTIES = {"callback", "flags", "index",
                        "inline", "member_name", "operation", "post_operation",
                        "separator", "separator_count", "text", "valid_values",
-                       "value", "variable"}
+                       "value", "value_type", "variable"}
 
-MEMBER_PROPERTIES = {"count", "default_value", "member_callback", "member_inline",
-                     "member_type", "value_type"}
+MEMBER_PROPERTIES = {"count", "default_value", "member_callback",
+                     "member_inline", "member_type"}
 
 _REVERSE_PROPERTY_ALIASES = {
     "callback": ["call"],

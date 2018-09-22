@@ -172,6 +172,9 @@ class DeducedType:
             return self.specific
         if not self.subtypes:
             return CATEGORY_TYPES[self.category]
+        if self.category == Category.COMPOSITE and len(self.subtypes) == 1:
+            return "%s<%s>" % (CATEGORY_TYPES[Category.LIST],
+                               self.subtypes[0])
         return "%s<%s>" % (CATEGORY_TYPES[self.category],
                            ", ".join(str(st) for st in self.subtypes))
 
@@ -276,13 +279,13 @@ def is_undetermined(deduced_type):
     return True
 
 
-def is_list(deduced_type):
+def is_list(deduced_type, logger):
     if not deduced_type:
         return False
     if deduced_type.category == Category.LIST:
         return True
     if deduced_type.category == Category.COMPOSITE \
-            and join_list_of_deduced_types(deduced_type.subtypes):
+            and join_list_of_deduced_types(deduced_type.subtypes, logger):
         return True
     if deduced_type.category == Category.ANY \
             and (deduced_type.explicit or deduced_type.specific):

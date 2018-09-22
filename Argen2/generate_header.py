@@ -68,7 +68,7 @@ class HeaderContentsGenerator(templateprocessor.Expander):
                 if mem.default_value:
                     lines.append("%s %s = %s;" % (mem.member_type, mem.name, mem.default_value))
                 else:
-                    lines.append("%s %s;" % (mem.member_type, mem.name))
+                    lines.append("%s %s = {};" % (mem.member_type, mem.name))
                 lines.append("")
         return lines
 
@@ -93,7 +93,7 @@ HEADER_NAMESPACE_TEMPLATE = """\
 [[[namespace_end]]]
 [[[ELSE]]]
 [[[code]]]
-[[[ENDIF]]]\
+[[[ENDIF]]]
 """
 
 
@@ -102,13 +102,12 @@ HEADER_CONTENTS_TEMPLATE = """\
   */
 struct [[[class_name]]]
 {
-    /** @brief Assigns default values to all members.
-      */
-    [[[class_name]]]();
-
     /** @brief Returns true if [[[function_name]]]_result is RESULT_OK, false otherwise.
       */
-    explicit operator bool() const;
+    explicit operator bool() const
+    {
+        return [[[function_name]]]_result == Result::RESULT_OK;
+    }
 
     [[[members]]]
 

@@ -76,50 +76,44 @@ def deduce_type_from_separator_count(count):
                               source="separator_count")
 
 
-def deduce_value_type(member, logger):
-    if member.value_type:
+def deduce_value_type(argument, logger):
+    if argument.value_type:
         return None
-    logger.argument = member.arguments[0]
+    logger.argument = argument
     deduced_types = [dt.DeducedType()]
-    for argument in member.arguments:
-        if argument.valid_values:
-            typ = deduce_type_from_valid_values(argument.valid_values, logger)
-            if typ:
-                deduced_types.append(typ)
-        if argument.value:
-            if argument.separator_count:
-                max_separators = argument.separator_count[1]
-            else:
-                max_separators = None
-            typ = deduce_type_from_value(argument.value,
-                                         argument.separator,
-                                         max_separators)
-            if typ:
-                typ.source = "value"
-                deduced_types.append(typ)
+    if argument.valid_values:
+        typ = deduce_type_from_valid_values(argument.valid_values, logger)
+        if typ:
+            deduced_types.append(typ)
+    if argument.value:
         if argument.separator_count:
-            typ = deduce_type_from_separator_count(argument.separator_count)
-            if typ:
-                deduced_types.append(typ)
+            max_separators = argument.separator_count[1]
+        else:
+            max_separators = None
+        typ = deduce_type_from_value(argument.value,
+                                     argument.separator,
+                                     max_separators)
+        if typ:
+            typ.source = "value"
+            deduced_types.append(typ)
+    if argument.separator_count:
+        typ = deduce_type_from_separator_count(argument.separator_count)
+        if typ:
+            deduced_types.append(typ)
     result = dt.join_list_of_deduced_types(deduced_types, logger)
     logger.argument = None
     return result
 
 
 def deduce_value_types(session):
-    for member in session.members:
-        if not member.value_type:
-            typ = deduce_value_type(member, session.logger)
+    for arg in session.arguments:
+        if not arg.value_type:
+            typ = deduce_value_type(arg, session.logger)
             if typ:
-                member.value_type = typ
+                arg.value_type = typ
                 session.logger.debug("Deduced value type for %s from %s: %s."
-                                     % (member.name, typ.source, member.value_type),
-                                     argument=member.arguments[0])
-                for arg in member.arguments[1:]:
-                    session.logger.debug("...also defined here.", argument=arg)
+                                     % (arg, typ.source, arg.value_type),
+                                     argument=arg)
             else:
-                session.logger.warn("Unable to deduce value type for %s."
-                                    % member.name,
-                                    argument=member.arguments[0])
-                for arg in member.arguments[1:]:
-                    session.logger.info("...also defined here.", argument=arg)
+                session.logger.warn("Unable to deduce value type for %s." % arg,
+                                    argument=arg)

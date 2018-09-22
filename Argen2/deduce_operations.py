@@ -17,7 +17,7 @@ def get_member_operations(arguments):
                 if mem.name not in member_operations:
                     member_operations[mem.name] = {arg.operation}
                 else:
-                    member_operations[mem.mem.name].add(arg.operation)
+                    member_operations[mem.name].add(arg.operation)
     return member_operations
 
 

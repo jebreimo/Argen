@@ -215,7 +215,7 @@ def parse_help_text_impl(text, session, line_number):
     try:
         for token_type, start, end in find_tokens(text, session.syntax):
             sm.handle_event(token_type, start, end)
-            line_number += text.count("\n", start, end)
+            handlers.line_number += text.count("\n", start, end)
         return handlers.arg_defs, handlers.output_text, handlers.arg_groups
     except HelpFileError as ex:
         if ex.line_number == -1:

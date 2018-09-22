@@ -8,7 +8,6 @@
 # ===========================================================================
 import parser_tools
 from deducedtype import DeducedType
-from helpfileerror import HelpFileError
 
 
 class Member:
@@ -22,7 +21,6 @@ class Member:
         self.member_callback = None
         self.member_type = None
         self.member_type = None
-        self.value_type = None
 
     def __str__(self):
         values = self.__dict__
@@ -35,6 +33,7 @@ class Member:
         for arg in self.arguments:
             if arg.flags:
                 return True
+
 
 def make_member(name, properties, arguments, session):
     mem = Member(name, properties)
@@ -52,6 +51,4 @@ def make_member(name, properties, arguments, session):
     mem.member_callback = properties.get("member_callback")
     if "member_type" in properties:
         mem.member_type = DeducedType(explicit=properties["member_type"])
-    if "value_type" in properties:
-        mem.value_type = DeducedType(explicit=properties["value_type"])
     return mem

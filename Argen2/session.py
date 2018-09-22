@@ -49,7 +49,6 @@ class Settings:
         self.header_only = False
         self.namespace = None
         self.function_name = "parse_arguments"
-        self.line_width = 79
         self.add_test = False
         self.metavar_types = dict(properties.DEFAULT_METAVAR_TYPES)
         self.detect_separators = False
@@ -57,6 +56,9 @@ class Settings:
         self.auto_format = True
         self.word_wrap = True
         self.immediate_callbacks = False
+        self.line_width = 79
+        self.max_line_width = 0
+        self.min_line_width = 0
 
 
 class Session:
@@ -122,9 +124,9 @@ class Session:
             self.settings.allow_abbreviations = parse_bool(value)
         elif name == "PragmaOnce":
             self.settings.use_pragma_once = parse_bool(value)
-        elif name == "Class_name":
+        elif name == "ClassName":
             self.settings.class_name = value
-        elif name == "File_name":
+        elif name == "FileName":
             self.settings.file_name = value
         elif name == "HeaderExtension":
             self.settings.header_extension = value
@@ -134,15 +136,13 @@ class Session:
             self.settings.namespace = [s.strip() for s in value.split("::")]
         elif name == "FunctionName":
             self.settings.function_name = value
-        elif name == "LineWidth":
-            self.settings.line_width = int(value)
         elif name == "Test":
             self.settings.add_test = parse_bool(value)
         elif name == "DetectSeparators":
             self.settings.detect_separators = parse_bool(value)
         elif name == "DirName":
-            self.settings.header_dir_name = \
-                self.settings.source_dir_name = value
+            self.settings.header_dir_name = value
+            self.settings.source_dir_name = value
         elif name == "HeaderDirName":
             self.settings.header_dir_name = value
         elif name == "SourceDirName":
@@ -155,6 +155,12 @@ class Session:
             self.settings.word_wrap = parse_bool(value)
         elif name == "ImmediateCallbacks":
             self.settings.immediate_callbacks = parse_bool(value)
+        elif name == "LineWidth":
+            self.settings.line_width = int(value)
+        elif name == "MinLineWidth":
+            self.settings.min_line_width = int(value)
+        elif name == "MaxLineWidth":
+            self.settings.max_line_width = int(value)
         else:
             return False
         return True

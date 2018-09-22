@@ -12,8 +12,8 @@ def deduce_values(session):
     for arg in session.arguments:
         if arg.value or arg.metavar or not arg.member:
             continue
-        if (not arg.member.value_type
-                or arg.member.value_type.explicit == "bool") \
+        if (not arg.value_type
+                or arg.value_type.explicit == "bool") \
             and (not arg.member.member_type
                  or arg.member.member_type.explicit == "bool"):
             arg.value = "true"
