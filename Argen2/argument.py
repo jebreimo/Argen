@@ -55,13 +55,13 @@ class Argument:
         self.member_name = None
         self.metavar = None
         self.operation = None
+        self.option_name = None
         self.post_operation = None
         self.separator = None
         self.separator_count = None
         self.text = None
         self.valid_values = None
         self.value = None
-        self.option_name = None
         self.member = None
         self.arguments = None
         self.value_type = None

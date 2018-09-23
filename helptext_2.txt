@@ -26,9 +26,9 @@ GENERAL OPTIONS
   {{-l FILE, --log-file=FILE}}  Redirect all the output the tests normally write to stdout or stderr to a file named FILE instead. (This does not affect the test reports).
   {{-q, --quiet| member: verbose | value: false}}  Don't display extra information while running tests. (Opposite of -v.)
   {{-v, --verbose}}  Display extra information while running tests.
-  {{--version| postop: abort}}
-  {{--info| postop: abort}}
-  {{--version2| member: version | postop: abort}}
+  {{--version| postop: return}}
+  {{--info| postop: return}}
+  {{--version2| member: version | postop: return}}
 
 REPORT OPTIONS
   {{--junit}}  Produce a test report in the JUnit XML format.

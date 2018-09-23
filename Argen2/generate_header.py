@@ -75,7 +75,7 @@ class HeaderContentsGenerator(templateprocessor.Expander):
     def result_enums(self, params, context):
         lines = []
         for arg in self._session.arguments:
-            if arg.option_name and arg.post_operation == "abort":
+            if arg.option_name and arg.post_operation in ("abort", "return"):
                 lines.extend((RESULT_ENUM_TEMPLATE
                               % (arg.flags[-1], arg.option_name)).split("\n"))
         return lines

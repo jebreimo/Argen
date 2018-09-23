@@ -48,6 +48,8 @@ def deduce_operation(argument, member_operations):
 def deduce_operations(session):
     member_operations = get_member_operations(session.arguments)
     for arg in session.arguments:
+        if not arg.post_operation:
+            arg.post_operation = "none"
         if arg.operation:
             continue
         arg.operation = deduce_operation(arg, member_operations)

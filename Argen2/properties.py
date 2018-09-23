@@ -60,5 +60,6 @@ LEGAL_OPERATIONS = {
 LEGAL_POST_OPERATIONS = {
     "none",
     "abort",
-    "final"
+    "final",
+    "return"
 }
