@@ -55,10 +55,6 @@ class SurceContentsGenerator(templateprocessor.Expander):
     def argument_iterator(self, params, context):
         return generate_argument_iterator(self._session)
 
-    # def help_text_string(self, params, context):
-    #     return generate_synopsis.generate_help_text_string(self._session.help_text,
-    #                                                        self._session)
-
     def get_console_width(self, params, context):
         return generate_get_console_width.generate_get_console_width()
 

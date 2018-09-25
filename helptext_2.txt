@@ -28,7 +28,7 @@ GENERAL OPTIONS
   {{-v, --verbose}}  Display extra information while running tests.
   {{--version| postop: return}}
   {{--info| postop: return}}
-  {{--version2| member: version | postop: return}}
+  {{--version2| member: | inline: $version$ = $info$ = true | postop: return}}
 
 REPORT OPTIONS
   {{--junit}}  Produce a test report in the JUnit XML format.
@@ -56,7 +56,7 @@ OTHER OPTIONS
   {{--string=STR| default: "Two words"}}
   {{--kjell| type:int | value: 10}}  Option that specify non-boolean type, but no argument or value
   {{--}}  End of options
-  {{-i PATH, --include=PATH| op: extend | separator: :}}
+  {{-i PATH, --include=PATH| op: extend | inline: printf("hello!\n") | separator: :}}
   {{--sysinclude| member: include | operation: extend | value: {"foo", "bar", "baz"}}}
   {{--stygg=N| type: uint64_t}}
   {{-u, --user=NAME:ID| values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}

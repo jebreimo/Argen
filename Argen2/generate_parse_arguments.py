@@ -6,6 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
+import re
 import templateprocessor
 
 
@@ -20,29 +21,14 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
                                     if o.post_operation == "final")
         self.has_program_name = session.code_properties.has_program_name
 
-    def option_cases(self, params, context):
+    def option_cases(self, *args):
         result = []
-        post_op_gen = PostOperationGenerator(self._session)
+        option_gen = ParseOptionGenerator(self._session)
         for opt in self._options:
-            result.append("case Option_%s:" % opt.option_name)
-            if opt.value:
-                if opt.operation == "assign":
-                    result.append("    result.%s = %s;"
-                                  % (opt.member_name, opt.value))
-                elif opt.operation == "append":
-                    result.append("    result.%s.push_back(%s);"
-                                  % (opt.member_name, opt.value))
-                elif opt.operation == "extend":
-                    result.append("    result.%s.insert(result.%s.end(), %s);"
-                                  % (opt.member_name, opt.member_name,
-                                     opt.value))
-            if opt.post_operation == "none":
-                result.append("    break;")
-            else:
-                post_op_gen.option = opt
-                result.extend(templateprocessor.make_lines(
-                    POST_OPERATION_TEMPLATE,
-                    post_op_gen))
+            option_gen.option = opt
+            result.extend(templateprocessor.make_lines(
+                PARSE_OPTION_TEMPLATE,
+                option_gen))
         return result
 
 
@@ -51,12 +37,52 @@ def generate_parse_arguments(session):
                                         ParseArgumentsGenerator(session))
 
 
-class PostOperationGenerator(templateprocessor.Expander):
+class ParseOptionGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
         self.option = None
+        self.inline_regexp = re.compile("\$([^$]*)\$")
+
+    def operation(self, *args):
+        opt = self.option
+        if not opt.value:
+            return None
+        elif opt.operation == "assign":
+            return "result.%s = %s;" % (opt.member_name, opt.value)
+        elif opt.operation == "append":
+            return "result.%s.push_back(%s);" % (opt.member_name, opt.value)
+        elif opt.operation == "extend":
+            return "result.%s.insert(result.%s.end(), %s);" \
+                   % (opt.member_name, opt.member_name, opt.value)
+        else:
+            return None
+
+    def inline(self, *args):
+        if self.option.inline:
+            parts = []
+            pos = 0
+            for match in self.inline_regexp.finditer(self.option.inline):
+                if match.start(0) != pos:
+                    parts.append(self.option.inline[pos:match.start(0)])
+                parts.append("result.")
+                parts.append(match.group(1))
+                pos = match.end(0)
+            if pos != len(self.option.inline):
+                parts.append(self.option.inline[pos:])
+            print(parts)
+            if parts and parts[-1][-1] != ";":
+                parts.append(";")
+            return "%s" % "".join(parts)
+        else:
+            return None
+
+    def callback(self, *args):
+        if self.option.callback:
+            return "%s(result, to_string(arg));" % self.option.callback
+        else:
+            return None
 
     def option_name(self, *args):
         return self.option.option_name
@@ -116,6 +142,32 @@ std::string getBaseName(const std::string& path)
     }
     return result;
 }
+"""
+
+PARSE_OPTION_TEMPLATE = """\
+case Option_[[[option_name]]]:
+    [[[operation]]]
+    [[[inline]]]
+    [[[callback]]]
+[[[IF abort_option]]]
+    if (autoExit)
+    {
+        exit([[[class_name]]]::OPTION_[[[option_name]]]);
+    }
+    else
+    {
+        result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
+        return result;
+    }
+[[[ELIF return_option]]]
+    result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
+    return result;
+[[[ELIF final_option]]]
+    finalOption = true;
+    break;
+[[[ELSE]]]
+    break;
+[[[ENDIF]]]\
 """
 
 POST_OPERATION_TEMPLATE = """\
