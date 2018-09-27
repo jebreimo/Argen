@@ -161,6 +161,8 @@ class Session:
             self.settings.min_line_width = int(value)
         elif name == "MaxLineWidth":
             self.settings.max_line_width = int(value)
+        elif name == "CaseSensitive":
+            self.settings.case_sensitive = parse_bool(value)
         else:
             return False
         return True

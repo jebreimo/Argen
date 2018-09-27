@@ -151,9 +151,9 @@ struct [[[class_name]]]
   */
 [[[class_name]]] [[[function_name]]](int argc, char* argv[], bool autoExit = true);
 
-void write_help_text(std::ostream& stream, size_t lineWidth = 0);
+void write_help_text(std::ostream& stream, unsigned lineWidth = 0);
 
-void write_synopsis(std::ostream& stream, size_t lineWidth = 0);\
+void write_synopsis(std::ostream& stream, unsigned lineWidth = 0);\
 """
 
 

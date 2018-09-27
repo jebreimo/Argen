@@ -152,12 +152,12 @@ const [[[enum_base_type]]] optionIndices[] =
     [[[option_indices]]]
 };
 
-int compareFlag(const StringWrapper& flag, const char* pattern)
+int compareFlag(const std::string_view& flag, const char* pattern)
 {
     size_t i = 0;
     while (true)
     {
-        if (i == flag.size)
+        if (i == flag.size())
         {
             if (pattern[i] == 1)
                 return 0;
@@ -168,17 +168,17 @@ int compareFlag(const StringWrapper& flag, const char* pattern)
         {
             break;
         }
-        else if (flag.data[i] != pattern[i])
+        else if (flag[i] != pattern[i])
         {
-            return flag.data[i] - pattern[i];
+            return flag[i] - pattern[i];
         }
         ++i;
     }
 
-    for (; i < flag.size; ++i)
+    for (; i < flag.size(); ++i)
     {
-        if (flag.data[i] != pattern[i + 1])
-            return flag.data[i] - pattern[i + 1];
+        if (flag[i] != pattern[i + 1])
+            return flag[i] - pattern[i + 1];
         else if (pattern[i + 1] == 0)
             break;
     }
@@ -186,7 +186,7 @@ int compareFlag(const StringWrapper& flag, const char* pattern)
 }
 
 template <typename RndAccIt>
-RndAccIt findFlag(RndAccIt begin, RndAccIt end, const StringWrapper& flag)
+RndAccIt findFlag(RndAccIt begin, RndAccIt end, const std::string_view& flag)
 {
     auto originalEnd = end;
     while (begin != end)
@@ -209,7 +209,7 @@ int findOptionCode(const Argument& argument)
     auto str = argument.string;
     if (argument.isShortOption)
     {
-        char c = str.data[str.size - 1];
+        char c = str[str.size() - 1];
         auto pos = std::lower_bound(std::begin(shortOptions),
                                     std::end(shortOptions),
                                     c);

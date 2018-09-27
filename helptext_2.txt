@@ -89,6 +89,7 @@ HeaderExtension = ".hpp"
 FunctionName = "parseArguments"
 Namespace = Foo::Bar
 Test = false
+CaseSensitive = False
 
 $$$ ErrorText
 usage: ${SYNOPSIS}

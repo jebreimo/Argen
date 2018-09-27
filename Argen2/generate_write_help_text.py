@@ -48,7 +48,7 @@ const char errorText[] =
 class HelpTextWriter
 {
 public:
-    HelpTextWriter(std::ostream& stream, size_t lineWidth)
+    HelpTextWriter(std::ostream& stream, unsigned lineWidth)
         : m_Stream(stream),
           m_LineWidth(lineWidth)
 [[[IF has_alignment]]]
@@ -75,7 +75,7 @@ public:
             }
 [[[IF has_alignment]]]
             m_Column = m_AlignmentColumns.back() + m_Buffer.size();
-            for (size_t i = 0; i < m_AlignmentColumns.back(); ++i)
+            for (unsigned i = 0; i < m_AlignmentColumns.back(); ++i)
                 m_Stream.put(' ');
 [[[ELSE]]]
             m_Column = m_Buffer.size();
@@ -122,22 +122,22 @@ public:
     }
 private:
     std::ostream& m_Stream;
-    size_t m_LineWidth;
-    size_t m_Column = 0;
-    size_t m_WhitespaceSize = 0;
+    unsigned m_LineWidth;
+    unsigned m_Column = 0;
+    unsigned m_WhitespaceSize = 0;
     std::vector<char> m_Buffer;
 [[[IF has_alignment]]]
-    std::vector<size_t> m_AlignmentColumns;
+    std::vector<unsigned> m_AlignmentColumns;
 [[[ENDIF]]]
     bool m_EmptyLine = true;
 };
 
-void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
+void write_help_text(std::ostream& stream, const char* text, unsigned lineWidth)
 {
     if (lineWidth == 0)
         lineWidth = [[[line_width]]];
     HelpTextWriter writer(stream, lineWidth);
-    for (size_t i = 0; text[i]; ++i)
+    for (unsigned i = 0; text[i]; ++i)
     {
         switch (text[i])
         {
@@ -165,7 +165,7 @@ void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
             if (strncmp(text + i, "${PROGRAM}", 10) == 0)
             {
                 writer.align();
-                for (size_t j = 0; programName[j]; ++j)
+                for (unsigned j = 0; programName[j]; ++j)
                     writer.write_character(programName[j]);
                 i += 9;
             }
@@ -182,15 +182,15 @@ void write_help_text(std::ostream& stream, const char* text, size_t lineWidth)
     }
 }
 
-void write_help_text(std::ostream& stream, size_t lineWidth)
+void write_help_text(std::ostream& stream, unsigned lineWidth)
 {
     if (lineWidth == 0)
 [[[IF has_min_max_line_width]]]
-        lineWidth = std::min(std::max(get_console_width(), [[[min_line_width]]]), [[[max_line_width]]]);
+        lineWidth = std::min(std::max(get_console_width(), [[[min_line_width]]]u), [[[max_line_width]]]u);
 [[[ELIF min_line_width]]]
-        lineWidth = std::max(get_console_width(), [[[min_line_width]]]);
+        lineWidth = std::max(get_console_width(), [[[min_line_width]]]u);
 [[[ELIF max_line_width]]]
-        lineWidth = std::min(get_console_width(), [[[max_line_width]]]);
+        lineWidth = std::min(get_console_width(), [[[max_line_width]]]u);
 [[[ELSE]]]
         lineWidth = get_console_width());
 [[[ENDIF]]]

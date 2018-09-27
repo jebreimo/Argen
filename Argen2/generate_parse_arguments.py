@@ -169,25 +169,3 @@ case Option_[[[option_name]]]:
     break;
 [[[ENDIF]]]\
 """
-
-POST_OPERATION_TEMPLATE = """\
-[[[IF abort_option]]]
-    if (autoExit)
-    {
-        exit([[[class_name]]]::OPTION_[[[option_name]]]);
-    }
-    else
-    {
-        result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
-        return result;
-    }
-[[[ELIF return_option]]]
-    result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
-    return result;
-[[[ELIF final_option]]]
-    finalOption = true;
-    break;
-[[[ELSE]]]
-    break;
-[[[ENDIF]]]\
-"""

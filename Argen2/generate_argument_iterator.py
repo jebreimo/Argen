@@ -30,31 +30,25 @@ def generate_argument_iterator(session):
 
 
 ARGUMENT_ITERATOR_TEMPLATE = """\
-struct StringWrapper
-{
-    StringWrapper() = default;
-    StringWrapper(const char* data, size_t size) : data(data), size(size) {}
-    explicit operator bool() const {return data != nullptr;}
-
-    const char* data = nullptr;
-    size_t size = 0;
-};
-
 struct Argument
 {
     Argument() = default;
+
 [[[IF has_short_options]]]
-    Argument(StringWrapper argument, bool isShortOption)
+    Argument(std::string_view argument, bool isShortOption)
             : string(argument),
               isShortOption(isShortOption)
     {}
 [[[ELSE]]]
-    Argument(StringWrapper argument) : string(argument) {}
+    Argument(std::string_view argument) : string(argument) {}
 [[[ENDIF]]]
-    explicit operator bool() const {return bool(string);}
 
-    StringWrapper string;[[[IF has_short_options]]]
-    bool isShortOption = false;[[[ENDIF]]]
+    explicit operator bool() const {return !string.empty();}
+
+    std::string_view string;
+[[[IF has_short_options]]]
+    bool isShortOption = false;
+[[[ENDIF]]]
 };
 [[[IF has_short_options]]]
 

@@ -23,7 +23,7 @@ class CodeProperties:
         # self.parse_function_name = None
         # self.expose_helptext_functions = None
         # self.shortest_option_length = 0
-        # self.case_sensitive_flags = False
+        self.case_sensitive_flags = True
         # self.abbreviated_options = True
         # self.non_short_options = True
         # self.special_options = True
@@ -178,6 +178,24 @@ def find_problematic_argument_callbacks(arguments):
     return problematic_arguments
 
 
+def can_have_case_insensitive_flags(session):
+    all_flags = {}
+    result = True
+    for argument in session.arguments:
+        if argument.flags:
+            flags = [(f.lower(), f) for f in argument.flags]
+            for key, flag in flags:
+                if key in all_flags:
+                    session.logger.warn("Cannot use case insensitive flags:"
+                                        " %s and %s are ambiguous."
+                                        % (all_flags[key], flag),
+                                        argument=argument)
+                    result = False
+            for key, flag in flags:
+                all_flags[key] = flag
+    return result
+
+
 def make_code_properties(session):
     settings = session.settings
 
@@ -205,7 +223,8 @@ def make_code_properties(session):
     result.counted_members = get_counted_members(session)
 
     result.source_includes = ['"%s"' % session.header_file_name(),
-                              "<iostream>"]
+                              "<iostream>",
+                              "<string_view>"]
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
         result.namespace_start = ["namespace " + ns, "{"]
@@ -247,6 +266,8 @@ def make_code_properties(session):
                                 " appears on the command line."
                                 % (is_are, arg.metavar))
 
+    if not settings.case_sensitive:
+        result.case_sensitive_flags = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.error_text)
     return result
