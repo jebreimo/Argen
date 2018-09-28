@@ -42,6 +42,8 @@ class CodeProperties:
         self.max_line_width = 0
         self.min_line_width = 40
         self.dynamic_line_width = True
+        self.has_option_values = False
+        self.has_delimited_values = False
 
 
 def get_internal_variables(session):
@@ -270,4 +272,10 @@ def make_code_properties(session):
         result.case_sensitive_flags = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.error_text)
+
+    for argument in session.arguments:
+        if argument.separator:
+            result.has_delimited_values = True
+        if argument.flags and not argument.value:
+            result.has_option_values = True
     return result

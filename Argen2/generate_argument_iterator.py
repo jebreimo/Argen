@@ -20,8 +20,8 @@ class ArgumentIteratorGenerator(templateprocessor.Expander):
                                      for k in session.code_properties.options)
         self.has_normal_options = self.has_slash_options or self.has_dash_options
         self.has_both_options = self.has_slash_options and self.has_dash_options
-        self.has_values = False
-        self.has_delimited_values = False
+        self.has_values = session.code_properties.has_option_values
+        self.has_delimited_values = session.code_properties.has_delimited_values
 
 
 def generate_argument_iterator(session):
@@ -131,7 +131,7 @@ public:
     }
 [[[IF has_values]]]
 
-    StringWrapper nextValue()
+    std::string_view nextValue()
     {
         if (m_ArgvIt == m_ArgvEnd)
             return {};
@@ -148,7 +148,7 @@ public:
 [[[ENDIF]]]
 [[[IF has_delimited_values]]]
 
-    StringWrapper nextDelimitedValue(char delimiter)
+    std::string_view nextDelimitedValue(char delimiter)
     {
         if (m_ArgvIt == m_ArgvEnd)
             return {};
@@ -171,5 +171,5 @@ private:
     char* m_ArgIt;
     char** m_ArgvIt;
     char** m_ArgvEnd;
-};\
+};
 """
