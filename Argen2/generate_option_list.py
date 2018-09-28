@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import templateprocessor
+from find_shortest_unique_prefixes import find_shortest_unique_prefixes
 
 
 def make_enum_lines(options):
@@ -26,45 +27,6 @@ def iterate_over_nth(items, n):
         yield item[n]
 
 
-def find_min_prefix_length(s):
-    if s[0] == "/":
-        return 1
-    elif s[0] == "-":
-        if len(s) > 1 and s[1] == "-":
-            return 2
-        else:
-            return 1
-    else:
-        return 0
-
-
-def find_first_unique_char(str1, str2):
-    max_index = min(len(str1), len(str2))
-    for i in range(find_min_prefix_length(str2), max_index):
-        if str1[i] != str2[i]:
-            return i + 1
-    return max_index
-
-
-def make_minimal_flag_strings(flags):
-    prefixes = []
-    for flag in flags:
-        text = flag[0]
-        if not prefixes:
-            index = find_min_prefix_length(text) + 1
-            prefixes.append((text[:index], text[index:], text))
-        else:
-            index = find_first_unique_char(prefixes[-1][0], text)
-            if index == len(prefixes[-1][0]):
-                prev_text = prefixes[-1][2]
-                index = find_first_unique_char(prev_text, text)
-                prefixes[-1] = prev_text[:index], prev_text[index:], prev_text
-                if index == len(prev_text):
-                    index += 1
-            prefixes.append((text[:index], text[index:], text))
-    return [(p[0], p[1], f[1]) for p, f in zip(prefixes, flags)]
-
-
 class OptionGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
@@ -82,36 +44,44 @@ class OptionGenerator(templateprocessor.Expander):
                     self._short_flags.append((flag, opt))
                 else:
                     self._flags.append((flag, opt))
-        self._short_flags.sort(key=lambda f: f[0])
-        self._flags.sort(key=lambda f: f[0])
+        self.case_insensitive = session.code_properties.case_insensitive
+        if self.case_insensitive:
+            self._short_flags.sort(key=lambda f: f[0].upper())
+            self._flags.sort(key=lambda f: f[0].upper())
+        else:
+            self._short_flags.sort(key=lambda f: f[0])
+            self._flags.sort(key=lambda f: f[0])
 
     def has_any_options(self):
         return self._short_flags or self._flags
 
-    def option_enums(self, params, context):
+    def option_enums(self, *args):
         return make_enum_lines(self._options)
 
-    def has_short_options(self, params, context):
+    def has_short_options(self, *args):
         return self._short_flags
 
-    def short_option_chars(self, params, context):
+    def short_option_chars(self, *args):
         return "".join(f[0][1] for f in self._short_flags)
 
-    def short_option_indices(self, params, context):
+    def short_option_indices(self, *args):
         return make_enum_lines(iterate_over_nth(self._short_flags, 1))
 
-    def has_options(self, params, context):
+    def has_options(self, *args):
         return self._flags
 
-    def enum_base_type(self, params, context):
+    def enum_base_type(self, *args):
         return "char" if len(self._options) < 128 else "short"
 
-    def option_indices(self, params, context):
+    def option_indices(self, *args):
         return make_enum_lines(iterate_over_nth(self._flags, 1))
 
-    def option_strings(self, params, context):
+    def option_strings(self, *args):
         strings = []
-        for s, suffix, option in make_minimal_flag_strings(self._flags):
+        unique_prefixes = find_shortest_unique_prefixes(
+            self._flags,
+            self._session.code_properties.case_insensitive)
+        for s, suffix, option in unique_prefixes:
             if suffix:
                 strings.append('"%s\\001%s",' % (s, suffix))
             else:
@@ -168,17 +138,29 @@ int compareFlag(const std::string_view& flag, const char* pattern)
         {
             break;
         }
+[[[IF case_insensitive]]]
+        else if (std::toupper(flag[i]) != std::toupper(pattern[i]))
+        {
+            return std::toupper(flag[i]) - std::toupper(pattern[i]);
+        }
+[[[ELSE]]]
         else if (flag[i] != pattern[i])
         {
             return flag[i] - pattern[i];
         }
+[[[ENDIF]]]
         ++i;
     }
 
     for (; i < flag.size(); ++i)
     {
+[[[IF case_insensitive]]]
+        if (std::toupper(flag[i]) != std::toupper(pattern[i + 1]))
+            return std::toupper(flag[i]) - std::toupper(pattern[i + 1]);
+[[[ELSE]]]
         if (flag[i] != pattern[i + 1])
             return flag[i] - pattern[i + 1];
+[[[ENDIF]]]
         else if (pattern[i + 1] == 0)
             break;
     }
@@ -210,9 +192,17 @@ int findOptionCode(const Argument& argument)
     if (argument.isShortOption)
     {
         char c = str[str.size() - 1];
+[[[IF case_insensitive]]]
+        auto pos = std::lower_bound(
+                std::begin(shortOptions),
+                std::end(shortOptions),
+                c,
+                [](auto a, auto b){return std::toupper(a) < std::toupper(b);});
+[[[ELSE]]]
         auto pos = std::lower_bound(std::begin(shortOptions),
                                     std::end(shortOptions),
                                     c);
+[[[ENDIF]]]
         if (pos == std::end(shortOptions))
             return -1;
         return int(shortOptionIndices[pos - std::begin(shortOptions)]);
@@ -225,42 +215,3 @@ int findOptionCode(const Argument& argument)
     return int(optionIndices[pos - std::begin(optionStrings)]);
 }
 """
-
-# def option_enum(self, params, context):
-#     options = [a for a in self._session.arguments if a.flags]
-#     if not options:
-#         return None
-#     lines = ["enum class Options : char", "{"]
-#     lines.extend(["    Option_%s," % o.option_name for o in options[:-1]])
-#     lines.append("    Option_%s" % options[-1].option_name)
-#     lines.append("};")
-#     return lines
-#
-#
-# def short_option_list(self, params, context):
-#     flags = []
-#     for opt in (a for a in self._session.arguments if a.flags):
-#         for flag in opt.flags:
-#             if len(flag) == 2 and flag[0] == "-":
-#                 flags.append((flag, opt))
-#     if not flags:
-#         return None
-#     flags.sort(key=lambda f: f[0])
-#     flags_string = "".join(f[0][1] for f in flags)
-#     lines = ['const char shortOptions = "%s";' % flags_string,
-#              "const char shortOptionIndices[] =",
-#              "{"]
-#     lines.extend("    Option_%s," % f[1].option_name for f in flags[:-1])
-#     lines.append("    Option_%s" % flags[-1][1].option_name)
-#     lines.append("};")
-#     return lines
-#
-#
-# def option_list(self, params, context):
-#     flags = []
-#     for opt in (a for a in self._session.arguments if a.flags):
-#         for flag in opt.flags:
-#             if len(flag) != 2 or flag[0] != "-":
-#                 flags.append((flag, opt))
-#     if not flags:
-#         return None

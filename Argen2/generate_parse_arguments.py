@@ -71,7 +71,6 @@ class ParseOptionGenerator(templateprocessor.Expander):
                 pos = match.end(0)
             if pos != len(self.option.inline):
                 parts.append(self.option.inline[pos:])
-            print(parts)
             if parts and parts[-1][-1] != ";":
                 parts.append(";")
             return "%s" % "".join(parts)

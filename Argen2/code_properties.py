@@ -23,7 +23,7 @@ class CodeProperties:
         # self.parse_function_name = None
         # self.expose_helptext_functions = None
         # self.shortest_option_length = 0
-        self.case_sensitive_flags = True
+        self.case_insensitive = True
         # self.abbreviated_options = True
         # self.non_short_options = True
         # self.special_options = True
@@ -188,11 +188,18 @@ def can_have_case_insensitive_flags(session):
             flags = [(f.lower(), f) for f in argument.flags]
             for key, flag in flags:
                 if key in all_flags:
-                    session.logger.warn("Cannot use case insensitive flags:"
-                                        " %s and %s are ambiguous."
-                                        % (all_flags[key], flag),
-                                        argument=argument)
+                    session.logger.error("Cannot use case insensitive flags:"
+                                         " %s and %s are ambiguous."
+                                         % (all_flags[key], flag),
+                                         argument=argument)
                     result = False
+                for c in flag:
+                    if ord(c) >= 128:
+                        session.logger.error("Case-insensitive flags can not"
+                                             " contain non-ASCII characters"
+                                             " (the %s in %s)."
+                                             % (c, flag), argument=argument)
+                        break
             for key, flag in flags:
                 all_flags[key] = flag
     return result
@@ -269,7 +276,7 @@ def make_code_properties(session):
                                 % (is_are, arg.metavar))
 
     if not settings.case_sensitive:
-        result.case_sensitive_flags = can_have_case_insensitive_flags(session)
+        result.case_insensitive = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.error_text)
 
