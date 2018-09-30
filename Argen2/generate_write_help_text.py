@@ -20,7 +20,8 @@ class WriteHelpTextGenerator(templateprocessor.Expander):
         self.has_min_max_line_width = self.min_line_width \
                                       and self.max_line_width
         self.help_text = generate_help_text_string(session.help_text, session)
-        self.error_text = generate_help_text_string(session.error_text, session)
+        self.brief_help_text = generate_help_text_string(
+            session.brief_help_text, session)
         alignment_char = escape_text(session.syntax.alignment_char)
         self.has_alignment = any(alignment_char in s for s in self.help_text)
         self.has_tabs = any("\t" in s for s in self.help_text)
@@ -42,8 +43,8 @@ std::string programName = "<program>";
 const char helpText[] =
     [[[help_text]]];
 
-const char errorText[] =
-    [[[error_text]]];
+const char briefHelpText[] =
+    [[[brief_help_text]]];
 
 class HelpTextWriter
 {
@@ -182,18 +183,38 @@ void write_help_text(std::ostream& stream, const char* text, unsigned lineWidth)
     }
 }
 
+unsigned get_default_line_width()
+{
+[[[IF has_min_max_line_width]]]
+    return std::min(std::max(get_console_width(), [[[min_line_width]]]u), [[[max_line_width]]]u);
+[[[ELIF min_line_width]]]
+    return std::max(get_console_width(), [[[min_line_width]]]u);
+[[[ELIF max_line_width]]]
+    return std::min(get_console_width(), [[[max_line_width]]]u);
+[[[ELSE]]]
+    return get_console_width());
+[[[ENDIF]]]
+}
+
 void write_help_text(std::ostream& stream, unsigned lineWidth)
 {
     if (lineWidth == 0)
-[[[IF has_min_max_line_width]]]
-        lineWidth = std::min(std::max(get_console_width(), [[[min_line_width]]]u), [[[max_line_width]]]u);
-[[[ELIF min_line_width]]]
-        lineWidth = std::max(get_console_width(), [[[min_line_width]]]u);
-[[[ELIF max_line_width]]]
-        lineWidth = std::min(get_console_width(), [[[max_line_width]]]u);
-[[[ELSE]]]
-        lineWidth = get_console_width());
-[[[ENDIF]]]
+        lineWidth = get_default_line_width();
     write_help_text(stream, helpText, lineWidth);  
+}
+
+void write_brief_help_text(std::ostream& stream, unsigned lineWidth)
+{
+    if (lineWidth == 0)
+        lineWidth = get_default_line_width();
+    write_help_text(stream, briefHelpText, lineWidth);
+}
+
+void write_error_text(const std::string& errorText,
+                      std::ostream& stream = std::cerr,
+                      unsigned lineWidth = 0)
+{
+    write_brief_help_text(stream, lineWidth);
+    stream << errorText << '\\n';
 }
 """

@@ -153,7 +153,7 @@ struct [[[class_name]]]
 
 void write_help_text(std::ostream& stream, unsigned lineWidth = 0);
 
-void write_synopsis(std::ostream& stream, unsigned lineWidth = 0);\
+void write_brief_help_text(std::ostream& stream, unsigned lineWidth = 0);\
 """
 
 

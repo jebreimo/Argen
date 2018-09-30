@@ -91,7 +91,5 @@ Namespace = Foo::Bar
 Test = false
 CaseSensitive = False
 
-$$$ ErrorText
+$$$ BriefHelpText
 usage: ${SYNOPSIS}
-
-${ERROR}

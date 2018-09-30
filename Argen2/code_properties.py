@@ -278,7 +278,7 @@ def make_code_properties(session):
     if not settings.case_sensitive:
         result.case_insensitive = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
-                               or "${PROGRAM}" in session.error_text)
+                               or "${PROGRAM}" in session.brief_help_text)
 
     for argument in session.arguments:
         if argument.separator:

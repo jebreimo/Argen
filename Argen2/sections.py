@@ -10,7 +10,7 @@
 from helpfileerror import HelpFileError
 
 
-# Section types: Text, Define, Header, Source, Options, ErrorText
+# Section types: Text, Define, Header, Source, Options, BriefHelpText
 class Section:
     def __init__(self, section_type, parameter, file_name, line_number):
         self.type = section_type
@@ -34,7 +34,7 @@ def parse_section_header(line):
     section_type = words[0].lower()
     if section_type == "set":
         return section_type, words[1]
-    elif section_type in ("text", "source", "header", "settings", "errortext"):
+    elif section_type in ("text", "source", "header", "settings", "briefhelptext"):
         if len(words) == 1:
             return section_type, None
         else:

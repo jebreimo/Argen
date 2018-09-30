@@ -105,8 +105,8 @@ def parse_sections(sections, session):
             parse_definition(section, session)
         elif section.type == "settings":
             parse_settings(section, session)
-        elif section.type == "errortext":
-            session.error_text = parse_help_text(section, session)
+        elif section.type == "briefhelptext":
+            session.brief_help_text = parse_help_text(section, session)
         session.end_processing_file()
 
 
@@ -191,8 +191,8 @@ def main():
     # print("==== VARIABLES ====")
     # for variable in session.variables:
     #     print("%s=%s" % (variable, session.variables[variable]))
-    # print("==== ERROR_TEXT ====")
-    # print(session.error_text)
+    # print("==== BRIEF_HELP_TEXT ====")
+    # print(session.brief_help_text)
     # print("==== HELP_TEXT ====")
     # print(session.help_text)
     # print("==== ARGUMENTS ====")
