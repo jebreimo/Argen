@@ -20,6 +20,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_final_option = any(o for o in self._options
                                     if o.post_operation == "final")
         self.has_program_name = session.code_properties.has_program_name
+        self.has_separators = True
 
     def option_cases(self, *args):
         result = []
@@ -97,6 +98,26 @@ class ParseOptionGenerator(templateprocessor.Expander):
 
 
 PARSE_ARGUMENTS_TEMPLATE = """\
+[[[IF has_separators]]]
+std::vector<std::string_view> split_string(
+        const std::string_view& string,
+        char separator,
+        size_t max_splits = SIZE_MAX)
+{
+    std::vector<std::string_view> result;
+    auto from = string.begin();
+    while (result.size() < max_splits)
+    {
+        auto to = std::find(from, string.end(), separator);
+        if (to == string.end())
+            break;
+        result.emplace_back(from, to);
+        from = to + 1;
+    }
+    result.emplace_back(from, string.end());
+    return result;
+}
+[[[ENDIF]]]    
 [[[IF has_program_name]]]
 std::string getBaseName(const std::string& path)
 {
