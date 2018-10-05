@@ -231,9 +231,18 @@ def make_code_properties(session):
     result.header_includes = get_header_includes(session)
     result.counted_members = get_counted_members(session)
 
-    result.source_includes = ['"%s"' % session.header_file_name(),
-                              "<iostream>",
-                              "<string_view>"]
+    result.source_includes = ['"%s"' % session.header_file_name()]
+
+    for argument in session.arguments:
+        if argument.separator:
+            result.has_delimited_values = True
+        if argument.flags and not argument.value:
+            result.has_option_values = True
+
+    if result.has_delimited_values:
+        result.source_includes.append("<algorithm>")
+    result.source_includes.extend(["<iostream>", "<string_view>"])
+
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
         result.namespace_start = ["namespace " + ns, "{"]
@@ -279,10 +288,4 @@ def make_code_properties(session):
         result.case_insensitive = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.brief_help_text)
-
-    for argument in session.arguments:
-        if argument.separator:
-            result.has_delimited_values = True
-        if argument.flags and not argument.value:
-            result.has_option_values = True
     return result

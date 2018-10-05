@@ -20,7 +20,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_final_option = any(o for o in self._options
                                     if o.post_operation == "final")
         self.has_program_name = session.code_properties.has_program_name
-        self.has_separators = True
+        self.has_separators = session.code_properties.has_delimited_values
 
     def option_cases(self, *args):
         result = []
