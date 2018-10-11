@@ -39,6 +39,10 @@ class HeaderContentsGenerator(templateprocessor.Expander):
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
         self.has_member_counters = session.code_properties.counted_members
+        self._special_options = [a for a in session.arguments
+                                 if a.option_name
+                                 and a.post_operation in ("abort", "return")]
+
 
     def code(self, params, context):
         return templateprocessor.make_lines(HEADER_CONTENTS_TEMPLATE, self)
@@ -72,12 +76,16 @@ class HeaderContentsGenerator(templateprocessor.Expander):
                 lines.append("")
         return lines
 
-    def result_enums(self, params, context):
+    def has_result_enums(self, *args):
+        return self._special_options
+
+    def result_enums(self, *args):
         lines = []
-        for arg in self._session.arguments:
-            if arg.option_name and arg.post_operation in ("abort", "return"):
-                lines.extend((RESULT_ENUM_TEMPLATE
-                              % (arg.flags[-1], arg.option_name)).split("\n"))
+        for i, arg in enumerate(self._special_options):
+            txt = RESULT_ENUM_TEMPLATE % (arg.flags[-1], arg.option_name)
+            if i != len(self._special_options) - 1:
+                txt += ","
+            lines.extend(txt.split("\n"))
         return lines
 
 
@@ -116,13 +124,13 @@ struct [[[class_name]]]
         /** @brief [[[function_name]]] parsed the arguments successfully.
           */
         RESULT_OK,
-        [[[result_enums]]]
         /** @brief There are invalid or missing options or arguments.
           *
           * An error message has been displayed. The option and argument
           * members of this struct can not be relied upon.
           */
-        RESULT_ERROR
+        RESULT_ERROR[[[IF has_result_enums]]],
+        [[[result_enums]]][[[ENDIF]]]
     };
 
     /** @brief The exit status of [[[function_name]]].
@@ -160,5 +168,5 @@ void write_brief_help_text(std::ostream& stream, unsigned lineWidth = 0);\
 RESULT_ENUM_TEMPLATE = """\
 /** @brief The %s option was given.
   */
-OPTION_%s,\
+OPTION_%s\
 """

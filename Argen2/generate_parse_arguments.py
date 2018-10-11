@@ -105,16 +105,17 @@ std::vector<std::string_view> split_string(
         size_t max_splits = SIZE_MAX)
 {
     std::vector<std::string_view> result;
-    auto from = string.begin();
+    auto from = string.data();
+    auto end = from + string.size();
     while (result.size() < max_splits)
     {
-        auto to = std::find(from, string.end(), separator);
-        if (to == string.end())
+        auto to = std::find(from, end, separator);
+        if (to == end)
             break;
-        result.emplace_back(from, to);
+        result.emplace_back(from, to - from);
         from = to + 1;
     }
-    result.emplace_back(from, string.end());
+    result.emplace_back(from, end - from);
     return result;
 }
 [[[ENDIF]]]    
@@ -143,8 +144,9 @@ std::string getBaseName(const std::string& path)
 [[[IF has_final_option]]]
     bool finalOption = false;
 [[[ENDIF]]]
-    while (auto arg = argIt.nextArgument())
+    while (argIt.hasNext())
     {
+        auto arg = argIt.nextArgument();
         auto optionCode = findOptionCode(arg);
         switch (optionCode)
         {
@@ -170,15 +172,7 @@ case Option_[[[option_name]]]:
     [[[inline]]]
     [[[callback]]]
 [[[IF abort_option]]]
-    if (autoExit)
-    {
-        exit([[[class_name]]]::OPTION_[[[option_name]]]);
-    }
-    else
-    {
-        result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
-        return result;
-    }
+    return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], autoExit);
 [[[ELIF return_option]]]
     result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
     return result;

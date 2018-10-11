@@ -47,7 +47,7 @@ OTHER OPTIONS
   {{--rect=LENxWID| separator: x | member: cuboid}}
   {{--line=LEN| member: cuboid }}
   {{--antiflag| member: flag | value: false}}
-  {{--percentage=N| type: int | values: 0..100, 200..| default: 50}}
+  {{-%=N, --percentage=N| type: int | values: 0..100, 200..| default: 50}}
   {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
   {{--special| member: s |op: assign | value: {"$spec$"}}}
   {{-n X,Y| type: double | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}

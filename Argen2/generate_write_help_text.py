@@ -75,7 +75,8 @@ public:
                 m_WhitespaceSize = 0;
             }
 [[[IF has_alignment]]]
-            m_Column = m_AlignmentColumns.back() + m_Buffer.size();
+            m_Column = m_AlignmentColumns.back()
+                       + unsigned(m_Buffer.size());
             for (unsigned i = 0; i < m_AlignmentColumns.back(); ++i)
                 m_Stream.put(' ');
 [[[ELSE]]]
@@ -215,6 +216,6 @@ void write_error_text(const std::string& errorText,
                       unsigned lineWidth = 0)
 {
     write_brief_help_text(stream, lineWidth);
-    stream << errorText << '\\n';
+    stream << '\\n' << errorText << '\\n';
 }
 """

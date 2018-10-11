@@ -50,6 +50,23 @@ struct Argument
     bool isShortOption = false;
 [[[ENDIF]]]
 };
+
+std::string to_string(const std::string_view& wrapper)
+{
+    return std::string(wrapper.data(), wrapper.size());
+}
+
+std::string to_string(const Argument& argument)
+{
+[[[IF has_short_options]]]
+    if (argument.isShortOption && argument.string.size() == 1)
+        return "-" + to_string(argument.string);
+    else
+        return to_string(argument.string);
+[[[ELSE]]]
+    return to_string(argument.string);
+[[[ENDIF]]]
+}
 [[[IF has_short_options]]]
 
 inline bool resemblesShortOption(const char* s)
@@ -141,30 +158,9 @@ public:
         return {value, length};
     }
 
-    bool hasValue() const
+    bool hasNext() const
     {
-        return m_ArgIt != *m_ArgvIt;
-    }
-[[[ENDIF]]]
-[[[IF has_delimited_values]]]
-
-    std::string_view nextDelimitedValue(char delimiter)
-    {
-        if (m_ArgvIt == m_ArgvEnd)
-            return {};
-
-        if (*m_ArgIt == 0)
-        {
-            m_ArgIt = *++m_ArgvIt;
-            return {};
-        }
-
-        auto value = m_ArgIt;
-        size_t length = 0;
-        while (m_ArgIt[length] != 0 && m_ArgIt[length] != delimiter)
-            ++length;
-        m_ArgIt += length + m_ArgIt[length] == 0 ? 0 : 1;
-        return {value, length};
+        return m_ArgIt != *m_ArgvEnd;
     }
 [[[ENDIF]]]
 private:
