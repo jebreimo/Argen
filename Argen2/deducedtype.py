@@ -6,6 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
+import re
 import parser_tools
 
 
@@ -65,6 +66,7 @@ class Category:
     ANY = "any"
     COMPOSITE = "composite"
     LIST = "list"
+    TUPLE = "tuple"
     VALUE = "value"
     STRING = "string"
     NUMBER = "number"
@@ -86,6 +88,7 @@ CATEGORY_TYPES = {
     Category.ANY: "std::string",
     Category.COMPOSITE: "std::tuple",
     Category.LIST: "std::vector",
+    Category.TUPLE: "std::tuple",
     Category.VALUE: "std::string",
     Category.STRING: "std::string",
     Category.NUMBER: "int",
@@ -99,6 +102,7 @@ PARENT_CATEGORIES = {
     Category.ANY: None,
     Category.COMPOSITE: Category.ANY,
     Category.LIST: Category.COMPOSITE,
+    Category.TUPLE: Category.COMPOSITE,
     Category.VALUE: Category.ANY,
     Category.STRING: Category.VALUE,
     Category.NUMBER: Category.VALUE,
@@ -191,7 +195,7 @@ def join_deduced_types(deduced_type1, deduced_type2, logger):
                                       deduced_type2.category)
     if category is None:
         logger.warn("Incompatible types: %s and %s."
-                       % (deduced_type1, deduced_type2))
+                    % (deduced_type1, deduced_type2))
         return None
 
     if deduced_type1.explicit != deduced_type2.explicit:
@@ -457,3 +461,36 @@ def get_value_type(text):
         if None not in types:
             return DeducedType(Category.COMPOSITE, subtypes=types)
     return None
+
+
+def add_all_type_names(set_of_type_names, deduced_type):
+    name = str(deduced_type)
+    if name not in set_of_type_names:
+        set_of_type_names.add(name)
+    if deduced_type.subtypes:
+        for subtype in deduced_type.subtypes:
+            add_all_type_names(set_of_type_names, subtype)
+
+
+COMPOSITE_REXP = re.compile("(?:std::)?(tuple|vector) *<(.*)>$")
+
+
+def parse_type(str):
+    if len(str) >= 3 and str[0] == "{" and str[-1] == "}":
+        subtypes = (s.strip() for s in str[1:-1].split(","))
+        return DeducedType(
+            category=Category.COMPOSITE,
+            subtypes=[DeducedType(explicit=s) for s in subtypes])
+    else:
+        match = COMPOSITE_REXP.match(str)
+        if match:
+            if match.group(1) == "vector":
+                return DeducedType(
+                    category=Category.LIST,
+                    subtypes=[DeducedType(explicit=match.group(2).strip())])
+            elif match.group(1) == "tuple":
+                subtypes = (s.strip() for s in match.group(2).split(","))
+                return DeducedType(
+                    category=Category.TUPLE,
+                    subtypes=[DeducedType(explicit=s) for s in subtypes])
+        return DeducedType(explicit=str)

@@ -7,7 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import parser_tools
-from deducedtype import DeducedType
+import deducedtype
 
 
 def get_int_property(dict, key):
@@ -114,7 +114,7 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     arg.valid_values = parse_valid_values(properties.get("valid_values"))
     arg.value = properties.get("value")
     if "value_type" in properties:
-        arg.value_type = DeducedType(explicit=properties["value_type"])
+        arg.value_type = deducedtype.parse_type(properties["value_type"])
     return arg
 
 # def compare_metavar_properties(aprops, bprops):

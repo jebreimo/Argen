@@ -117,3 +117,13 @@ def deduce_value_types(session):
             else:
                 session.logger.warn("Unable to deduce value type for %s." % arg,
                                     argument=arg)
+        elif arg.separator \
+                and not dt.is_child_category(arg.value_type.category,
+                                             dt.Category.COMPOSITE):
+            session.logger.error("Illegal combination of separator and type "
+                                 + str(arg.value_type) + ".", argument=arg)
+        elif arg.valid_values and len(arg.valid_values) > 1 \
+                and not dt.is_child_category(arg.value_type.category,
+                                             dt.Category.COMPOSITE):
+            session.logger.error("Illegal combination of valid_values and type "
+                                 + str(arg.value_type) + ".", argument=arg)

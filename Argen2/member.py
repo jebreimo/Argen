@@ -7,7 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import parser_tools
-from deducedtype import DeducedType
+import deducedtype
 
 
 class Member:
@@ -19,7 +19,6 @@ class Member:
         self.default_value = None
         self.member_action = None
         self.member_callback = None
-        self.member_type = None
         self.member_type = None
 
     def __str__(self):
@@ -50,5 +49,5 @@ def make_member(name, properties, arguments, session):
     mem.member_action = properties.get("member_action")
     mem.member_callback = properties.get("member_callback")
     if "member_type" in properties:
-        mem.member_type = DeducedType(explicit=properties["member_type"])
+        mem.member_type = deducedtype.parse_type(properties["member_type"])
     return mem
