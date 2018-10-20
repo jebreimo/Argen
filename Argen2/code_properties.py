@@ -9,6 +9,7 @@
 import os.path
 import re
 from replace_variables import replace_variables
+from deducedtype import add_all_type_names
 
 
 class CodeProperties:
@@ -44,6 +45,7 @@ class CodeProperties:
         self.dynamic_line_width = True
         self.has_option_values = False
         self.has_delimited_values = False
+        self.parsed_type_names = None
 
 
 def get_internal_variables(session):
@@ -69,8 +71,16 @@ def get_internal_variables(session):
     return internals
 
 
-def has_strings(session):
-    pass
+def get_argument_type_names(session):
+    all_type_names = set()
+    parsed_type_names = set()
+    for arg in session.arguments:
+        if arg.member:
+            member_type = arg.member.member_type
+            if arg.value is None and arg.operation != "none":
+                add_all_type_names(parsed_type_names, member_type)
+            add_all_type_names(all_type_names, member_type)
+    return all_type_names, parsed_type_names
 
 
 def _replace_variables(text, session, internal_variables):
@@ -108,13 +118,12 @@ INCLUDE_FILES_REXPS = {
 }
 
 
-def get_header_includes(session):
+def get_header_includes(type_names):
     includes = {"<iosfwd>"}
     rexps = {k: re.compile(k) for k in INCLUDE_FILES_REXPS}
-    for mem in session.members:
-        t = str(mem.member_type)
+    for type_name in type_names:
         for rexp_key in rexps:
-            if rexps[rexp_key].search(t):
+            if rexps[rexp_key].search(type_name):
                 includes.add(INCLUDE_FILES_REXPS[rexp_key])
     return sorted(includes)
 
@@ -205,9 +214,32 @@ def can_have_case_insensitive_flags(session):
     return result
 
 
+def determine_line_width_members(code_properties, settings):
+    min_width = max(settings.min_line_width, 0)
+    max_width = max(settings.max_line_width, 0)
+    if min_width == max_width and min_width != 0:
+        code_properties.dynamic_line_width = False
+        code_properties.default_line_width = min_width
+        code_properties.min_line_width = min_width
+        code_properties.max_line_width = max_width
+    else:
+        default_width = max(settings.line_width, min_width, 40)
+        code_properties.default_line_width = default_width
+        code_properties.min_line_width = max(min_width, 40)
+        if max_width != 0:
+            code_properties.max_line_width = max(max_width, default_width)
+        else:
+            code_properties.max_line_width = int(1.25 * default_width + 0.5)
+
+
+def has_non_string_type_names(type_names):
+    return any(tn for tn in type_names if tn != "std::string"
+               and not tn.startswith("std::vector")
+               and not tn.startswith("std::pair"))
+
+
 def make_code_properties(session):
     settings = session.settings
-
     result = CodeProperties()
 
     name = settings.file_name + settings.header_extension
@@ -228,8 +260,10 @@ def make_code_properties(session):
     result.source_template = _replace_variables(
         internal_variables["SOURCE"], session, internal_variables)
 
-    result.header_includes = get_header_includes(session)
+    all_type_names, parsed_type_names = get_argument_type_names(session)
+    result.header_includes = get_header_includes(all_type_names)
     result.counted_members = get_counted_members(session)
+    result.parsed_type_names = parsed_type_names
 
     result.source_includes = ['"%s"' % session.header_file_name()]
 
@@ -242,6 +276,9 @@ def make_code_properties(session):
     if result.has_delimited_values:
         result.source_includes.append("<algorithm>")
     result.source_includes.extend(["<iostream>", "<string_view>"])
+    if has_non_string_type_names(result.parsed_type_names):
+        result.source_includes.append("<sstream>")
+    result.source_includes.sort()
 
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
@@ -256,20 +293,7 @@ def make_code_properties(session):
     if result.options:
         result.equal_is_separator = can_use_equal_as_separator(session, result)
 
-    min_width = max(settings.min_line_width, 0)
-    max_width = max(settings.max_line_width, 0)
-    if min_width == max_width and min_width != 0:
-        result.dynamic_line_width = False
-        result.default_line_width = min_width
-        result.min_line_width = min_width
-        result.max_line_width = max_width
-    else:
-        result.default_line_width = max(settings.line_width, min_width, 40)
-        result.min_line_width = max(min_width, 40)
-        if max_width != 0:
-            result.max_line_width = max(max_width, result.default_line_width)
-        else:
-            result.max_line_width = 2 * result.default_line_width
+    determine_line_width_members(result, settings)
 
     if settings.immediate_callbacks:
         problematic_args = find_problematic_argument_callbacks(result.arguments)
