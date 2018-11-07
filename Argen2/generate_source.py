@@ -14,6 +14,7 @@ from generate_test_code import generate_test_code
 from generate_write_help_text import generate_write_help_text
 from generate_parse_arguments import generate_parse_arguments
 from generate_option_functions import generate_option_functions
+from generate_test_functions import generate_test_functions
 
 
 class SourceFileGenerator(templateprocessor.Expander):
@@ -75,6 +76,9 @@ class SurceContentsGenerator(templateprocessor.Expander):
     def parse_arguments(self, params, context):
         return generate_parse_arguments(self._session)
 
+    def check_value_functions(self, *args):
+        return generate_test_functions(self._session)
+
 
 def generate_source_contents(session):
     return templateprocessor.make_lines(SOURCE_NAMESPACE_TEMPLATE,
@@ -98,10 +102,10 @@ SOURCE_CONTENTS_TEMPLATE = """\
 [[[write_help_text_function]]]
 [[[options]]]
 [[[option_functions]]]
+[[[check_value_functions]]]
 [[[parse_arguments]]]
 //[ [[error_messages]]]
 //[ [[set_value_functions]]]
-//[ [[check_value_functions]]\]
 """
 
 SOURCE_CONTENTS = """\

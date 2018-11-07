@@ -51,7 +51,7 @@ OTHER OPTIONS
   {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
   {{--special| member: s |op: assign | value: {"$spec$"}}}
   {{-n X,Y| type: {double, double} | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
-  {{-p X,Y,Z| type: {double, double, double} | separator: , | values: -1000..1000 : -1000..1000 : 0..500}}
+  {{-p X,Y,Z| type: {double, double, double} | separator: , | values: -1000..1000 : -1000..1000 : 0..}}
   {{-m NUM, --month=NUM| type: unsigned | values: 1..12 | count: 3}}
   {{--string=STR| default: "Two words"}}
   {{--kjell| type:int | value: 10}}  Option that specify non-boolean type, but no argument or value

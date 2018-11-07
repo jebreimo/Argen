@@ -30,7 +30,7 @@ bool from_string(const std::string_view& str, T& value)
 {
     std::istringstream stream(std::string(str.data(), str.size()));
     stream >> value;
-    return !stream.fail();
+    return !stream.fail() && stream.eof();
 }
 
 template <typename T>
@@ -47,18 +47,6 @@ bool read_value(ArgumentIterator& iterator, T& value,
     {
         write_error_text(to_string(argument) + ": invalid value \\""
                          + to_string(inputValue) + "\\".");
-        return false;
-    }
-    return true;
-}
-
-template <typename T>
-bool test_value(T&& value, const Argument& argument)
-{
-    if (!((0 <= value && value <= 100) || 200 <= value))
-    {
-        write_error_text(to_string(argument) + ": illegal value. "
-                         "(legal values: 0..100, 200..)");
         return false;
     }
     return true;

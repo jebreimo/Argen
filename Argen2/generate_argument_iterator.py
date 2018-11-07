@@ -67,6 +67,11 @@ std::string to_string(const Argument& argument)
     return to_string(argument.string);
 [[[ENDIF]]]
 }
+
+std::ostream& operator<<(std::ostream& os, const Argument& argument)
+{
+    return os << to_string(argument);
+}
 [[[IF has_short_options]]]
 
 inline bool resemblesShortOption(const char* s)

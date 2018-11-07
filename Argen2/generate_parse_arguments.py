@@ -118,6 +118,36 @@ std::vector<std::string_view> split_string(
     result.emplace_back(from, end - from);
     return result;
 }
+
+bool split_value(ArgumentIterator& iterator,
+                 std::vector<std::string_view>& parts,
+                 char separator,
+                 size_t min_splits, size_t max_splits,
+                 const Argument& argument)
+{
+    if (!iterator.hasNext())
+    {
+        write_error_text(to_string(argument) + ": no value given.");
+        return false;
+    }
+    auto inputValue = iterator.nextValue();
+    parts = split_string(inputValue, separator, max_splits);
+    if (parts.size() < min_splits + 1)
+    {
+        std::stringstream ss;
+        ss << argument << ": incorrect number of parts in value \\""
+           << inputValue << "\\".\\nIt must have ";
+        if (min_splits == max_splits)
+            ss << "exactly ";
+        else
+            ss << "at least ";
+        ss << min_splits + 1 <<  " parts separated by " << separator
+           << "'s.";
+        write_error_text(ss.str());
+        return false;
+    }
+    return true;
+}
 [[[ENDIF]]]    
 [[[IF has_program_name]]]
 std::string getBaseName(const std::string& path)
