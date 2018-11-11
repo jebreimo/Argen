@@ -16,7 +16,7 @@ def deduce_member_types_fom_operations(member, logger):
             if not arg.value_type:
                 types.append(dt.DeducedType(dt.Category.LIST,
                                             subtypes=[dt.DeducedType()]))
-            elif dt.is_list(arg.value_type, logger):
+            elif dt.can_be_list(arg.value_type, logger):
                 types.append(dt.DeducedType(prototype=arg.value_type))
             else:
                 types.append(dt.DeducedType(dt.Category.LIST,
@@ -76,6 +76,17 @@ def deduce_member_type(member, logger):
     return result
 
 
+def update_value_types(session):
+    debug = session.logger.debug
+    for argument in session.arguments:
+        if argument.operation == "assign" \
+                and dt.is_list(argument.member.member_type) \
+                and not dt.is_list(argument.value_type):
+            argument.value_type = argument.member.member_type
+            debug("Deduced value type for %s from member_type: %s."
+                  % (argument, argument.value_type), argument=argument)
+
+
 def deduce_member_types(session):
     for member in session.members:
         if not member.member_type:
@@ -94,3 +105,4 @@ def deduce_member_types(session):
                                      argument=member.arguments[0])
                 for arg in member.arguments[1:]:
                     session.logger.info("...also defined here.", argument=arg)
+    update_value_types(session)

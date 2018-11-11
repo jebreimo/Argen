@@ -25,33 +25,6 @@ void show_help(Arguments& arguments, const std::string& argument)
     write_help_text(std::cout);
 }
 
-template <typename T>
-bool from_string(const std::string_view& str, T& value)
-{
-    std::istringstream stream(std::string(str.data(), str.size()));
-    stream >> value;
-    return !stream.fail() && stream.eof();
-}
-
-template <typename T>
-bool read_value(ArgumentIterator& iterator, T& value,
-                const Argument& argument)
-{
-    if (!iterator.hasNext())
-    {
-        write_error_text(to_string(argument) + ": no value given.");
-        return false;
-    }
-    auto inputValue = iterator.nextValue();
-    if (!from_string(inputValue, value))
-    {
-        write_error_text(to_string(argument) + ": invalid value \\""
-                         + to_string(inputValue) + "\\".");
-        return false;
-    }
-    return true;
-}
-
 Arguments& abort(Arguments& arguments,
                  Arguments::Result result,
                  bool autoExit)

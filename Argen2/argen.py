@@ -31,6 +31,7 @@ import make_members as mm
 import code_properties
 import generate_header
 import generate_source
+import validate_arguments as va
 
 
 def tokenize_setting(line, logger):
@@ -111,20 +112,25 @@ def parse_sections(sections, session):
 
 
 def make_deductions(session):
-    dfam.deduce_flags_and_metavars(session)
-    don.deduce_option_names(session)
-    dso.deduce_special_options(session)
-    da.deduce_arguments(session)
-    dmn.deduce_member_names(session)
-    ds.deduce_separator_counts(session)
-    if session.has_errors():
-        return
-    mm.make_members(session)
-    di.deduce_indices(session)
-    dv.deduce_values(session)
-    do.deduce_operations(session)
-    dvt.deduce_value_types(session)
-    dmt.deduce_member_types(session)
+    functions = [
+        dfam.deduce_flags_and_metavars,
+        don.deduce_option_names,
+        dso.deduce_special_options,
+        da.deduce_arguments,
+        dmn.deduce_member_names,
+        ds.deduce_separator_counts,
+        mm.make_members,
+        di.deduce_indices,
+        dv.deduce_values,
+        do.deduce_operations,
+        dvt.deduce_value_types,
+        dmt.deduce_member_types,
+        va.validate_arguments
+    ]
+    for func in functions:
+        func(session)
+        if session.has_errors():
+            return
 
 
 def process_files(file_names, session):

@@ -50,7 +50,7 @@ OTHER OPTIONS
   {{-%=N, --percentage=N| type: int | values: 0..100, 200..| default: 50}}
   {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
   {{--special| member: s |op: assign | value: {"$spec$"}}}
-  {{-n X,Y| type: {double, double} | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
+  {{-n X,Y| separator: , |type: {double, double} | values: -9999, -1000..-500, -100..-10, -5, 0, 5, 10..100, 500..1000, 2000..}}
   {{-p X,Y,Z| type: {double, double, double} | separator: , | values: -1000..1000 : -1000..1000 : 0..}}
   {{-m NUM, --month=NUM| type: unsigned | values: 1..12 | count: 3}}
   {{--string=STR| default: "Two words"}}
@@ -59,7 +59,7 @@ OTHER OPTIONS
   {{-i PATH, --include=PATH| op: extend | inline: printf("hello!\n") | separator: :}}
   {{--sysinclude| member: include | operation: extend | value: {"foo", "bar", "baz"}}}
   {{--stygg=N| type: uint64_t}}
-  {{-u, --user=NAME:ID| values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
+  {{-u, --user=NAME:ID| separator: : | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
   {{-| op: none}}  Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 

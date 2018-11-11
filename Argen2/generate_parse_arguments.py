@@ -8,7 +8,7 @@
 # ===========================================================================
 import re
 import templateprocessor
-
+import deducedtype
 
 class ParseArgumentsGenerator(templateprocessor.Expander):
     def __init__(self, session):
@@ -37,6 +37,69 @@ def generate_parse_arguments(session):
     return templateprocessor.make_lines(PARSE_ARGUMENTS_TEMPLATE,
                                         ParseArgumentsGenerator(session))
 
+class Operations:
+    NO_OPERATION = 0
+    ASSIGN_CONSTANT = 1
+    ASSIGN_VALUE = 2
+    ASSIGN_TUPLE = 3
+    ASSIGN_VECTOR = 4
+    APPEND_CONSTANT = 11
+    APPEND_VALUE = 12
+    APPEND_TUPLE = 13
+    APPEND_VECTOR = 14
+    EXTEND_CONSTANT = 21
+    EXTEND_VECTOR = 24
+
+
+def get_operation_type(option):
+    if option.operation == "assign":
+        op_value = 0
+    elif option.operation == "append":
+        op_value = 10
+    elif option.operation == "extend":
+        op_value = 20
+    else:
+        return Operations.NO_OPERATION
+    type_value = 0
+    if option.value:
+        type_value = 1
+    elif not option.value_type.subtypes:
+        type_value = 2
+    elif deducedtype.is_tuple(option.value_type):
+        type_value = 3
+    else:
+        type_value = 4
+    return op_value + type_value
+
+
+def generate_read_value(option):
+    operation_type = get_operation_type(option)
+    if operation_type == Operations.ASSIGN_CONSTANT:
+        return "result.%s = %s;" % (option.member_name, option.value)
+    elif operation_type == Operations.APPEND_CONSTANT:
+        return "result.%s.push_back(%s);" % (option.member_name, option.value)
+    elif operation_type == Operations.EXTEND_CONSTANT:
+        return "result.%s.insert(result.%s.end(), %s);" \
+               % (option.member_name, option.member_name, option.value)
+    elif operation_type == Operations.NO_OPERATION:
+        return None
+
+    parts = ["if (!read_value(value, argIt, arg)"]
+    if operation_type == Operations.ASSIGN_VALUE:
+        parts.append("    || !assign_value(result.%s, value, arg)" % option.member_name)
+    elif operation_type == Operations.ASSIGN_TUPLE:
+        parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
+                     % (option.separator, option.separator_count[0],
+                        option.separator_count[0]))
+        for i in range(len(option.value_type.subtypes)):
+            parts.append("    || !assign_value(std::get<%d>(result.%s), parts[%d], arg)"
+                         % (i, option.member_name, i))
+    parts[-1] += ")"
+    parts.extend(("{",
+                  "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
+                  "}"))
+    return parts
+
 
 class ParseOptionGenerator(templateprocessor.Expander):
     def __init__(self, session):
@@ -47,18 +110,7 @@ class ParseOptionGenerator(templateprocessor.Expander):
         self.inline_regexp = re.compile("\$([^$]*)\$")
 
     def operation(self, *args):
-        opt = self.option
-        if not opt.value:
-            return None
-        elif opt.operation == "assign":
-            return "result.%s = %s;" % (opt.member_name, opt.value)
-        elif opt.operation == "append":
-            return "result.%s.push_back(%s);" % (opt.member_name, opt.value)
-        elif opt.operation == "extend":
-            return "result.%s.insert(result.%s.end(), %s);" \
-                   % (opt.member_name, opt.member_name, opt.value)
-        else:
-            return None
+        return generate_read_value(self.option)
 
     def inline(self, *args):
         if self.option.inline:
@@ -98,6 +150,27 @@ class ParseOptionGenerator(templateprocessor.Expander):
 
 
 PARSE_ARGUMENTS_TEMPLATE = """\
+template <typename T>
+bool from_string(const std::string_view& str, T& value)
+{
+    std::istringstream stream(std::string(str.data(), str.size()));
+    stream >> value;
+    return !stream.fail() && stream.eof();
+}
+
+bool read_value(std::string_view& value,
+                ArgumentIterator& iterator,
+                const Argument& argument)
+{
+    if (!iterator.hasNext())
+    {
+        write_error_text(to_string(argument) + ": no value given.");
+        return false;
+    }
+    value = iterator.nextValue();
+    return true;
+}
+
 [[[IF has_separators]]]
 std::vector<std::string_view> split_string(
         const std::string_view& string,
@@ -119,24 +192,18 @@ std::vector<std::string_view> split_string(
     return result;
 }
 
-bool split_value(ArgumentIterator& iterator,
-                 std::vector<std::string_view>& parts,
+bool split_value(std::vector<std::string_view>& parts,
+                 const std::string_view& value,
                  char separator,
                  size_t min_splits, size_t max_splits,
                  const Argument& argument)
 {
-    if (!iterator.hasNext())
-    {
-        write_error_text(to_string(argument) + ": no value given.");
-        return false;
-    }
-    auto inputValue = iterator.nextValue();
-    parts = split_string(inputValue, separator, max_splits);
+    parts = split_string(value, separator, max_splits);
     if (parts.size() < min_splits + 1)
     {
         std::stringstream ss;
         ss << argument << ": incorrect number of parts in value \\""
-           << inputValue << "\\".\\nIt must have ";
+           << value << "\\".\\nIt must have ";
         if (min_splits == max_splits)
             ss << "exactly ";
         else

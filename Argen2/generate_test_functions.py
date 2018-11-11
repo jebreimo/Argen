@@ -47,30 +47,7 @@ def generate_test_function(valid_values, value_type, argument, session):
     if not valid_values:
         return None
 
-    if not value_type.subtypes:
-        if len(valid_values) > 1:
-            session.logger.error("Property 'valid_values' is invalid.",
-                                 argument=argument)
-            return None
-        valid_values = valid_values[0]
-        if len(valid_values) == 1:
-            lo, hi = valid_values[0]
-            if not lo and not hi:
-                return None
-            elif not lo:
-                return [TEST_MAX_RANGE_TEMPLATE]
-            elif not hi:
-                return [TEST_MIN_RANGE_TEMPLATE]
-            elif lo != hi:
-                return [TEST_MINMAX_RANGE_TEMPLATE]
-            else:
-                session.logger.warn("Argument has only one legal value: "
-                                    + lo)
-                # TODO Single value check.
-                return None
-        else:
-            return [generate_complex_value_check(valid_values, value_type, argument, session)]
-    else:
+    if value_type.subtypes:
         functions = []
         subtypes = value_type.subtypes
         if len(valid_values) > len(subtypes):
@@ -153,72 +130,10 @@ bool check_value(T value, CheckFunc check_func,
 }
 """
 
-
-TEST_COMPLEX_LEGAL_VALUES = """\
-bool check_%s([[[type]]] value, const Argument& argument)
+TEST_TUPLE_VALUES = """\
+bool check_value(const [[[type]]]& value,
+                 const Argument& argument)
 {
-    if ([[[test]]])
-    {
-        std::stringstream ss;
-        ss << argument << ": illegal value: " << value << ". (Legal values: "
-           << [[[legal_values]]] 
-           << ")";
-        write_error_text(ss.str());
-        return false;
-    }
-    return true;
-}
-"""
-
-
-TEST_MINMAX_RANGE_TEMPLATE = """\
-template <typename T>
-bool check_value_is_in_range(T value, T minValue, T maxValue,
-                             const Argument& argument)
-{
-    if (value < minValue || maxValue < value)
-    {
-        std::stringstream ss;
-        ss << argument << ": illegal value: " << value
-           << ". (Legal range: " << minValue <<  "..."
-           << maxValue << ")";
-        write_error_text(ss.str());
-        return false;
-    }
-    return true;
-}
-"""
-
-
-TEST_MIN_RANGE_TEMPLATE = """\
-template <typename T>
-bool check_value_is_at_least(T value, T minValue, const Argument& argument)
-{
-    if (value < minValue)
-    {
-        std::stringstream ss;
-        ss << argument << ": illegal value: " << value
-           << ". (Minimum value: " << minValue << ")";
-        write_error_text(ss.str());
-        return false;
-    }
-    return true;
-}
-"""
-
-
-TEST_MAX_RANGE_TEMPLATE = """\
-template <typename T>
-bool check_value_is_at_most(T value, T maxValue, const Argument& argument)
-{
-    if (maxValue < value)
-    {
-        std::stringstream ss;
-        ss << argument << ": illegal value: " << value
-           << ". (Maximum value: " << maxValue << ")";
-        write_error_text(ss.str());
-        return false;
-    }
-    return true;
+    return [[[check_each_value]]];
 }
 """
