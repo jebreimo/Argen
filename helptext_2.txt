@@ -59,7 +59,7 @@ OTHER OPTIONS
   {{-i PATH, --include=PATH| op: extend | inline: printf("hello!\n") | separator: :}}
   {{--sysinclude| member: include | operation: extend | value: {"foo", "bar", "baz"}}}
   {{--stygg=N| type: uint64_t}}
-  {{-u, --user=NAME:ID| separator: : | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100}}
+  {{-u, --user=NAME:ID| separator: : | values: "ab", "ac", "ad", "bc", "bd", "cd" : 0..100 | count: 0..}}
   {{-| op: none}}  Read input from stdin.
 Another option ({{-z}}) is the zombie-option.
 

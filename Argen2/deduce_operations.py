@@ -26,20 +26,27 @@ def deduce_operation(argument, member_operations):
         return argument.operation
     elif not argument.member:
         return "none"
-    elif argument.member and argument.member.name in member_operations:
+
+    member_has_count = argument.member.count and argument.member.count[1] != 1
+    argument_has_count = argument.separator_count \
+        and argument.separator_count[1] != 0
+    if argument.member and argument.member.name in member_operations:
         operations = member_operations[argument.member.name]
         if "extend" in operations:
-            if not argument.separator_count or argument.separator_count[1] == 0:
+            if not argument_has_count:
                 return "append"
             else:
                 return "extend"
         elif "append" in operations:
             return "append"
         elif "assign" in operations:
-            return "assign"
+            if member_has_count and not argument_has_count:
+                return "append"
+            else:
+                return "assign"
         else:
             return "none"
-    elif not argument.member.count or argument.member.count[1] == 1:
+    elif not member_has_count:
         return "assign"
     else:
         return "append"

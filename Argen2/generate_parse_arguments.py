@@ -22,6 +22,9 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_program_name = session.code_properties.has_program_name
         self.has_separators = session.code_properties.has_delimited_values
 
+        self.has_values = any(a for a in session.arguments
+                              if a.operation != "none" and a.value is None)
+
     def option_cases(self, *args):
         result = []
         option_gen = ParseOptionGenerator(self._session)
@@ -60,7 +63,6 @@ def get_operation_type(option):
         op_value = 20
     else:
         return Operations.NO_OPERATION
-    type_value = 0
     if option.value:
         type_value = 1
     elif not option.value_type.subtypes:
@@ -86,7 +88,8 @@ def generate_read_value(option):
 
     parts = ["if (!read_value(value, argIt, arg)"]
     if operation_type == Operations.ASSIGN_VALUE:
-        parts.append("    || !assign_value(result.%s, value, arg)" % option.member_name)
+        parts.append("    || !assign_value(result.%s, value, arg)"
+                     % option.member_name)
     elif operation_type == Operations.ASSIGN_TUPLE:
         parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
                      % (option.separator, option.separator_count[0],
@@ -94,6 +97,21 @@ def generate_read_value(option):
         for i in range(len(option.value_type.subtypes)):
             parts.append("    || !assign_value(std::get<%d>(result.%s), parts[%d], arg)"
                          % (i, option.member_name, i))
+    elif operation_type == Operations.ASSIGN_VECTOR:
+        if option.separator is None:
+            parts.append("    || !assign_value(result.%s, std::vector<std::string_view>{value}, arg)"
+                         % option.member_name)
+        else:
+            parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
+                         % (option.separator, option.separator_count[0],
+                            option.separator_count[0]))
+            parts.append("    || !assign_value(result.%s, parts, arg)"
+                         % option.member_name)
+    elif operation_type == Operations.APPEND_VALUE:
+        parts.append("    || !append_value(result.%s, value, arg)"
+                     % option.member_name)
+    elif operation_type == Operations.APPEND_TUPLE:
+        pass
     parts[-1] += ")"
     parts.extend(("{",
                   "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
@@ -104,6 +122,7 @@ def generate_read_value(option):
 class ParseOptionGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
+        self._session = session
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
         self.option = None
@@ -238,6 +257,12 @@ std::string getBaseName(const std::string& path)
 [[[ENDIF]]]
     [[[class_name]]] result;
     ArgumentIterator argIt(argc - 1, argv + 1);
+[[[IF has_values]]]
+    std::string_view value;
+[[[IF has_separators]]]
+    std::vector<std::string_view> parts;
+[[[ENDIF]]]
+[[[ENDIF]]]
 [[[IF has_final_option]]]
     bool finalOption = false;
 [[[ENDIF]]]

@@ -284,15 +284,20 @@ def is_undetermined(deduced_type):
 
 
 def is_tuple(deduced_type):
+    if not deduced_type:
+        return False
     return deduced_type.category == Category.TUPLE \
         or (deduced_type.category == Category.COMPOSITE
             and len(deduced_type.subtypes) > 1)
 
 
 def is_list(deduced_type):
+    if not deduced_type:
+        return False
     return deduced_type.category == Category.LIST \
         or (deduced_type.category == Category.COMPOSITE
             and len(deduced_type.subtypes) == 1)
+
 
 def can_be_list(deduced_type, logger):
     if not deduced_type:
