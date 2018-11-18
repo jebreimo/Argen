@@ -10,6 +10,7 @@ import re
 import templateprocessor
 import deducedtype
 
+
 class ParseArgumentsGenerator(templateprocessor.Expander):
     def __init__(self, session):
         super().__init__()
@@ -21,7 +22,6 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
                                     if o.post_operation == "final")
         self.has_program_name = session.code_properties.has_program_name
         self.has_separators = session.code_properties.has_delimited_values
-
         self.has_values = any(a for a in session.arguments
                               if a.operation != "none" and a.value is None)
 
@@ -31,7 +31,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         for opt in self._options:
             option_gen.option = opt
             result.extend(templateprocessor.make_lines(
-                PARSE_OPTION_TEMPLATE,
+                OPTION_CASE_TEMPLATE,
                 option_gen))
         return result
 
@@ -39,6 +39,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
 def generate_parse_arguments(session):
     return templateprocessor.make_lines(PARSE_ARGUMENTS_TEMPLATE,
                                         ParseArgumentsGenerator(session))
+
 
 class Operations:
     NO_OPERATION = 0
@@ -74,6 +75,99 @@ def get_operation_type(option):
     return op_value + type_value
 
 
+def generate_check_value_lambda(valid_values):
+    tests = []
+    for entry in valid_values:
+        lo, hi = entry
+        if not lo and not hi:
+            continue
+        elif lo == hi:
+            tests.append(f"v == {lo}")
+        elif lo and hi:
+            if len(valid_values) == 1:
+                tests.append(f"{lo} <= v && v <= {hi}")
+            else:
+                tests.append(f"({lo} <= v && v <= {hi})")
+        elif lo:
+            tests.append(f"{lo} <= v")
+        else:
+            tests.append(f"v <= {hi}")
+    return "[](auto&& v){return %s;}" % " || ".join(tests)
+
+
+def generate_check_value_text(valid_values):
+    tokens = []
+    for entry in valid_values:
+        lo, hi = entry
+        if not lo and not hi:
+            continue
+        elif lo == hi:
+            tokens.append(lo)
+        elif lo and hi:
+            tokens.append(f"{lo}...{hi}")
+        elif lo:
+            tokens.append(f"{lo}...")
+        else:
+            tokens.append(f"...{hi}")
+    return '"%s"' % ", ".join(t.replace('"', '\\"') for t in tokens)
+
+
+def make_check_value(function_name, value_name, valid_values):
+    return "    || !%s(%s, %s, %s, arg)" \
+           % (function_name, value_name,
+              generate_check_value_lambda(valid_values),
+              generate_check_value_text(valid_values))
+
+
+def append_check_value(lines, option, operation_type):
+    valid_values = option.valid_values
+    if not valid_values:
+        return
+    if operation_type == Operations.ASSIGN_VALUE:
+        lines.append(make_check_value("check_value",
+                                      "result." + option.member_name,
+                                      valid_values[0]))
+    elif operation_type == Operations.ASSIGN_TUPLE:
+        value_type = option.value_type
+        subtypes = value_type.subtypes
+        if len(valid_values) > len(subtypes):
+            return
+        elif len(valid_values) < len(subtypes):
+            for i in range(len(subtypes) - len(valid_values)):
+                valid_values.append(valid_values[-1])
+        for i in range(len(valid_values)):
+            lines.append(make_check_value("check_value",
+                                          "std::get<%d>(result.%s)"
+                                          % (i, option.member_name),
+                                          valid_values[i]))
+    elif operation_type == Operations.ASSIGN_VECTOR:
+        lines.append(make_check_value("check_values",
+                                      "result." + option.member_name,
+                                      valid_values[0]))
+    elif operation_type == Operations.APPEND_VALUE:
+        lines.append(make_check_value("check_value", "result.%s.back()" % option.member_name,
+                     option.valid_values[0]))
+    elif operation_type == Operations.APPEND_TUPLE:
+        value_type = option.value_type
+        subtypes = value_type.subtypes
+        if len(valid_values) > len(subtypes):
+            return
+        elif len(valid_values) < len(subtypes):
+            for i in range(len(subtypes) - len(valid_values)):
+                valid_values.append(valid_values[-1])
+        for i in range(len(valid_values)):
+            lines.append(make_check_value("check_value", "std::get<%d>(temp)" % i,
+                         option.valid_values[i]))
+    elif operation_type in (Operations.APPEND_VECTOR, Operations.EXTEND_VECTOR):
+        lines.append(make_check_value("check_value", "temp", option.valid_values[0]))
+
+
+def make_split_value(separator, separator_count):
+    return "    || !split_value(parts, value, '%s', %d, %s, arg)" \
+           % (separator, separator_count[0],
+              str(separator_count[1]) if separator_count[1] else "SIZE_MAX")
+
+
 def generate_read_value(option):
     operation_type = get_operation_type(option)
     if operation_type == Operations.ASSIGN_CONSTANT:
@@ -88,30 +182,56 @@ def generate_read_value(option):
 
     parts = ["if (!read_value(value, argIt, arg)"]
     if operation_type == Operations.ASSIGN_VALUE:
-        parts.append("    || !assign_value(result.%s, value, arg)"
+        parts.append("    || !parse_and_assign(result.%s, value, arg)"
                      % option.member_name)
+        append_check_value(parts, option, operation_type)
     elif operation_type == Operations.ASSIGN_TUPLE:
-        parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
-                     % (option.separator, option.separator_count[0],
-                        option.separator_count[0]))
+        parts.append(make_split_value(option.separator, option.separator_count))
         for i in range(len(option.value_type.subtypes)):
-            parts.append("    || !assign_value(std::get<%d>(result.%s), parts[%d], arg)"
+            parts.append("    || !parse_and_assign(std::get<%d>(result.%s), parts[%d], arg)"
                          % (i, option.member_name, i))
+        append_check_value(parts, option, operation_type)
     elif operation_type == Operations.ASSIGN_VECTOR:
         if option.separator is None:
-            parts.append("    || !assign_value(result.%s, std::vector<std::string_view>{value}, arg)"
+            parts.append("    || !parse_and_assign(result.%s, std::vector<std::string_view>{value}, arg)"
                          % option.member_name)
         else:
-            parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
-                         % (option.separator, option.separator_count[0],
-                            option.separator_count[0]))
-            parts.append("    || !assign_value(result.%s, parts, arg)"
+            parts.append(make_split_value(option.separator,
+                                          option.separator_count))
+            parts.append("    || !parse_and_assign(result.%s, parts, arg)"
                          % option.member_name)
+        append_check_value(parts, option, operation_type)
     elif operation_type == Operations.APPEND_VALUE:
-        parts.append("    || !append_value(result.%s, value, arg)"
+        parts.append("    || !parse_and_append(result.%s, value, arg)"
                      % option.member_name)
+        append_check_value(parts, option, operation_type)
     elif operation_type == Operations.APPEND_TUPLE:
-        pass
+        parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
+                     % (option.separator, option.separator_count[0],
+                        option.separator_count[1]))
+        for i in range(len(option.value_type.subtypes)):
+            parts.append("    || !parse_and_assign(std::get<%d>(temp), parts[%d], arg)"
+                         % (i, i))
+        append_check_value(parts, option, operation_type)
+        parts.append("    || !append(result.%s, std::move(temp))"
+                     % option.member_name)
+    elif operation_type == Operations.APPEND_VECTOR:
+        parts.append(make_split_value(option.separator, option.separator_count))
+        for i in range(len(option.value_type.subtypes)):
+            parts.append("    || !parse_and_assign(temp, parts, arg)")
+        parts.append("    || !append(result.%s, std::move(temp))"
+                     % option.member_name)
+        append_check_value(parts, option, operation_type)
+    elif operation_type == Operations.EXTEND_VECTOR:
+        parts.append(make_split_value(option.separator, option.separator_count))
+        if option.valid_values:
+            parts.append("    || !parse_and_assign(temp, parts, arg)")
+            parts.append("    || !extend(result.%s, std::move(temp))"
+                         % option.member_name)
+        else:
+            parts.append("    || !parse_and_extend(result.%s, parts, arg)"
+                         % option.member_name)
+
     parts[-1] += ")"
     parts.extend(("{",
                   "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
@@ -167,76 +287,26 @@ class ParseOptionGenerator(templateprocessor.Expander):
     def final_option(self, *args):
         return self.option.post_operation == "final"
 
+    def has_temp_variable(self, *args):
+        operation_type = get_operation_type(self.option)
+        if operation_type in (Operations.APPEND_TUPLE,
+                              Operations.APPEND_VECTOR):
+            return True
+        elif operation_type == Operations.EXTEND_VECTOR:
+            return self.option.valid_values
+        else:
+            return False
+
+    def case_implementation(self, *args):
+        return templateprocessor.make_lines(OPTION_CASE_IMPL_TEMPLATE, self)
+
+    def temp_variable_type(self, *args):
+        return self.option.value_type
+
 
 PARSE_ARGUMENTS_TEMPLATE = """\
-template <typename T>
-bool from_string(const std::string_view& str, T& value)
-{
-    std::istringstream stream(std::string(str.data(), str.size()));
-    stream >> value;
-    return !stream.fail() && stream.eof();
-}
-
-bool read_value(std::string_view& value,
-                ArgumentIterator& iterator,
-                const Argument& argument)
-{
-    if (!iterator.hasNext())
-    {
-        write_error_text(to_string(argument) + ": no value given.");
-        return false;
-    }
-    value = iterator.nextValue();
-    return true;
-}
-
-[[[IF has_separators]]]
-std::vector<std::string_view> split_string(
-        const std::string_view& string,
-        char separator,
-        size_t max_splits = SIZE_MAX)
-{
-    std::vector<std::string_view> result;
-    auto from = string.data();
-    auto end = from + string.size();
-    while (result.size() < max_splits)
-    {
-        auto to = std::find(from, end, separator);
-        if (to == end)
-            break;
-        result.emplace_back(from, to - from);
-        from = to + 1;
-    }
-    result.emplace_back(from, end - from);
-    return result;
-}
-
-bool split_value(std::vector<std::string_view>& parts,
-                 const std::string_view& value,
-                 char separator,
-                 size_t min_splits, size_t max_splits,
-                 const Argument& argument)
-{
-    parts = split_string(value, separator, max_splits);
-    if (parts.size() < min_splits + 1)
-    {
-        std::stringstream ss;
-        ss << argument << ": incorrect number of parts in value \\""
-           << value << "\\".\\nIt must have ";
-        if (min_splits == max_splits)
-            ss << "exactly ";
-        else
-            ss << "at least ";
-        ss << min_splits + 1 <<  " parts separated by " << separator
-           << "'s.";
-        write_error_text(ss.str());
-        return false;
-    }
-    return true;
-}
-[[[ENDIF]]]    
 [[[IF has_program_name]]]
-std::string getBaseName(const std::string& path)
+std::string get_base_name(const std::string& path)
 {
     size_t pos = path.find_last_of("/\\\\");
     if (pos == std::string::npos)
@@ -252,7 +322,7 @@ std::string getBaseName(const std::string& path)
         return [[[class_name]]]();
 
 [[[IF has_program_name]]]
-    programName = getBaseName(argv[0]);
+    programName = get_base_name(argv[0]);
 
 [[[ENDIF]]]
     [[[class_name]]] result;
@@ -266,10 +336,10 @@ std::string getBaseName(const std::string& path)
 [[[IF has_final_option]]]
     bool finalOption = false;
 [[[ENDIF]]]
-    while (argIt.hasNext())
+    while (argIt.has_next())
     {
-        auto arg = argIt.nextArgument();
-        auto optionCode = findOptionCode(arg);
+        auto arg = argIt.next_argument();
+        auto optionCode = find_option_code(arg);
         switch (optionCode)
         {
         [[[option_cases]]]
@@ -277,31 +347,42 @@ std::string getBaseName(const std::string& path)
             break;
         }
 
-        if (autoExit && result.parseArguments_result == [[[class_name]]]::RESULT_ERROR)
+        if (autoExit && result.[[[function_name]]]_result == [[[class_name]]]::RESULT_ERROR)
             exit(EINVAL);
-        [[[IF has_final_option]]]
+[[[IF has_final_option]]]
         if (finalOption)
             break;
-        [[[ENDIF]]]
+[[[ENDIF]]]
     }
     return result;
 }
 """
 
-PARSE_OPTION_TEMPLATE = """\
+OPTION_CASE_TEMPLATE = """\
 case Option_[[[option_name]]]:
-    [[[operation]]]
-    [[[inline]]]
-    [[[callback]]]
-[[[IF abort_option]]]
-    return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], autoExit);
-[[[ELIF return_option]]]
-    result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
-    return result;
-[[[ELIF final_option]]]
-    finalOption = true;
-    break;
+[[[IF has_temp_variable]]]
+    {
+        [[[temp_variable_type]]] temp;
+        [[[case_implementation]]]
+    }
 [[[ELSE]]]
-    break;
+    [[[case_implementation]]]
+[[[ENDIF]]]\
+"""
+
+OPTION_CASE_IMPL_TEMPLATE = """\
+[[[operation]]]
+[[[inline]]]
+[[[callback]]]
+[[[IF abort_option]]]
+return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], autoExit);
+[[[ELIF return_option]]]
+result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
+return result;
+[[[ELIF final_option]]]
+finalOption = true;
+break;
+[[[ELSE]]]
+break;
 [[[ENDIF]]]\
 """

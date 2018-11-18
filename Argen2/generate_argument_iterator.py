@@ -74,7 +74,7 @@ std::ostream& operator<<(std::ostream& os, const Argument& argument)
 }
 [[[IF has_short_options]]]
 
-inline bool resemblesShortOption(const char* s)
+inline bool resembles_short_option(const char* s)
 {
     return s[0] == '-' && s[1] != 0
            && (s[1] != '-' || s[2] == 0 || s[2] == '=');
@@ -82,7 +82,7 @@ inline bool resemblesShortOption(const char* s)
 [[[ENDIF]]]
 [[[IF has_normal_options]]]
 
-inline bool resemblesOption(const char* s)
+inline bool resembles_option(const char* s)
 {
 [[[IF has_both_options]]]
     return (s[0] == '-' || s[0] == '/') && s[1] != 0;
@@ -101,7 +101,7 @@ public:
             : m_ArgIt(*argv), m_ArgvIt(&argv[0]), m_ArgvEnd(&argv[argc])
     {}
 
-    Argument nextArgument()
+    Argument next_argument()
     {
         if (m_ArgvIt == m_ArgvEnd)
             return {};
@@ -116,7 +116,7 @@ public:
             return {{arg, length}, true};
         }
 
-        if (resemblesShortOption(m_ArgIt))
+        if (resembles_short_option(m_ArgIt))
         {
             auto arg = m_ArgIt;
             size_t length = 2;
@@ -129,7 +129,7 @@ public:
 
         auto arg = m_ArgIt;
         size_t length = 0;
-        if (resemblesOption(m_ArgIt))
+        if (resembles_option(m_ArgIt))
         {
             length += 2;
             while (m_ArgIt[length] != 0 && m_ArgIt[length] != '=')
@@ -153,7 +153,7 @@ public:
     }
 [[[IF has_values]]]
 
-    std::string_view nextValue()
+    std::string_view next_value()
     {
         if (m_ArgvIt == m_ArgvEnd)
             return {};
@@ -163,7 +163,7 @@ public:
         return {value, length};
     }
 
-    bool hasNext() const
+    bool has_next() const
     {
         return m_ArgIt != *m_ArgvEnd;
     }

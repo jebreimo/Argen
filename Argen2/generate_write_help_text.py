@@ -40,10 +40,10 @@ WRITE_HELP_TEXT_TEMPLATE = """\
 std::string programName = "<program>";
 
 [[[ENDIF]]]
-const char helpText[] =
+const char HELP_TEXT[] =
     [[[help_text]]];
 
-const char briefHelpText[] =
+const char BRIEF_HELP_TEXT[] =
     [[[brief_help_text]]];
 
 class HelpTextWriter
@@ -201,14 +201,14 @@ void write_help_text(std::ostream& stream, unsigned lineWidth)
 {
     if (lineWidth == 0)
         lineWidth = get_default_line_width();
-    write_help_text(stream, helpText, lineWidth);  
+    write_help_text(stream, HELP_TEXT, lineWidth);  
 }
 
 void write_brief_help_text(std::ostream& stream, unsigned lineWidth)
 {
     if (lineWidth == 0)
         lineWidth = get_default_line_width();
-    write_help_text(stream, briefHelpText, lineWidth);
+    write_help_text(stream, BRIEF_HELP_TEXT, lineWidth);
 }
 
 void write_error_text(const std::string& errorText,

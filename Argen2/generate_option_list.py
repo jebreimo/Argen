@@ -104,25 +104,25 @@ enum Options
 };    
 
 [[[IF has_short_options]]]
-const char shortOptions[] = "[[[short_option_chars]]]";
-const [[[enum_base_type]]] shortOptionIndices[] =
+const char SHORT_OPTIONS[] = "[[[short_option_chars]]]";
+const [[[enum_base_type]]] SHORT_OPTION_INDICES[] =
 {
     [[[short_option_indices]]]
 };
 
 [[[ENDIF]]]
 [[[IF has_options]]]
-const char* optionStrings[] =
+const char* OPTION_STRINGS[] =
 {
     [[[option_strings]]]
 };
 
-const [[[enum_base_type]]] optionIndices[] =
+const [[[enum_base_type]]] OPTION_INDICES[] =
 {
     [[[option_indices]]]
 };
 
-int compareFlag(const std::string_view& flag, const char* pattern)
+int compare_flag(const std::string_view& flag, const char* pattern)
 {
     size_t i = 0;
     while (true)
@@ -168,13 +168,14 @@ int compareFlag(const std::string_view& flag, const char* pattern)
 }
 
 template <typename RndAccIt>
-RndAccIt findFlag(RndAccIt begin, RndAccIt end, const std::string_view& flag)
+RndAccIt find_flag(RndAccIt begin, RndAccIt end,
+                   const std::string_view& flag)
 {
     auto originalEnd = end;
     while (begin != end)
     {
         auto mid = begin + std::distance(begin, end) / 2;
-        auto cmp = compareFlag(flag, *mid);
+        auto cmp = compare_flag(flag, *mid);
         if (cmp == 0)
             return mid;
         if (cmp < 0)
@@ -186,7 +187,7 @@ RndAccIt findFlag(RndAccIt begin, RndAccIt end, const std::string_view& flag)
 }
 [[[ENDIF]]]
 
-int findOptionCode(const Argument& argument)
+int find_option_code(const Argument& argument)
 {
     auto str = argument.string;
     if (argument.isShortOption)
@@ -194,24 +195,24 @@ int findOptionCode(const Argument& argument)
         char c = str[str.size() - 1];
 [[[IF case_insensitive]]]
         auto pos = std::lower_bound(
-                std::begin(shortOptions),
-                std::end(shortOptions),
+                std::begin(SHORT_OPTIONS),
+                std::end(SHORT_OPTIONS),
                 c,
                 [](auto a, auto b){return std::toupper(a) < std::toupper(b);});
 [[[ELSE]]]
-        auto pos = std::lower_bound(std::begin(shortOptions),
-                                    std::end(shortOptions),
+        auto pos = std::lower_bound(std::begin(SHORT_OPTIONS),
+                                    std::end(SHORT_OPTIONS),
                                     c);
 [[[ENDIF]]]
-        if (pos == std::end(shortOptions))
+        if (pos == std::end(SHORT_OPTIONS))
             return -1;
-        return int(shortOptionIndices[pos - std::begin(shortOptions)]);
+        return int(SHORT_OPTION_INDICES[pos - std::begin(SHORT_OPTIONS)]);
     }
-    auto pos = findFlag(std::begin(optionStrings),
-                        std::end(optionStrings),
-                        argument.string);
-    if (pos == std::end(optionStrings))
+    auto pos = find_flag(std::begin(OPTION_STRINGS),
+                         std::end(OPTION_STRINGS),
+                         argument.string);
+    if (pos == std::end(OPTION_STRINGS))
         return -1;
-    return int(optionIndices[pos - std::begin(optionStrings)]);
+    return int(OPTION_INDICES[pos - std::begin(OPTION_STRINGS)]);
 }
 """
