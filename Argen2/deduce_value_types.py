@@ -84,7 +84,12 @@ def deduce_value_type(argument, logger):
     if argument.valid_values:
         typ = deduce_type_from_valid_values(argument.valid_values, logger)
         if typ:
-            deduced_types.append(typ)
+            if argument.operation == "extend":
+                deduced_types.append(dt.DeducedType(dt.Category.LIST,
+                                                    subtypes=[typ],
+                                                    source=typ.source))
+            else:
+                deduced_types.append(typ)
     if argument.value:
         if argument.separator_count:
             max_separators = argument.separator_count[1]
