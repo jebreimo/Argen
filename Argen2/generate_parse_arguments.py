@@ -6,9 +6,9 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
+import deducedtype
 import re
 import templateprocessor
-import deducedtype
 
 
 class ParseArgumentsGenerator(templateprocessor.Expander):
@@ -127,39 +127,26 @@ def append_check_value(lines, option, operation_type):
         lines.append(make_check_value("check_value",
                                       "result." + option.member_name,
                                       valid_values[0]))
-    elif operation_type == Operations.ASSIGN_TUPLE:
-        value_type = option.value_type
-        subtypes = value_type.subtypes
-        if len(valid_values) > len(subtypes):
-            return
-        elif len(valid_values) < len(subtypes):
-            for i in range(len(subtypes) - len(valid_values)):
-                valid_values.append(valid_values[-1])
-        for i in range(len(valid_values)):
-            lines.append(make_check_value("check_value",
-                                          "std::get<%d>(result.%s)"
-                                          % (i, option.member_name),
-                                          valid_values[i]))
     elif operation_type == Operations.ASSIGN_VECTOR:
         lines.append(make_check_value("check_values",
                                       "result." + option.member_name,
                                       valid_values[0]))
     elif operation_type == Operations.APPEND_VALUE:
-        lines.append(make_check_value("check_value", "result.%s.back()" % option.member_name,
-                     option.valid_values[0]))
-    elif operation_type == Operations.APPEND_TUPLE:
-        value_type = option.value_type
-        subtypes = value_type.subtypes
-        if len(valid_values) > len(subtypes):
-            return
-        elif len(valid_values) < len(subtypes):
-            for i in range(len(subtypes) - len(valid_values)):
-                valid_values.append(valid_values[-1])
-        for i in range(len(valid_values)):
-            lines.append(make_check_value("check_value", "std::get<%d>(temp)" % i,
-                         option.valid_values[i]))
+        lines.append(make_check_value("check_value",
+                                      "result.%s.back()" % option.member_name,
+                                      option.valid_values[0]))
     elif operation_type in (Operations.APPEND_VECTOR, Operations.EXTEND_VECTOR):
-        lines.append(make_check_value("check_value", "temp", option.valid_values[0]))
+        lines.append(make_check_value("check_value", "temp",
+                                      option.valid_values[0]))
+    elif operation_type in (Operations.APPEND_TUPLE, Operations.ASSIGN_TUPLE):
+        if operation_type == Operations.ASSIGN_TUPLE:
+            variable = "result." + option.member_name
+        else:
+            variable = "temp"
+        for i in range(len(valid_values)):
+            lines.append(make_check_value("check_value",
+                                          "std::get<%d>(%s)" % (i, variable),
+                                          valid_values[i]))
 
 
 def make_split_value(separator, separator_count):
@@ -206,12 +193,11 @@ def generate_read_value(option):
                      % option.member_name)
         append_check_value(parts, option, operation_type)
     elif operation_type == Operations.APPEND_TUPLE:
-        parts.append("    || !split_value(parts, value, '%s', %d, %d, arg)"
-                     % (option.separator, option.separator_count[0],
-                        option.separator_count[1]))
+        parts.append(make_split_value(option.separator, option.separator_count))
         for i in range(len(option.value_type.subtypes)):
-            parts.append("    || !parse_and_assign(std::get<%d>(temp), parts[%d], arg)"
-                         % (i, i))
+            parts.append(
+                "    || !parse_and_assign(std::get<%d>(temp), parts[%d], arg)"
+                % (i, i))
         append_check_value(parts, option, operation_type)
         parts.append("    || !append(result.%s, std::move(temp))"
                      % option.member_name)
@@ -246,7 +232,7 @@ class ParseOptionGenerator(templateprocessor.Expander):
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
         self.option = None
-        self.inline_regexp = re.compile("\$([^$]*)\$")
+        self.inline_regexp = re.compile("\\$([^$]*)\\$")
 
     def operation(self, *args):
         return generate_read_value(self.option)

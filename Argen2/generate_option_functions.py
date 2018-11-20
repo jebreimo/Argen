@@ -22,9 +22,10 @@ def generate_option_functions(session):
 
 
 OPTION_FUNCTIONS_TEMPLATE = """\
-void show_help(Arguments& arguments, const std::string& argument)
+bool show_help(Arguments& arguments, const std::string& argument)
 {
     write_help_text(std::cout);
+    return true;
 }
 
 Arguments& abort(Arguments& arguments,

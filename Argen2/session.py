@@ -59,6 +59,7 @@ class Settings:
         self.line_width = 79
         self.max_line_width = 0
         self.min_line_width = 0
+        self.update_argv = False
 
 
 class Session:

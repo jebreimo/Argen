@@ -25,6 +25,7 @@ import deduce_operations as do
 import deduce_option_names as don
 import deduce_separator_counts as ds
 import deduce_special_options as dso
+import deduce_valid_values as dvv
 import deduce_value_types as dvt
 import deduce_values as dv
 import make_members as mm
@@ -125,6 +126,7 @@ def make_deductions(session):
         do.deduce_operations,
         dvt.deduce_value_types,
         dmt.deduce_member_types,
+        dvv.deduce_valid_values,
         va.validate_arguments
     ]
     for func in functions:
