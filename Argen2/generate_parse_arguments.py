@@ -113,7 +113,7 @@ def generate_check_value_text(valid_values):
 
 
 def make_check_value(function_name, value_name, valid_values):
-    return "    || !%s(%s, %s, %s, arg)" \
+    return "%s(%s, %s, %s, arg)" \
            % (function_name, value_name,
               generate_check_value_lambda(valid_values),
               generate_check_value_text(valid_values))
@@ -136,7 +136,7 @@ def append_check_value(lines, option, operation_type):
                                       "result.%s.back()" % option.member_name,
                                       option.valid_values[0]))
     elif operation_type in (Operations.APPEND_VECTOR, Operations.EXTEND_VECTOR):
-        lines.append(make_check_value("check_value", "temp",
+        lines.append(make_check_value("check_values", "temp",
                                       option.valid_values[0]))
     elif operation_type in (Operations.APPEND_TUPLE, Operations.ASSIGN_TUPLE):
         if operation_type == Operations.ASSIGN_TUPLE:
@@ -149,80 +149,92 @@ def append_check_value(lines, option, operation_type):
                                           valid_values[i]))
 
 
-def make_split_value(separator, separator_count):
-    return "    || !split_value(parts, value, '%s', %d, %s, arg)" \
-           % (separator, separator_count[0],
-              str(separator_count[1]) if separator_count[1] else "SIZE_MAX")
+def make_split_value(option):
+    if option.separator_count[1]:
+        max_count = str(option.separator_count[1])
+    else:
+        max_count = "SIZE_MAX"
+    return "split_value(parts, value, '%s', %d, %s, arg)" \
+           % (option.separator, option.separator_count[0], max_count)
+
+
+def generate_constant_assignment(lines, option):
+    if not option.value:
+        return option.operation == "none"
+    name = "result." + option.member_name
+    if option.operation == "assign":
+        lines.append("%s = %s;" % (name, option.value))
+    elif option.operation == "append":
+        lines.append("%s.push_back(%s);" % (name, option.value))
+    elif option.operation == "extend":
+        lines.append("%s.insert(%s.end(), %s);" % (name, name, option.value))
+    return True
+
+
+def generate_parameter_assignment(lines, option):
+    operation_type = get_operation_type(option)
+    dest_name = "result." + option.member_name
+    lines.append("read_value(value, argIt, arg)")
+    if operation_type == Operations.ASSIGN_VALUE:
+        lines.append("parse_and_assign(%s, value, arg)" % dest_name)
+        append_check_value(lines, option, operation_type)
+    elif operation_type == Operations.ASSIGN_TUPLE:
+        lines.append(make_split_value(option))
+        for i in range(len(option.value_type.subtypes)):
+            name = "std::get<%d>(%s)" % (i, dest_name)
+            lines.append("parse_and_assign(%s, parts[%d], arg)" % (name, i))
+        append_check_value(lines, option, operation_type)
+    elif operation_type == Operations.ASSIGN_VECTOR:
+        if option.separator is None:
+            lines.append("parse_and_assign(%s, std::vector<std::string_view>{value}, arg)"
+                         % dest_name)
+        else:
+            lines.append(make_split_value(option))
+            lines.append("parse_and_assign(%s, parts, arg)" % dest_name)
+        append_check_value(lines, option, operation_type)
+    elif operation_type == Operations.APPEND_VALUE:
+        lines.append("parse_and_append(%s, value, arg)" % dest_name)
+        append_check_value(lines, option, operation_type)
+    elif operation_type == Operations.APPEND_TUPLE:
+        lines.append(make_split_value(option))
+        for i in range(len(option.value_type.subtypes)):
+            name = "std::get<%d>(temp)" % i
+            lines.append("parse_and_assign(%s, parts[%d], arg)" % (name, i))
+        append_check_value(lines, option, operation_type)
+        lines.append("append(%s, std::move(temp))" % dest_name)
+    elif operation_type == Operations.APPEND_VECTOR:
+        lines.append(make_split_value(option))
+        for i in range(len(option.value_type.subtypes)):
+            lines.append("parse_and_assign(temp, parts, arg)")
+        lines.append("append(%s, std::move(temp))" % dest_name)
+        append_check_value(lines, option, operation_type)
+    elif operation_type == Operations.EXTEND_VECTOR:
+        lines.append(make_split_value(option))
+        if option.valid_values:
+            lines.append("parse_and_assign(temp, parts, arg)")
+            lines.append("extend(%s, std::move(temp))" % dest_name)
+        else:
+            lines.append("parse_and_extend(%s, parts, arg)" % dest_name)
 
 
 def generate_read_value(option):
-    operation_type = get_operation_type(option)
-    if operation_type == Operations.ASSIGN_CONSTANT:
-        return "result.%s = %s;" % (option.member_name, option.value)
-    elif operation_type == Operations.APPEND_CONSTANT:
-        return "result.%s.push_back(%s);" % (option.member_name, option.value)
-    elif operation_type == Operations.EXTEND_CONSTANT:
-        return "result.%s.insert(result.%s.end(), %s);" \
-               % (option.member_name, option.member_name, option.value)
-    elif operation_type == Operations.NO_OPERATION:
-        return None
+    lines = []
+    conditions = []
+    if not generate_constant_assignment(lines, option):
+        generate_parameter_assignment(conditions, option)
 
-    parts = ["if (!read_value(value, argIt, arg)"]
-    if operation_type == Operations.ASSIGN_VALUE:
-        parts.append("    || !parse_and_assign(result.%s, value, arg)"
-                     % option.member_name)
-        append_check_value(parts, option, operation_type)
-    elif operation_type == Operations.ASSIGN_TUPLE:
-        parts.append(make_split_value(option.separator, option.separator_count))
-        for i in range(len(option.value_type.subtypes)):
-            parts.append("    || !parse_and_assign(std::get<%d>(result.%s), parts[%d], arg)"
-                         % (i, option.member_name, i))
-        append_check_value(parts, option, operation_type)
-    elif operation_type == Operations.ASSIGN_VECTOR:
-        if option.separator is None:
-            parts.append("    || !parse_and_assign(result.%s, std::vector<std::string_view>{value}, arg)"
-                         % option.member_name)
-        else:
-            parts.append(make_split_value(option.separator,
-                                          option.separator_count))
-            parts.append("    || !parse_and_assign(result.%s, parts, arg)"
-                         % option.member_name)
-        append_check_value(parts, option, operation_type)
-    elif operation_type == Operations.APPEND_VALUE:
-        parts.append("    || !parse_and_append(result.%s, value, arg)"
-                     % option.member_name)
-        append_check_value(parts, option, operation_type)
-    elif operation_type == Operations.APPEND_TUPLE:
-        parts.append(make_split_value(option.separator, option.separator_count))
-        for i in range(len(option.value_type.subtypes)):
-            parts.append(
-                "    || !parse_and_assign(std::get<%d>(temp), parts[%d], arg)"
-                % (i, i))
-        append_check_value(parts, option, operation_type)
-        parts.append("    || !append(result.%s, std::move(temp))"
-                     % option.member_name)
-    elif operation_type == Operations.APPEND_VECTOR:
-        parts.append(make_split_value(option.separator, option.separator_count))
-        for i in range(len(option.value_type.subtypes)):
-            parts.append("    || !parse_and_assign(temp, parts, arg)")
-        parts.append("    || !append(result.%s, std::move(temp))"
-                     % option.member_name)
-        append_check_value(parts, option, operation_type)
-    elif operation_type == Operations.EXTEND_VECTOR:
-        parts.append(make_split_value(option.separator, option.separator_count))
-        if option.valid_values:
-            parts.append("    || !parse_and_assign(temp, parts, arg)")
-            parts.append("    || !extend(result.%s, std::move(temp))"
-                         % option.member_name)
-        else:
-            parts.append("    || !parse_and_extend(result.%s, parts, arg)"
-                         % option.member_name)
+    if option.callback:
+        conditions.append("%s(result, to_string(arg))" % option.callback)
 
-    parts[-1] += ")"
-    parts.extend(("{",
-                  "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
-                  "}"))
-    return parts
+    if conditions:
+        lines.append("if (!" + conditions[0])
+        for i in range(1, len(conditions)):
+            lines.append("    || !" + conditions[i])
+        lines[-1] += ")"
+        lines.extend(("{",
+                      "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
+                      "}"))
+    return lines
 
 
 class ParseOptionGenerator(templateprocessor.Expander):
@@ -330,7 +342,8 @@ std::string get_base_name(const std::string& path)
         {
         [[[option_cases]]]
         default:
-            break;
+            write_error_text(to_string(arg) + ": unknown option.");
+            return abort(result, Arguments::RESULT_ERROR, autoExit);
         }
 
         if (autoExit && result.[[[function_name]]]_result == [[[class_name]]]::RESULT_ERROR)
@@ -359,7 +372,6 @@ case Option_[[[option_name]]]:
 OPTION_CASE_IMPL_TEMPLATE = """\
 [[[operation]]]
 [[[inline]]]
-[[[callback]]]
 [[[IF abort_option]]]
 return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], autoExit);
 [[[ELIF return_option]]]
