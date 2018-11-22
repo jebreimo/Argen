@@ -33,7 +33,7 @@ Arguments& abort(Arguments& arguments,
                  bool autoExit)
 {
     if (autoExit)
-        exit(result);
+        exit(EINVAL);
     arguments.[[[function_name]]]_result = result;
     return arguments;
 }

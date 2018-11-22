@@ -346,8 +346,6 @@ std::string get_base_name(const std::string& path)
             return abort(result, Arguments::RESULT_ERROR, autoExit);
         }
 
-        if (autoExit && result.[[[function_name]]]_result == [[[class_name]]]::RESULT_ERROR)
-            exit(EINVAL);
 [[[IF has_final_option]]]
         if (finalOption)
             break;
