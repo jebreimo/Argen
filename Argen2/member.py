@@ -17,8 +17,6 @@ class Member:
         self.arguments = None
         self.count = None
         self.default_value = None
-        self.member_action = None
-        self.member_callback = None
         self.member_type = None
 
     def __str__(self):
@@ -46,8 +44,6 @@ def make_member(name, properties, arguments, session):
                              "or a range of integers (from..[to])"
                              % properties["count"], argument=args[0])
     mem.default_value = properties.get("default_value")
-    mem.member_action = properties.get("member_action")
-    mem.member_callback = properties.get("member_callback")
     if "member_type" in properties:
         mem.member_type = deducedtype.parse_type(properties["member_type"])
     return mem
