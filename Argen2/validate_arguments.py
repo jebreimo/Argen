@@ -20,3 +20,8 @@ def validate_arguments(session):
             elif argument.separator_count is None:
                 session.logger.error("Can not determine the separator count.",
                                      argument=argument)
+        elif argument.operation == "none" \
+                and argument.member_name \
+                and not (argument.callback or argument.inline):
+            session.logger.warn("No value is assigned to member '%s'."
+                                % argument.member_name, argument=argument)
