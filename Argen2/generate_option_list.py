@@ -132,7 +132,7 @@ int compare_flag(const std::string_view& flag, const char* pattern)
             if (pattern[i] == 1)
                 return 0;
             else
-                return pattern[i];
+                return -pattern[i];
         }
         else if (pattern[i] == 1)
         {
