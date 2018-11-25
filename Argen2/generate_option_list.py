@@ -190,7 +190,7 @@ RndAccIt find_flag(RndAccIt begin, RndAccIt end,
 int find_option_code(const Argument& argument)
 {
     auto str = argument.string;
-    if (argument.isShortOption)
+    if (argument.is_short_option)
     {
         char c = str[str.size() - 1];
 [[[IF case_insensitive]]]

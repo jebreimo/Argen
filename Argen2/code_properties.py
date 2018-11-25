@@ -174,21 +174,6 @@ def can_use_equal_as_separator(session, code_properties):
     return has_option_arguments
 
 
-def find_problematic_argument_callbacks(arguments):
-    problematic_arguments = []
-    known_index = True
-    for i, arg in enumerate(arguments):
-        count = arg.member.count
-        if arg.callback:
-            if not known_index:
-                problematic_arguments.append(arg)
-            elif count and count[0] != count[1] and i + 1 != len(arguments):
-                problematic_arguments.append(arg)
-        if count and count[0] != count[1]:
-            known_index = False
-    return problematic_arguments
-
-
 def can_have_case_insensitive_flags(session):
     all_flags = {}
     result = True
@@ -294,19 +279,6 @@ def make_code_properties(session):
         result.equal_is_separator = can_use_equal_as_separator(session, result)
 
     determine_line_width_members(result, settings)
-
-    if settings.immediate_callbacks:
-        problematic_args = find_problematic_argument_callbacks(result.arguments)
-        for arg in problematic_args:
-            count = arg.member.count
-            is_are = "s are" if count[1] != 1 else " is"
-            session.logger.warn("It is necessary to read all the arguments and"
-                                " options to determine which argument%s %s."
-                                " The callback for this argument will therefore"
-                                " see the final state of the options, not"
-                                " necessarily the state when the argument"
-                                " appears on the command line."
-                                % (is_are, arg.metavar))
 
     if not settings.case_sensitive:
         result.case_insensitive = can_have_case_insensitive_flags(session)

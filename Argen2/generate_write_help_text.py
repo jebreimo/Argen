@@ -37,7 +37,7 @@ def  generate_write_help_text(session):
 
 WRITE_HELP_TEXT_TEMPLATE = """\
 [[[IF has_program_name]]]
-std::string programName = "<program>";
+std::string program_name = "<program>";
 
 [[[ENDIF]]]
 const char HELP_TEXT[] =
@@ -49,9 +49,9 @@ const char BRIEF_HELP_TEXT[] =
 class HelpTextWriter
 {
 public:
-    HelpTextWriter(std::ostream& stream, unsigned lineWidth)
+    HelpTextWriter(std::ostream& stream, unsigned line_width)
         : m_Stream(stream),
-          m_LineWidth(lineWidth)
+          m_LineWidth(line_width)
 [[[IF has_alignment]]]
     {
         m_AlignmentColumns.push_back(0);
@@ -134,11 +134,11 @@ private:
     bool m_EmptyLine = true;
 };
 
-void write_help_text(std::ostream& stream, const char* text, unsigned lineWidth)
+void write_help_text(std::ostream& stream, const char* text, unsigned line_width)
 {
-    if (lineWidth == 0)
-        lineWidth = [[[line_width]]];
-    HelpTextWriter writer(stream, lineWidth);
+    if (line_width == 0)
+        line_width = [[[line_width]]];
+    HelpTextWriter writer(stream, line_width);
     for (unsigned i = 0; text[i]; ++i)
     {
         switch (text[i])
@@ -167,8 +167,8 @@ void write_help_text(std::ostream& stream, const char* text, unsigned lineWidth)
             if (strncmp(text + i, "${PROGRAM}", 10) == 0)
             {
                 writer.align();
-                for (unsigned j = 0; programName[j]; ++j)
-                    writer.write_character(programName[j]);
+                for (unsigned j = 0; program_name[j]; ++j)
+                    writer.write_character(program_name[j]);
                 i += 9;
             }
             else
@@ -197,25 +197,25 @@ unsigned get_default_line_width()
 [[[ENDIF]]]
 }
 
-void write_help_text(std::ostream& stream, unsigned lineWidth)
+void write_help_text(std::ostream& stream, unsigned line_width)
 {
-    if (lineWidth == 0)
-        lineWidth = get_default_line_width();
-    write_help_text(stream, HELP_TEXT, lineWidth);  
+    if (line_width == 0)
+        line_width = get_default_line_width();
+    write_help_text(stream, HELP_TEXT, line_width);  
 }
 
-void write_brief_help_text(std::ostream& stream, unsigned lineWidth)
+void write_brief_help_text(std::ostream& stream, unsigned line_width)
 {
-    if (lineWidth == 0)
-        lineWidth = get_default_line_width();
-    write_help_text(stream, BRIEF_HELP_TEXT, lineWidth);
+    if (line_width == 0)
+        line_width = get_default_line_width();
+    write_help_text(stream, BRIEF_HELP_TEXT, line_width);
 }
 
-void write_error_text(const std::string& errorText,
+void write_error_text(const std::string& error_text,
                       std::ostream& stream = std::cerr,
-                      unsigned lineWidth = 0)
+                      unsigned line_width = 0)
 {
-    write_brief_help_text(stream, lineWidth);
-    stream << '\\n' << errorText << '\\n';
+    write_brief_help_text(stream, line_width);
+    stream << '\\n' << error_text << '\\n';
 }
 """

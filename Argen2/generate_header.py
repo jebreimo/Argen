@@ -157,11 +157,11 @@ struct [[[class_name]]]
   *     accordance with the parsed arguments. If @a argc is 0 the
   *     returned value is a nullptr.
   */
-[[[class_name]]] [[[function_name]]](int argc, char* argv[], bool autoExit = true);
+[[[class_name]]] [[[function_name]]](int argc, char* argv[], bool auto_exit = true);
 
-void write_help_text(std::ostream& stream, unsigned lineWidth = 0);
+void write_help_text(std::ostream& stream, unsigned line_width = 0);
 
-void write_brief_help_text(std::ostream& stream, unsigned lineWidth = 0);\
+void write_brief_help_text(std::ostream& stream, unsigned line_width = 0);\
 """
 
 

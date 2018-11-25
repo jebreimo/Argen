@@ -35,9 +35,9 @@ struct Argument
     Argument() = default;
 
 [[[IF has_short_options]]]
-    Argument(std::string_view argument, bool isShortOption)
+    Argument(std::string_view argument, bool is_short_option)
             : string(argument),
-              isShortOption(isShortOption)
+              is_short_option(is_short_option)
     {}
 [[[ELSE]]]
     Argument(std::string_view argument) : string(argument) {}
@@ -47,7 +47,7 @@ struct Argument
 
     std::string_view string;
 [[[IF has_short_options]]]
-    bool isShortOption = false;
+    bool is_short_option = false;
 [[[ENDIF]]]
 };
 
@@ -59,7 +59,7 @@ std::string to_string(const std::string_view& wrapper)
 std::string to_string(const Argument& argument)
 {
 [[[IF has_short_options]]]
-    if (argument.isShortOption && argument.string.size() == 1)
+    if (argument.is_short_option && argument.string.size() == 1)
         return "-" + to_string(argument.string);
     else
         return to_string(argument.string);

@@ -174,7 +174,7 @@ def generate_constant_assignment(lines, option):
 def generate_parameter_assignment(lines, option):
     operation_type = get_operation_type(option)
     dest_name = "result." + option.member_name
-    lines.append("read_value(value, argIt, arg)")
+    lines.append("read_value(value, arg_it, arg)")
     if operation_type == Operations.ASSIGN_VALUE:
         lines.append("parse_and_assign(%s, value, arg)" % dest_name)
         append_check_value(lines, option, operation_type)
@@ -232,7 +232,7 @@ def generate_read_value(option):
             lines.append("    || !" + conditions[i])
         lines[-1] += ")"
         lines.extend(("{",
-                      "    return abort(result, Arguments::RESULT_ERROR, autoExit);",
+                      "    return abort(result, Arguments::RESULT_ERROR, auto_exit);",
                       "}"))
     return lines
 
@@ -314,17 +314,17 @@ std::string get_base_name(const std::string& path)
 }
 [[[ENDIF]]]
 
-[[[class_name]]] [[[function_name]]](int argc, char* argv[], bool autoExit)
+[[[class_name]]] [[[function_name]]](int argc, char* argv[], bool auto_exit)
 {
     if (argc == 0)
         return [[[class_name]]]();
 
 [[[IF has_program_name]]]
-    programName = get_base_name(argv[0]);
+    program_name = get_base_name(argv[0]);
 
 [[[ENDIF]]]
     [[[class_name]]] result;
-    ArgumentIterator argIt(argc - 1, argv + 1);
+    ArgumentIterator arg_it(argc - 1, argv + 1);
 [[[IF has_values]]]
     std::string_view value;
 [[[IF has_separators]]]
@@ -332,22 +332,22 @@ std::string get_base_name(const std::string& path)
 [[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF has_final_option]]]
-    bool finalOption = false;
+    bool final_option = false;
 [[[ENDIF]]]
-    while (argIt.has_next())
+    while (arg_it.has_next())
     {
-        auto arg = argIt.next_argument();
-        auto optionCode = find_option_code(arg);
-        switch (optionCode)
+        auto arg = arg_it.next_argument();
+        auto option_code = find_option_code(arg);
+        switch (option_code)
         {
         [[[option_cases]]]
         default:
             write_error_text(to_string(arg) + ": unknown option.");
-            return abort(result, Arguments::RESULT_ERROR, autoExit);
+            return abort(result, Arguments::RESULT_ERROR, auto_exit);
         }
 
 [[[IF has_final_option]]]
-        if (finalOption)
+        if (final_option)
             break;
 [[[ENDIF]]]
     }
@@ -371,12 +371,12 @@ OPTION_CASE_IMPL_TEMPLATE = """\
 [[[operation]]]
 [[[inline]]]
 [[[IF abort_option]]]
-return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], autoExit);
+return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], auto_exit);
 [[[ELIF return_option]]]
 result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
 return result;
 [[[ELIF final_option]]]
-finalOption = true;
+final_option = true;
 break;
 [[[ELSE]]]
 break;
