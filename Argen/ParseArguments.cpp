@@ -185,13 +185,13 @@ namespace Foo { namespace Bar
         "USAGE\n"
         "  \001${PROGRAM} \001[-e] [-h] [-l\002FILE] [-q] [-v] [--version]"
         " [--info] [--version2] [--junit] [--text] [--fulltext] [--host=HOST]"
-        " [--foo=N1,N2,...] [-@] [--flag] [--size=ROWSxCOLS] [--rect=LENxWID]"
-        " [--line=LEN] [--antiflag] [-%\002N] [-s\002TEXT] [--special]"
-        " [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--] [-i\002PATH]"
-        " [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z] <-f\002FILE>"
-        " <--ting> <--tang=N> <--cuboid=LENxWIDxHEI> <-m\002NUM> <test\002name>"
-        " <test\002name> [test\002name] [test\002name] <the-list> [unnamed]"
-        " [out-file]\n"
+        " [--tang=N] [--foo=N1,N2,...] [-@] [--flag] [--size=ROWSxCOLS]"
+        " [--rect=LENxWID] [--line=LEN] [--antiflag] [-%\002N] [-s\002TEXT]"
+        " [--special] [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--]"
+        " [-i\002PATH] [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z]"
+        " <-f\002FILE> <--ting> <--cuboid=LENxWIDxHEI> <-m\002NUM> <-m\002NUM>"
+        " <-m\002NUM> <test\002name> <test\002name> [test\002name] [test\002name]"
+        " <the-list> [unnamed] [out-file]\n"
         "\n"
         "Executes unit tests.\n"
         "\n"
@@ -280,13 +280,13 @@ namespace Foo { namespace Bar
     const char BRIEF_HELP_TEXT[] =
         "usage: ${PROGRAM} \001[-e] [-h] [-l\002FILE] [-q] [-v] [--version]"
         " [--info] [--version2] [--junit] [--text] [--fulltext] [--host=HOST]"
-        " [--foo=N1,N2,...] [-@] [--flag] [--size=ROWSxCOLS] [--rect=LENxWID]"
-        " [--line=LEN] [--antiflag] [-%\002N] [-s\002TEXT] [--special]"
-        " [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--] [-i\002PATH]"
-        " [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z] <-f\002FILE>"
-        " <--ting> <--tang=N> <--cuboid=LENxWIDxHEI> <-m\002NUM> <test\002name>"
-        " <test\002name> [test\002name] [test\002name] <the-list> [unnamed]"
-        " [out-file]\n";
+        " [--tang=N] [--foo=N1,N2,...] [-@] [--flag] [--size=ROWSxCOLS]"
+        " [--rect=LENxWID] [--line=LEN] [--antiflag] [-%\002N] [-s\002TEXT]"
+        " [--special] [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--]"
+        " [-i\002PATH] [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z]"
+        " <-f\002FILE> <--ting> <--cuboid=LENxWIDxHEI> <-m\002NUM> <-m\002NUM>"
+        " <-m\002NUM> <test\002name> <test\002name> [test\002name] [test\002name]"
+        " <the-list> [unnamed] [out-file]\n";
 
     class HelpTextWriter
     {
@@ -924,11 +924,11 @@ namespace Foo { namespace Bar
             }
             break;
         case Option_ting:
-            result.ting.push_back(10.0);
+            result.ting = 10.0;
             break;
         case Option_tang:
             if (!read_value(value, arg_it, arg)
-                || !parse_and_append(result.ting, value, arg))
+                || !parse_and_assign(result.ting, value, arg))
             {
                 return OptionResult::INVALID_OPTION;
             }

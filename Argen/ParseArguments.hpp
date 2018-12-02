@@ -87,7 +87,7 @@ namespace Foo { namespace Bar
 
         /** @brief Member for options --ting and --tang.
           */
-        std::vector<double> ting = {};
+        double ting = {};
 
         /** @brief Member for option --foo.
           */

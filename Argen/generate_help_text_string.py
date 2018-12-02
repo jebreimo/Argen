@@ -45,6 +45,9 @@ def format_option(arg, session, is_optional=False):
     return format_string % (flag, sep, var)
 
 
+MAX_ARGUMENT_EXPANSION = 4
+
+
 def generate_options_text(session):
     optional = []
     mandatory = []
@@ -54,6 +57,8 @@ def generate_options_text(session):
             string = string.replace(" ", session.syntax.non_breaking_space)
             if string[0] == "[":
                 optional.append(string)
+            elif arg.count and 1 < arg.count[0] <= MAX_ARGUMENT_EXPANSION:
+                mandatory.extend([string] * arg.count[0])
             else:
                 mandatory.append(string)
     return " ".join((" ".join(optional), " ".join(mandatory)))
@@ -70,10 +75,11 @@ def get_mandatory_optional(arg):
         opt_count = 1
     if count[1] and count[1] != count[0]:
         opt_count = count[1] - count[0]
+    if man_count > MAX_ARGUMENT_EXPANSION:
+        return 1, 0
+    if opt_count > MAX_ARGUMENT_EXPANSION:
+        return man_count, 1
     return man_count, opt_count
-
-
-MAX_ARGUMENT_EXPANSION = 4
 
 
 def format_mandatory(str):

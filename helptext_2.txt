@@ -39,7 +39,7 @@ REPORT OPTIONS
 
 OTHER OPTIONS
   {{--ting| value: 10.0 | count: 1}}  Text
-  {{--tang=N| member:ting | count: 1}}  Text
+  {{--tang=N| member:ting }}  Text
   {{--foo=N1,N2,... | separator: , | op: extend | Values: 1...}}
   {{-@| member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
   {{--flag| default: true}}  Text
