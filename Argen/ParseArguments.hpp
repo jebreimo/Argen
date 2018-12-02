@@ -189,12 +189,6 @@ namespace Foo { namespace Bar
           * are read.
           */
         Result parse_arguments_result = RESULT_OK;
-
-        /** This member is reserved for internal use in parse_arguments.
-          *
-          * It's always nullptr.
-          */
-        struct MemberCounters* reserved_for_internal_use = nullptr;
     };
 
     /** @brief Parses the arguments in @a argv.
@@ -211,7 +205,6 @@ namespace Foo { namespace Bar
 
     void write_brief_help_text(std::ostream& stream, unsigned line_width = 0);
 }}
-
 
 inline bool foo_bar(Foo::Bar::Arguments& arguments, const std::string& argument)
 {

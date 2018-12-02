@@ -38,7 +38,6 @@ class HeaderContentsGenerator(templateprocessor.Expander):
         self.namespace_end = session.code_properties.namespace_end
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
-        self.has_member_counters = session.code_properties.counted_members
         self._special_options = [a for a in session.arguments
                                  if a.option_name
                                  and a.post_operation in ("abort", "return")]
@@ -139,14 +138,6 @@ struct [[[class_name]]]
       * are read.
       */
     Result [[[function_name]]]_result = RESULT_OK;
-[[[IF has_member_counters]]]
-
-    /** This member is reserved for internal use in [[[function_name]]].
-      *
-      * It's always nullptr.
-      */
-    struct MemberCounters* reserved_for_internal_use = nullptr;
-[[[ENDIF]]]
 };
 
 /** @brief Parses the arguments in @a argv.
