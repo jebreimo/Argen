@@ -1,204 +1,232 @@
 #!/usr/bin/env python
-"""
-    argen - Command Line Argument Parser GENerator
-"""
+# -*- coding: UTF-8 -*-
+# ===========================================================================
+# Copyright © 2017 Jan Erik Breimo. All rights reserved.
+# Created by Jan Erik Breimo on 2017-10-22.
+#
+# This file is distributed under the BSD License.
+# License text is included with the source distribution.
+# ===========================================================================
 import argparse
-import os
 import sys
-import textwrap
 
-from error import Error
-import helptextparser
-import argparser_hpp
-import argparser_cpp
+from helpfileerror import HelpFileError
+from logger import Logger
+from parse_help_text import parse_help_text
+from replace_variables import replace_variables
+from sections import read_sections
+from session import Session
+import deduce_arguments as da
+import deduce_flags_and_metavars as dfam
+import deduce_indices as di
+import deduce_member_names as dmn
+import deduce_member_types as dmt
+import deduce_operations as do
+import deduce_option_names as don
+import deduce_separator_counts as ds
+import deduce_special_options as dso
+import deduce_valid_values as dvv
+import deduce_value_types as dvt
+import deduce_values as dv
+import make_members as mm
+import code_properties
+import generate_header
+import generate_source
+import validate_arguments as va
 
-def find_first(s, func):
-    for i, c in enumerate(s):
-        if func(c):
-            return i
-    return -1
 
-def formatText(text, definitionLineNos, width, definitionIndent):
-    result = []
-    wrapper = textwrap.TextWrapper(width=width)
-    for i, line in enumerate(text.split("\n")):
-        line = line.rstrip()
-        if len(line) <= width:
-            result.append(line)
-        else:
-            if i in definitionLineNos:
-                indent = definitionIndent
-            else:
-                indent = find_first(line, lambda c: not c.isspace())
-                if indent == -1:
-                    indent = 0
-            wrapper.subsequent_indent = " " * indent
-            result.extend(wrapper.wrap(line))
-    return "\n".join(result)
+def tokenize_setting(line, logger):
+    parts = line.split("=", 1)
+    if len(parts) != 2:
+        logger.warn("Incorrect setting: %s" % line)
+        return None, None, None
+    left_side = parts[0].split()
+    if len(left_side) == 1:
+        name = left_side[0]
+        is_setting = True
+    elif len(left_side) == 2 and left_side[0] == "set":
+        name = left_side[1]
+        is_setting = False
+    else:
+        logger.warn("Incorrect setting name: %s" % parts[0])
+        return None, None, None
+    value = parts[1].strip()
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        value = value[1:-1]
+    return name, value, is_setting
 
-def makeArgParser():
-    ap = argparse.ArgumentParser(description='Generates a C++ argument parser.')
-    ap.add_argument("helpfile", metavar="text file",
-                    help="one or more text files defining the help text")
-    ap.add_argument("-i", "--indent", metavar="N", type=int,
-                    dest="indent", default=-1,
+
+def parse_settings(section, session):
+    for i, line in enumerate(section.lines):
+        try:
+            session.logger.line_number = section.line_number + i + 1
+            line = replace_variables(line, session)
+            line = line.strip()
+            if line:
+                name, value, is_setting = tokenize_setting(line, session.logger)
+                if name:
+                    if not is_setting:
+                        session.variables[name] = value
+                    elif not session.set_setting(name, value):
+                        session.logger.warn("Unknown setting: " + name)
+        except HelpFileError as ex:
+            ex.file_name = section.file_name
+            ex.line_number = section.line_number + i + 1
+            raise
+
+
+def parse_definition(section, session):
+    lines = []
+    for i, line in enumerate(section.lines):
+        try:
+            lines.append(replace_variables(line.rstrip(), session))
+        except HelpFileError as ex:
+            ex.file_name = section.file_name
+            ex.line_number = section.line_number + i + 1
+            raise
+    for i in range(2):
+        if len(lines) > 1 and not lines[-1]:
+            del lines[-1]
+    session.variables[section.parameter] = "\n".join(lines)
+
+
+# def create_code_properties(arguments, options, members):
+#     pass
+#
+#
+# def create_code(codeProperties, arguments, options, members):
+#     pass
+
+
+def parse_sections(sections, session):
+    for section in sections:
+        session.begin_processing_file(section.file_name)
+        if section.type == "text":
+            session.help_text = parse_help_text(section, session)
+        elif section.type == "set":
+            parse_definition(section, session)
+        elif section.type == "settings":
+            parse_settings(section, session)
+        elif section.type == "briefhelptext":
+            session.brief_help_text = parse_help_text(section, session)
+        session.end_processing_file()
+
+
+def make_deductions(session):
+    functions = [
+        dfam.deduce_flags_and_metavars,
+        don.deduce_option_names,
+        dso.deduce_special_options,
+        da.deduce_arguments,
+        dmn.deduce_member_names,
+        ds.deduce_separator_counts,
+        mm.make_members,
+        di.deduce_indices,
+        dv.deduce_values,
+        do.deduce_operations,
+        dvt.deduce_value_types,
+        dmt.deduce_member_types,
+        dvv.deduce_valid_values,
+        va.validate_arguments
+    ]
+    for func in functions:
+        func(session)
+        if session.has_errors():
+            return
+
+
+def process_files(file_names, session):
+    sections = []
+    for file_name in file_names:
+        print(file_name)
+        new_sections = read_sections(file_name, session.syntax)
+        sections.extend(new_sections)
+        parse_sections(new_sections, session)
+    if session.has_errors():
+        return False
+    make_deductions(session)
+    return not session.has_errors()
+
+
+def print_result(result, session):
+    print(result + " %d error(s) %d warning(s)"
+          % (session.logger.counters[Logger.ERROR],
+             session.logger.counters[Logger.WARNING]))
+
+
+def make_argument_parser():
+    ap = argparse.ArgumentParser(description='Generates source files for a C++ command line argument parser.')
+    ap.add_argument("helpfiles", metavar="text file", action="append",
+                    help="text files containing the help text")
+    ap.add_argument("-i", "--indent", metavar="N", type=int, default=-1,
                     help="indentation width when option help text is word-wrapped")
-    ap.add_argument("-c", "--class", metavar="NAME",
-                    dest="className", default="Arguments",
-                    help="the name of the generated class")
-    ap.add_argument("-f", "--file", metavar="NAME",
-                    dest="fileName", default="ParseArguments",
-                    help="the file name (without extension) of the generated files")
-    ap.add_argument("--cpp", metavar="CPP",
-                    dest="cpp", default="cpp",
-                    help="the extension of the generated implementation file (default is cpp)")
-    ap.add_argument("--hpp", metavar="HPP",
-                    dest="hpp", default="h",
-                    help="the extension of the generated header file (default is h)")
-    ap.add_argument("--function", metavar="NAME",
-                    dest="functionName", default="parse_arguments",
-                    help="the name of the generated function (default is parse_arguments)")
-    ap.add_argument("--namespace", metavar="NAME",
-                    dest="namespace", default="",
-                    help="the namespace of the generated functions and classes")
-    ap.add_argument("--parenthesis", metavar="PARENS",
-                    dest="parenthesis", default="",
-                    help="Set the parenthesis used to enclose the "
-                         "definitions and separate properties from each "
-                         "other in the help file. (Defalut is \"{{ | }}\"")
-    ap.add_argument("--test",
-                    dest="includeTest", action="store_const",
-                    const=True, default=False,
-                    help="Include a main-function the source file")
-    ap.add_argument("--width", metavar="N", type=int,
-                    dest="width", default=79,
-                    help='line width for help text word wrapping (default is 79)')
-    ap.add_argument("--debug",
-                    dest="listProperties", action="store_const",
-                    const=True, default=False,
-                    help="list the parser result without generating files")
+    ap.add_argument("-d", "--define", metavar="NAME=VALUE", action="append",
+                    help="define a value that can be used in the helpfiles")
+    ap.add_argument("--no-pragma-once", action="store_const", const=True,
+                    default=False,
+                    help="don't insert a pragma once at the beginning of the header file")
+    ap.add_argument("--section-prefix", default="$$$",
+                    help="set the section prefix that are used to define sections in helpfiles")
+    ap.add_argument("--debug", action="store_const", const=True,
+                    default=False,
+                    help="show debug messages")
     return ap
 
 
-def inferIndentation(line):
-    gaps = []
-    start = -1
-    for i, c in enumerate(line):
-        if c.isspace():
-            if start == -1:
-                start = i
-        elif start != -1:
-            if i - start > 1:
-                gaps.append((i - start, start))
-            start = -1
-    if start != -1:
-        gaps.append((len(line) - start, start))
-    if not gaps:
-        return 0
-    gaps.sort()
-    return gaps[-1][0] + gaps[-1][1]
-
-def inferOptionIndentation(text, lineNos):
-    lines = text.split("\n")
-    widths = {}
-    for lineNo in lineNos:
-        width = inferIndentation(lines[lineNo])
-        if width in widths:
-            widths[width] += 1
-        else:
-            widths[width] = 1
-    n, width = 0, 0
-    for key in widths:
-        if widths[key] > n or widths[key] == n and key > width:
-            n, width = widths[key], key
-    return width
-
-def main(args):
-    try:
-        args = makeArgParser().parse_args()
-    except argparse.ArgumentError:
+def main():
+    args = make_argument_parser().parse_args()
+    session = Session()
+    syntax = session.syntax
+    syntax.section_prefix = args.section_prefix
+    session.logger.error_level = Logger.DEBUG if args.debug else Logger.INFO
+    if not process_files(args.helpfiles, session):
+        print_result("Failure.", session)
         return 1
-    try:
-        if args.parenthesis:
-            parens = args.parenthesis.split()
-            if len(parens) == 3 and parens[0] and parens[1] and parens[2]:
-                helptextparser.StartDefinition = parens[0]
-                helptextparser.DefinitionSeparator = parens[1]
-                helptextparser.EndDefinition = parens[2]
-            else:
-                print("Invalid parenthesis: " + args.parenthesis)
-                print("The parenthesis string must consist of the opening "
-                      " parenthesis (defaults is \"{{\"), the property "
-                      " separator (default is \"|\") and the closing "
-                      " parenthesis (default is \"}}\")separated by a space "
-                      " character. The space character must either be "
-                      " escaped or the entire option must be enclosed in "
-                      " quotes. For instance to produce the default "
-                      " perenthesis: \"--parenthesis=${ }$\".")
-                return 1
-        parserResult = helptextparser.parseFile(args.helpfile)
-    except IOError as ex:
-        print(ex)
-        return 2
-    except Error as ex:
-        print(ex)
-        return 3
-    if args.indent != -1:
-        indentation = args.indent
-    else:
-        indentation = inferOptionIndentation(parserResult.text,
-                                             parserResult.definitionLineNos)
-    text = formatText(parserResult.text,
-                      parserResult.definitionLineNos,
-                      args.width,
-                      indentation)
-    if args.listProperties:
-        print("")
-        print("Options")
-        print("=======")
-        for o in parserResult.options:
-            print(o.props)
-        print("")
-        print("Arguments")
-        print("=========")
-        for a in parserResult.arguments:
-            print(a.props)
-        print("")
-        print("Members")
-        print("=======")
-        for m in parserResult.members:
-            print(m.props)
-        print("")
-        print("Help text")
-        print("=========")
-        print(text)
-        return 0
-    try:
-        hppFile = args.fileName + "." + args.hpp
-        argparser_hpp.createFile(hppFile,
-                                 parserResult.members,
-                                 className=args.className,
-                                 functionName=args.functionName,
-                                 namespace=args.namespace)
-        cppFile = args.fileName + "." + args.cpp
-        argparser_cpp.createFile(cppFile,
-                                 text,
-                                 parserResult.options,
-                                 parserResult.arguments,
-                                 parserResult.members,
-                                 className=args.className,
-                                 functionName=args.functionName,
-                                 namespace=args.namespace,
-                                 headerFileName=os.path.basename(hppFile),
-                                 includeTest=args.includeTest)
-        print("%s: generated %s and %s"
-              % (os.path.basename(sys.argv[0]), hppFile, cppFile))
-    except Exception as ex:
-        print("Error: " + str(ex))
-        raise
-        return 3
-    # argparser_generator.crateSourceFile("CommandLine.cpp", helpText)
+    session.code_properties = code_properties.make_code_properties(session)
+    # print(session.code_properties.source_template)
+    file = open(session.header_file_path(), "w")
+    file.write(generate_header.generate_header(session))
+    file.close()
+    file = open(session.source_file_path(), "w")
+    file.write(generate_source.generate_source(session))
+    file.close()
+    # print(generate_source.generate_source(session))
+    print_result("Success.", session)
+
+
+    # for section in sections:
+    #     print(section)
+    # print("==== VARIABLES ====")
+    # for variable in session.variables:
+    #     print("%s=%s" % (variable, session.variables[variable]))
+    # print("==== BRIEF_HELP_TEXT ====")
+    # print(session.brief_help_text)
+    # print("==== HELP_TEXT ====")
+    # print(session.help_text)
+    # print("==== ARGUMENTS ====")
+    # for arg in session.arguments:
+    #     print(arg)
+    # for member in session.members:
+    #     print(member)
     return 0
 
-if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+
+sys.exit(main())
+
+## IndentationWidth=N
+## PragmaOnce=BOOL
+## Abbreviations=BOOL
+## SectionPrefix=STR # Can't set SectionPrefix
+## ArgumentPrefix=STR
+## ArgumentSuffix=STR
+## ArgumentSeparator=CHAR
+## VariablePrefix=STR
+## VariableSuffix=STR
+## ClassName=STR
+## FileName=STR
+## HeaderExtension=STR
+## SourceExtension=STR
+## Namespace=STR
+## FunctionName=STR
+## LineWidth=N
+## Test=BOOL

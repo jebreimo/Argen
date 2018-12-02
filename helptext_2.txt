@@ -80,6 +80,11 @@ ${HEADER_INCLUDES}
 
 ${HEADER_CODE}
 
+inline bool foo_bar(Foo::Bar::Arguments& arguments, const std::string& argument)
+{
+    return true;
+}
+
 $$$ Source
 ${FileHeader}
 #include "StdAfx.h"

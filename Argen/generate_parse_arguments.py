@@ -232,7 +232,7 @@ def generate_read_value(option):
             lines.append("    || !" + conditions[i])
         lines[-1] += ")"
         lines.extend(("{",
-                      "    return abort(result, Arguments::RESULT_ERROR, auto_exit);",
+                      "    return OptionResult::INVALID_OPTION;",
                       "}"))
     return lines
 
@@ -314,6 +314,34 @@ std::string get_base_name(const std::string& path)
 }
 [[[ENDIF]]]
 
+enum class OptionResult
+{
+    NORMAL_OPTION,
+    FINAL_OPTION,
+    ABORTING_OPTION,
+    INVALID_OPTION,
+    UNKNOWN_OPTION
+};
+
+OptionResult process_option(Arguments& result,
+                            Argument& arg,
+                            int option_code,
+                            ArgumentIterator& arg_it)
+{
+[[[IF has_values]]]
+    std::string_view value;
+[[[IF has_separators]]]
+    std::vector<std::string_view> parts;
+    switch (option_code)
+    {
+    [[[option_cases]]]
+    default:
+        return OptionResult::UNKNOWN_OPTION;
+    }
+[[[ENDIF]]]
+    return OptionResult::NORMAL_OPTION;
+}
+
 [[[class_name]]] [[[function_name]]](int argc, char* argv[], bool auto_exit)
 {
     if (argc == 0)
@@ -324,12 +352,8 @@ std::string get_base_name(const std::string& path)
 
 [[[ENDIF]]]
     [[[class_name]]] result;
+    std::vector<std::string_view> arguments;
     ArgumentIterator arg_it(argc - 1, argv + 1);
-[[[IF has_values]]]
-    std::string_view value;
-[[[IF has_separators]]]
-    std::vector<std::string_view> parts;
-[[[ENDIF]]]
 [[[ENDIF]]]
 [[[IF has_final_option]]]
     bool final_option = false;
@@ -337,15 +361,39 @@ std::string get_base_name(const std::string& path)
     while (arg_it.has_next())
     {
         auto arg = arg_it.next_argument();
-        auto option_code = find_option_code(arg);
-        switch (option_code)
+        if (arg.is_option)
         {
-        [[[option_cases]]]
-        default:
-            write_error_text(to_string(arg) + ": unknown option.");
-            return abort(result, Arguments::RESULT_ERROR, auto_exit);
+            auto option_code = find_option_code(arg);
+            switch (process_option(result, arg, option_code, arg_it))
+            {
+            case OptionResult::FINAL_OPTION:
+                final_option = true;
+                break;
+            case OptionResult::ABORTING_OPTION:
+                if (auto_exit)
+                    exit(0);
+                break;
+            case OptionResult::INVALID_OPTION:
+                if (auto_exit)
+                    exit(EINVAL);
+                result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
+                break;
+            case OptionResult::UNKNOWN_OPTION:
+                write_error_text(to_string(arg) + ": unknown option.");
+                if (auto_exit)
+                    exit(EINVAL);
+                result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
+                break;
+            default:
+                break;
+            }
+            if (result.[[[function_name]]]_result != Arguments::RESULT_OK)
+                return result;
         }
-
+        else
+        {
+            arguments.push_back(arg.string);
+        }
 [[[IF has_final_option]]]
         if (final_option)
             break;
@@ -371,13 +419,13 @@ OPTION_CASE_IMPL_TEMPLATE = """\
 [[[operation]]]
 [[[inline]]]
 [[[IF abort_option]]]
-return abort(result, [[[class_name]]]::OPTION_[[[option_name]]], auto_exit);
+result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
+return OptionResult::ABORTING_OPTION;
 [[[ELIF return_option]]]
 result.[[[function_name]]]_result = [[[class_name]]]::OPTION_[[[option_name]]];
-return result;
-[[[ELIF final_option]]]
-final_option = true;
 break;
+[[[ELIF final_option]]]
+return OptionResult::FINAL_OPTION;
 [[[ELSE]]]
 break;
 [[[ENDIF]]]\

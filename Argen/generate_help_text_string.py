@@ -26,7 +26,7 @@ def is_mandatory(option):
     return option.member.count[0] > 0 and len(option.member.arguments) == 1
 
 
-def format_option(arg, session):
+def format_option(arg, session, is_optional=False):
     if not arg.flags:
         return None
     flag = find_shortest_string(arg.flags)
@@ -40,7 +40,7 @@ def format_option(arg, session):
         sep = " "
     else:
         sep = "="
-    if is_mandatory(arg):
+    if not is_optional and is_mandatory(arg):
         format_string = "<%s%s%s>"
     else:
         format_string = "[%s%s%s]"
@@ -59,6 +59,18 @@ def generate_options_text(session):
             else:
                 mandatory.append(string)
     return " ".join((" ".join(optional), " ".join(mandatory)))
+
+
+# def generate_arg_blah_blah(arg):
+#     if not arg.member or arg.member.count is None \
+#             or len(arg.member.arguments) != 1:
+#         return 1, 0
+#     man_count = opt_count = 0
+#     count = arg.member.count
+#     if count[0]:
+#         man_count = count[0]
+#     if count[1] and count[1] != count[0]:
+#         opt_count = count[1] - count[1]
 
 
 def generate_arguments_text(session):

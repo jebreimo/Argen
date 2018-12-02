@@ -1,45 +1,49 @@
-import utilities
+# -*- coding: UTF-8 -*-
+# ===========================================================================
+# Copyright © 2018 Jan Erik Breimo. All rights reserved.
+# Created by Jan Erik Breimo on 2018-01-27.
+#
+# This file is distributed under the BSD License.
+# License text is included with the source distribution.
+# ===========================================================================
+import parser_tools
+import deducedtype
 
-class Member(object):
-    """This class represents a member variable in the struct that is
-       returned by the generated argument parser function.
-    """
-    def __init__(self, props):
-        self.default = props["default"]
-        self.props = props
-        self.arguments = props["arguments"]
-        self.name = props["name"]
-        self.values = utilities.parseValues(props.get("values", ""))
-        self.valueType = props["valuetype"]
-        self.count = utilities.parseCount(props["count"])
-        self.minCount, self.maxCount = self.count
-        self.include = props.get("include")
-        self.includeCpp = props.get("includecpp")
-        self.action = props.get("memberaction")
-        self.condition = props.get("membercondition")
-        self.conditionMessage = props.get("memberconditionmessage")
-        self.type = props.get("type")
-        if not self.type:
-            self.type = "value" if self.maxCount == 1 else "list"
-        if self.type in ("list", "multivalue"):
-            self.memberType = "std::vector<%s>" % self.valueType
-        else:
-            self.memberType = self.valueType
-        self.isOption = not any(a for a in self.arguments if not a.flags)
 
-    def __getitem__(self, key):
-        return self.__getattribute__(key)
+class Member:
+    def __init__(self, name, properties):
+        self.name = name
+        self.properties = properties
+        self.arguments = None
+        self.count = None
+        self.default_value = None
+        self.member_type = None
 
     def __str__(self):
-        return "%s %s;" % (self.memberType, self.name)
+        values = self.__dict__
+        keys = [k for k in values.keys() if k != "arguments"]
+        keys.sort()
+        kvs = ("%s: %s" % (k, values[k]) for k in keys if values[k] is not None)
+        return "%s\n    %s" % (self.name, "\n    ".join(kvs))
 
-    @property
-    def lineNo(self):
-        return ", ".join(set(a.lineNo for a in self.arguments))
+    def is_option(self):
+        for arg in self.arguments:
+            if arg.flags:
+                return True
 
-    @property
-    def flags(self):
-        flags = []
-        for a in self.arguments:
-            flags.extend(a.flags)
-        return ", ".join(flags)
+
+def make_member(name, properties, arguments, session):
+    mem = Member(name, properties)
+    mem.arguments = arguments
+    mem.properties = properties
+    try:
+        mem.count = parser_tools.get_int_range(properties.get("count"))
+    except ValueError:
+        args = [a for a in arguments if "count" in a.properties] or [None]
+        session.logger.error("Invalid count: %s. The value must be an integer "
+                             "or a range of integers (from..to, from.. or ..to)"
+                             % properties["count"], argument=args[0])
+    mem.default_value = properties.get("default_value")
+    if "member_type" in properties:
+        mem.member_type = deducedtype.parse_type(properties["member_type"])
+    return mem

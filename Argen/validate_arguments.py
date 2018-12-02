@@ -55,3 +55,7 @@ def validate_arguments(session):
                                 " necessarily the state they have where the "
                                 " argument appears on the command line."
                                 % (is_are, arg.metavar))
+    # for mem in session.members:
+    #     if mem.count and mem.count == (1, 1) and len(mem.arguments) > 1:
+    #         session.logger.warn("")
+    # return option.member.count[0] > 0 and len(option.member.arguments) == 1

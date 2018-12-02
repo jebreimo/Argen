@@ -1,0 +1,2 @@
+  {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
+  {{--special| member: s |op: assign | value: {"$spec$"}}}

@@ -35,8 +35,11 @@ struct Argument
     Argument() = default;
 
 [[[IF has_short_options]]]
-    Argument(std::string_view argument, bool is_short_option)
+    Argument(std::string_view argument,
+             bool is_option,
+             bool is_short_option)
             : string(argument),
+              is_option(is_option),
               is_short_option(is_short_option)
     {}
 [[[ELSE]]]
@@ -47,6 +50,7 @@ struct Argument
 
     std::string_view string;
 [[[IF has_short_options]]]
+    bool is_option = false;
     bool is_short_option = false;
 [[[ENDIF]]]
 };
@@ -113,7 +117,7 @@ public:
             size_t length = 1;
             if (*m_ArgIt == 0)
                 m_ArgIt = *++m_ArgvIt;
-            return {{arg, length}, true};
+            return {{arg, length}, true, true};
         }
 
         if (resembles_short_option(m_ArgIt))
@@ -123,13 +127,14 @@ public:
             m_ArgIt += 2;
             if (*m_ArgIt == 0)
                 m_ArgIt = *++m_ArgvIt;
-            return {{arg, length}, true};
+            return {{arg, length}, true, true};
         }
 [[[ENDIF]]]
 
         auto arg = m_ArgIt;
         size_t length = 0;
-        if (resembles_option(m_ArgIt))
+        bool is_option = resembles_option(m_ArgIt);
+        if (is_option)
         {
             length += 2;
             while (m_ArgIt[length] != 0 && m_ArgIt[length] != '=')
@@ -149,7 +154,7 @@ public:
                 m_ArgIt = *++m_ArgvIt;
         }
 
-        return {{arg, length}, false};
+        return {{arg, length}, is_option, false};
     }
 [[[IF has_values]]]
 
