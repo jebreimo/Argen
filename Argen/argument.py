@@ -91,6 +91,12 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     arg.callback = properties.get("callback")
     if "flags" in properties:
         arg.flags = properties["flags"].split()
+    try:
+        arg.count = parser_tools.get_int_range(properties.get("count"))
+    except ValueError:
+        session.logger.error("Invalid count: %s. The value must be an integer "
+                             "or a range of integers (from..to, from.. or ..to)"
+                             % properties["count"], argument=arg)
     arg.index = get_int_property(properties, "index")
     arg.inline = properties.get("inline")
     arg.member_name = properties.get("member_name")

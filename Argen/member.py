@@ -15,7 +15,7 @@ class Member:
         self.name = name
         self.properties = properties
         self.arguments = None
-        self.count = None
+        self.member_count = None
         self.default_value = None
         self.member_type = None
 
@@ -32,17 +32,29 @@ class Member:
                 return True
 
 
+def get_accumulated_count(arguments):
+    min_count = max_count = 0
+    for arg in arguments:
+        count = arg.count
+        if not count:
+            continue
+        if count[0]:
+            min_count += count[0]
+        if count[1] is None:
+            max_count = None
+        elif max_count is not None:
+            max_count += count[1]
+    if min_count != 0 or max_count != 0:
+        return min_count, max_count
+    else:
+        return None
+
+
 def make_member(name, properties, arguments, session):
     mem = Member(name, properties)
     mem.arguments = arguments
     mem.properties = properties
-    try:
-        mem.count = parser_tools.get_int_range(properties.get("count"))
-    except ValueError:
-        args = [a for a in arguments if "count" in a.properties] or [None]
-        session.logger.error("Invalid count: %s. The value must be an integer "
-                             "or a range of integers (from..to, from.. or ..to)"
-                             % properties["count"], argument=args[0])
+    mem.member_count = get_accumulated_count(arguments)
     mem.default_value = properties.get("default_value")
     if "member_type" in properties:
         mem.member_type = deducedtype.parse_type(properties["member_type"])

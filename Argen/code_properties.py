@@ -131,7 +131,7 @@ def get_header_includes(type_names):
 def get_counted_members(session):
     has_count = lambda a, b: a or b
     return [m for m in session.members
-            if m.count and has_count(*m.count) and m.is_option()]
+            if m.member_count and has_count(*m.member_count) and m.is_option()]
 
 
 def get_argument_groups(session):

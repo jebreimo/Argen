@@ -21,9 +21,7 @@ def find_shortest_string(strings):
 
 
 def is_mandatory(option):
-    if not option.member or not option.member.count:
-        return False
-    return option.member.count[0] > 0 and len(option.member.arguments) == 1
+    return option.count and option.count[0] > 0
 
 
 def format_option(arg, session, is_optional=False):

@@ -7,12 +7,12 @@
 # License text is included with the source distribution.
 # ===========================================================================
 
-ARGUMENT_PROPERTIES = {"callback", "flags", "index",
+ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
                        "inline", "member_name", "operation", "post_operation",
                        "separator", "separator_count", "text", "valid_values",
                        "value", "value_type", "variable"}
 
-MEMBER_PROPERTIES = {"count", "default_value", "member_type"}
+MEMBER_PROPERTIES = {"member_count", "default_value", "member_type"}
 
 _REVERSE_PROPERTY_ALIASES = {
     "callback": ["call"],

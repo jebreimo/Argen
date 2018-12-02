@@ -27,7 +27,7 @@ def deduce_operation(argument, member_operations):
     elif not argument.member:
         return "none"
 
-    member_has_count = argument.member.count and argument.member.count[1] != 1
+    member_has_count = argument.member.member_count and argument.member.member_count[1] != 1
     argument_has_count = argument.separator_count \
         and argument.separator_count[1] != 0
     if argument.member and argument.member.name in member_operations:
