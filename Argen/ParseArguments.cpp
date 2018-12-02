@@ -190,7 +190,8 @@ namespace Foo { namespace Bar
         " [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--] [-i\002PATH]"
         " [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z] <-f\002FILE>"
         " <--ting> <--tang=N> <--cuboid=LENxWIDxHEI> <-m\002NUM> <test\002name>"
-        " <the-list> unnamed <out-file>\n"
+        " <test\002name> [test\002name] [test\002name] <the-list> [unnamed]"
+        " [out-file]\n"
         "\n"
         "Executes unit tests.\n"
         "\n"
@@ -284,7 +285,8 @@ namespace Foo { namespace Bar
         " [-n\002X,Y] [-p\002X,Y,Z] [--string=STR] [--kjell] [--] [-i\002PATH]"
         " [--sysinclude] [--stygg=N] [-u\002NAME:ID] [-] [-z] <-f\002FILE>"
         " <--ting> <--tang=N> <--cuboid=LENxWIDxHEI> <-m\002NUM> <test\002name>"
-        " <the-list> unnamed <out-file>\n";
+        " <test\002name> [test\002name] [test\002name] <the-list> [unnamed]"
+        " [out-file]\n";
 
     class HelpTextWriter
     {

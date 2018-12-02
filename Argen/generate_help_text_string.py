@@ -59,23 +59,52 @@ def generate_options_text(session):
     return " ".join((" ".join(optional), " ".join(mandatory)))
 
 
-# def generate_arg_blah_blah(arg):
-#     if not arg.member or arg.member.count is None \
-#             or len(arg.member.arguments) != 1:
-#         return 1, 0
-#     man_count = opt_count = 0
-#     count = arg.member.count
-#     if count[0]:
-#         man_count = count[0]
-#     if count[1] and count[1] != count[0]:
-#         opt_count = count[1] - count[1]
+def get_mandatory_optional(arg):
+    if arg.count is None:
+        return 1, 0
+    man_count = opt_count = 0
+    count = arg.count
+    if count[0]:
+        man_count = count[0]
+    elif count[0] == 0:
+        opt_count = 1
+    if count[1] and count[1] != count[0]:
+        opt_count = count[1] - count[0]
+    return man_count, opt_count
+
+
+MAX_ARGUMENT_EXPANSION = 4
+
+
+def format_mandatory(str):
+    if not str or (str[0] == "<" and str[-1] == ">"):
+        return str
+    if str[0] == "[" and str[-1] == "]":
+        str = str[1:-1]
+    return "<%s>" % str
+
+
+def format_optional(str):
+    if not str or (str[0] == "[" and str[-1] == "]"):
+        return str
+    if str[0] == "<" and str[-1] == ">":
+        str = str[1:-1]
+    return "[%s]" % str
 
 
 def generate_arguments_text(session):
     arguments = [a for a in session.arguments if not a.flags and a.metavar]
     arguments.sort(key=lambda a: a.index)
-    return " ".join(a.metavar.replace(" ", session.syntax.non_breaking_space)
-                    for a in arguments)
+    nbs = session.syntax.non_breaking_space
+    result = []
+    for arg in arguments:
+        name = arg.metavar.replace(" ", nbs)
+        man, opt = get_mandatory_optional(arg)
+        for i in range(1 if man == 1 or MAX_ARGUMENT_EXPANSION < man else man):
+            result.append(format_mandatory(name))
+        for i in range(1 if opt == 1 or MAX_ARGUMENT_EXPANSION < opt else opt):
+            result.append(format_optional(name))
+    return " ".join(result)
 
 
 ESCAPED_CHARS = {
