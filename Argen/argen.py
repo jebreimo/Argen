@@ -16,9 +16,9 @@ from parse_help_text import parse_help_text
 from replace_variables import replace_variables
 from sections import read_sections
 from session import Session
-import deduce_arguments as da
 import deduce_flags_and_metavars as dfam
 import deduce_indices as di
+import deduce_member_count as dmc
 import deduce_member_names as dmn
 import deduce_member_types as dmt
 import deduce_operations as do
@@ -117,13 +117,13 @@ def make_deductions(session):
         dfam.deduce_flags_and_metavars,
         don.deduce_option_names,
         dso.deduce_special_options,
-        da.deduce_arguments,
         dmn.deduce_member_names,
         ds.deduce_separator_counts,
         mm.make_members,
         di.deduce_indices,
         dv.deduce_values,
         do.deduce_operations,
+        dmc.deduce_member_count,
         dvt.deduce_value_types,
         dmt.deduce_member_types,
         dvv.deduce_valid_values,

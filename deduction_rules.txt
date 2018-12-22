@@ -1,3 +1,45 @@
+Deduction:
+
+1. Deduce flags and metavars from text.
+dfam.deduce_flags_and_metavars,
+
+2. Deduce the names of options from flags
+don.deduce_option_names,
+
+3. Deduce help option and final option
+dso.deduce_special_options,
+
+4. Deduce member names.
+dmn.deduce_member_names,
+
+5. Deduce separator counts from separator and metavar.
+ds.deduce_separator_counts,
+
+6. Make members.
+mm.make_members,
+
+8. Deduce indices (for the obscure situation where arguments are defined out of order)
+di.deduce_indices,
+
+9. Deduce values. "true" is the only value that can be deduced.
+dv.deduce_values,
+
+10. Deduce operations.
+do.deduce_operations,
+
+11. Deduce member count.
+dmc.deduce_member_count,
+
+12. Deduce value types
+dvt.deduce_value_types,
+
+13. Deduce member types.
+dmt.deduce_member_types,
+
+14. Deduce valid values.
+dvv.deduce_valid_values,
+
+
 Argument properties
 -------------------
 // arguments

@@ -1,6 +1,5 @@
 #pragma once
 #include <iosfwd>
-#include <string>
 #include <vector>
 
 /** @brief The result returned by parse_arguments
@@ -14,9 +13,9 @@ struct Arguments
         return parse_arguments_result == Result::RESULT_OK;
     }
 
-    /** @brief Member for options -s and --special.
+    /** @brief Member for options --cuboid, --rect and --line.
       */
-    std::vector<std::string> s = {"Kjakan Gundersen"};
+    std::vector<int> cuboid = {};
 
 
     enum Result
@@ -38,12 +37,6 @@ struct Arguments
       * are read.
       */
     Result parse_arguments_result = RESULT_OK;
-
-    /** This member is reserved for internal use in parse_arguments.
-      *
-      * It's always nullptr.
-      */
-    struct MemberCounters* reserved_for_internal_use = nullptr;
 };
 
 /** @brief Parses the arguments in @a argv.
@@ -54,8 +47,8 @@ struct Arguments
   *     accordance with the parsed arguments. If @a argc is 0 the
   *     returned value is a nullptr.
   */
-Arguments parse_arguments(int argc, char* argv[], bool autoExit = true);
+Arguments parse_arguments(int argc, char* argv[], bool auto_exit = true);
 
-void write_help_text(std::ostream& stream, unsigned lineWidth = 0);
+void write_help_text(std::ostream& stream, unsigned line_width = 0);
 
-void write_brief_help_text(std::ostream& stream, unsigned lineWidth = 0);
+void write_brief_help_text(std::ostream& stream, unsigned line_width = 0);

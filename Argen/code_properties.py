@@ -28,6 +28,7 @@ class CodeProperties:
         # self.abbreviated_options = True
         # self.non_short_options = True
         # self.special_options = True
+        self.counted_options = None
         self.header_template = None
         self.source_template = None
         self.tracked_members = None
@@ -128,10 +129,13 @@ def get_header_includes(type_names):
     return sorted(includes)
 
 
-def get_counted_members(session):
-    has_count = lambda a, b: a or b
-    return [m for m in session.members
-            if m.member_count and has_count(*m.member_count) and m.is_option()]
+def get_counted_options(session):
+    def is_count(c): return c and (c[0] or c[1])
+    # for arg in session.arguments:
+    #     if has_count(arg.count):
+    #
+    return [a for a in session.arguments
+            if is_count(a.count) and a.flags]
 
 
 def get_argument_groups(session):
@@ -247,7 +251,7 @@ def make_code_properties(session):
 
     all_type_names, parsed_type_names = get_argument_type_names(session)
     result.header_includes = get_header_includes(all_type_names)
-    result.counted_members = get_counted_members(session)
+    result.counted_options = get_counted_options(session)
     result.parsed_type_names = parsed_type_names
 
     result.source_includes = ['"%s"' % session.header_file_name()]

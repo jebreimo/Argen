@@ -17,18 +17,23 @@ def count_separators(text, separator):
     positions = parser_tools.find_all(text, separator)
     if not positions:
         return 0, None
-    final_token_pos = positions[-1] + len(separator)
-    if parser_tools.is_ellipsis(text[final_token_pos:]):
+    if text.endswith(".."):
         return 0, None
     return len(positions), len(positions)
 
 
+def get_first_and_last(str):
+    return str[0] + str[-1]
+
+
 def deduce_separator_counts(session):
     for arg in session.arguments:
-        if arg.separator and not arg.separator_count and arg.arguments:
-            if arg.arguments and arg.arguments[0] != "...":
-                arg.separator_count = count_separators(arg.arguments[0][1:-1],
-                                                       arg.separator)
-                session.logger.debug("Deduced separator count: (%s, %s)"
-                                     % arg.separator_count,
-                                     argument=arg)
+        if arg.separator and not arg.separator_count and arg.metavar:
+            metavar = arg.metavar
+            if get_first_and_last(arg.metavar) in ("<>", "[]"):
+                metavar = arg.metavar[1:-1]
+            arg.separator_count = count_separators(metavar,
+                                                   arg.separator)
+            session.logger.debug("Deduced separator count: (%s, %s)"
+                                 % arg.separator_count,
+                                 argument=arg)

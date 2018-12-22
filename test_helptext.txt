@@ -1,2 +1,30 @@
-  {{-s TEXT| count: ..10 | default: {"Kjakan Gundersen"}}}
-  {{--special| member: s |op: assign | value: {"$spec$"}}}
+  {{--cuboid=LENxWIDxHEI| separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | size:1..3}}
+  {{--rect=LENxWID| separator: x | member: cuboid}}
+  {{--line=LEN| member: cuboid }}
+
+Distinguish between count and size.
+Default count for options is 0...
+Default count for arguments is 1.
+Default size is 1.
+Size 0..1 can result in a vector or std::optional.
+
+Rules for size:
+If min-count is greater than one, then min-size equals min-count.
+For arguments which don't share its member with other options or arguments, size = count.
+If multiple options or arguments share the same member, the member's min and max size are the sum of min and max counts.
+
+Rules for count:
+If multiple options (but no arguments) share the same member, and only one of those options has count:
+    then this count applies to all of them.
+
+
+Operation
+Count
+Size
+SeparatorCount
+
+Default size for options can be -1, meaning that there's a single value, and it can be set 0 or more times.
+Default size for arguments is 1.
+
+The example above then becomes meaningful with "size: 1".
+

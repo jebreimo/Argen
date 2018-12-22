@@ -15,9 +15,9 @@ class Member:
         self.name = name
         self.properties = properties
         self.arguments = None
-        self.member_count = None
         self.default_value = None
         self.member_type = None
+        self.size = None
 
     def __str__(self):
         values = self.__dict__
@@ -32,29 +32,50 @@ class Member:
                 return True
 
 
-def get_accumulated_count(arguments):
-    min_count = max_count = 0
+def get_accumulated_size(arguments):
+    min_size = max_size = 0
     for arg in arguments:
         count = arg.count
         if not count:
-            continue
+            if not arg.flags:
+                count = (1, 1)
+            else:
+                continue
         if count[0]:
-            min_count += count[0]
+            min_size += count[0]
         if count[1] is None:
-            max_count = None
-        elif max_count is not None:
-            max_count += count[1]
-    if min_count != 0 or max_count != 0:
-        return min_count, max_count
+            max_size = None
+        elif max_size is not None:
+            max_size += count[1]
+    if min_size != 0 or max_size != 0:
+        return min_size, max_size
     else:
         return None
+
+
+def foo(member, name, session):
+    try:
+        return parser_tools.get_int_range(member.properties.get(name))
+    except ValueError:
+        for argument in member.arguments:
+            if name in argument.properties:
+                break
+        else:
+            argument = None
+        session.logger.error(
+            "Invalid %s: %s. The value must be an integer "
+            "or a range of integers (from..to, from.. or ..to)"
+            % (name, member.properties[name]), argument=argument)
 
 
 def make_member(name, properties, arguments, session):
     mem = Member(name, properties)
     mem.arguments = arguments
     mem.properties = properties
-    mem.member_count = get_accumulated_count(arguments)
+    mem.size = foo(mem, "size", session)
+    if not mem.size:
+        mem.size = get_accumulated_size(arguments)
+
     mem.default_value = properties.get("default_value")
     if "member_type" in properties:
         mem.member_type = deducedtype.parse_type(properties["member_type"])

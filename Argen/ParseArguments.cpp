@@ -1,6 +1,6 @@
 //****************************************************************************
 // Copyright © 2018 Jan Erik Breimo. All rights reserved.
-// Created by Jan Erik Breimo on 2018-12-02.
+// Created by Jan Erik Breimo on 2018-12-22.
 //
 // This file is distributed under the BSD License.
 // License text is included with the source distribution.
@@ -661,6 +661,12 @@ namespace Foo { namespace Bar
         return !stream.fail() && stream.eof();
     }
 
+    bool from_string(const std::string_view& str, std::string& value)
+    {
+        value = str;
+        return true;
+    }
+
     bool read_value(std::string_view& value,
                     ArgumentIterator& iterator,
                     const Argument& argument)
@@ -694,17 +700,19 @@ namespace Foo { namespace Bar
         return result;
     }
 
+    template <typename Arg>
     bool split_value(std::vector<std::string_view>& parts,
                      const std::string_view& value,
                      char separator,
                      size_t min_splits, size_t max_splits,
-                     const Argument& argument)
+                     const Arg& argument)
     {
         parts = split_string(value, separator, max_splits);
         if (parts.size() < min_splits + 1)
         {
             std::stringstream ss;
-            ss << argument << ": incorrect number of parts in value \""
+            ss << to_string(argument)
+               << ": incorrect number of parts in value \""
                << value << "\".\nIt must have ";
             if (min_splits == max_splits)
                 ss << "exactly ";
@@ -718,10 +726,10 @@ namespace Foo { namespace Bar
         return true;
     }
 
-    template <typename T>
+    template <typename T, typename Arg>
     bool parse_and_assign(T& value,
                           const std::string_view& string,
-                          const Argument& argument)
+                          const Arg& argument)
     {
         if (from_string(string, value))
             return true;
@@ -731,10 +739,10 @@ namespace Foo { namespace Bar
         return false;
     }
 
-    template <typename T>
+    template <typename T, typename Arg>
     bool parse_and_assign(std::vector<T>& value,
                           const std::vector<std::string_view>& strings,
-                          const Argument& argument)
+                          const Arg& argument)
     {
         value.clear();
         for (auto& string : strings)
@@ -751,10 +759,10 @@ namespace Foo { namespace Bar
         return true;
     }
 
-    template <typename T>
+    template <typename T, typename Arg>
     bool parse_and_append(std::vector<T>& value,
                           const std::string_view& string,
-                          const Argument& argument)
+                          const Arg& argument)
     {
         value.clear();
         T temp;
@@ -782,10 +790,10 @@ namespace Foo { namespace Bar
         return true;
     }
 
-    template <typename T>
+    template <typename T, typename Arg>
     bool parse_and_extend(std::vector<T>& value,
                           const std::vector<std::string_view>& strings,
-                          const Argument& argument)
+                          const Arg& argument)
     {
         for (auto& string : strings)
         {
@@ -801,10 +809,10 @@ namespace Foo { namespace Bar
         return true;
     }
 
-    template <typename T, typename CheckFunc>
+    template <typename T, typename CheckFunc, typename Arg>
     bool check_value(T value, CheckFunc check_func,
                      const char* legal_values_text,
-                     const Argument& argument)
+                     const Arg& argument)
     {
         if (!check_func(value))
         {
@@ -817,11 +825,11 @@ namespace Foo { namespace Bar
         return true;
     }
 
-    template <typename T, typename CheckFunc>
+    template <typename T, typename CheckFunc, typename Arg>
     bool check_values(const std::vector<T>& values,
                       CheckFunc check_func,
                       const char* legal_values_text,
-                      const Argument& argument)
+                      const Arg& argument)
     {
         for (auto&& value : values)
         {
@@ -855,7 +863,17 @@ namespace Foo { namespace Bar
         UNKNOWN_OPTION
     };
 
+    struct MemberCounters
+    {
+        size_t file_counter = 0;
+        size_t ting_counter = 0;
+        size_t cuboid_counter = 0;
+        size_t s_counter = 0;
+        size_t month_counter = 0;
+    };
+
     OptionResult process_option(Arguments& result,
+                                MemberCounters& counters,
                                 Argument& arg,
                                 int option_code,
                                 ArgumentIterator& arg_it)
@@ -915,6 +933,7 @@ namespace Foo { namespace Bar
             {
                 return OptionResult::INVALID_OPTION;
             }
+            ++counters.file_counter;
             break;
         case Option_host:
             if (!read_value(value, arg_it, arg)
@@ -925,6 +944,7 @@ namespace Foo { namespace Bar
             break;
         case Option_ting:
             result.ting = 10.0;
+            ++counters.ting_counter;
             break;
         case Option_tang:
             if (!read_value(value, arg_it, arg)
@@ -968,6 +988,7 @@ namespace Foo { namespace Bar
             {
                 return OptionResult::INVALID_OPTION;
             }
+            ++counters.cuboid_counter;
             break;
         case Option_rect:
             if (!read_value(value, arg_it, arg)
@@ -1001,6 +1022,7 @@ namespace Foo { namespace Bar
             {
                 return OptionResult::INVALID_OPTION;
             }
+            ++counters.s_counter;
             break;
         case Option_special:
             result.s = {"$spec$"};
@@ -1036,6 +1058,7 @@ namespace Foo { namespace Bar
             {
                 return OptionResult::INVALID_OPTION;
             }
+            ++counters.month_counter;
             break;
         case Option_string:
             if (!read_value(value, arg_it, arg)
@@ -1094,6 +1117,36 @@ namespace Foo { namespace Bar
         return OptionResult::NORMAL_OPTION;
     }
 
+    bool check_option_counts(Arguments& result, MemberCounters& counters)
+    {
+        if (counters.file_counter != 3)
+        {
+            write_error_text("-f or --file must be given 1 time.");
+            return false;
+        }
+        if (counters.ting_counter != 3)
+        {
+            write_error_text("--ting must be given 1 time.");
+            return false;
+        }
+        if (counters.cuboid_counter != 3)
+        {
+            write_error_text("--cuboid must be given 1 time.");
+            return false;
+        }
+        if (counters.s_counter != 3)
+        {
+            write_error_text("-s must not be given more than 10 times.");
+            return false;
+        }
+        if (counters.month_counter != 3)
+        {
+            write_error_text("-m or --month must be given 3 times.");
+            return false;
+        }
+        return true;
+    }
+
     Arguments parse_arguments(int argc, char* argv[], bool auto_exit)
     {
         if (argc == 0)
@@ -1102,6 +1155,7 @@ namespace Foo { namespace Bar
         program_name = get_base_name(argv[0]);
 
         Arguments result;
+        MemberCounters counters;
         std::vector<std::string_view> arguments;
         ArgumentIterator arg_it(argc - 1, argv + 1);
         bool final_option = false;
@@ -1111,7 +1165,7 @@ namespace Foo { namespace Bar
             if (arg.is_option)
             {
                 auto option_code = find_option_code(arg);
-                switch (process_option(result, arg, option_code, arg_it))
+                switch (process_option(result, counters, arg, option_code, arg_it))
                 {
                 case OptionResult::FINAL_OPTION:
                     final_option = true;
@@ -1142,7 +1196,18 @@ namespace Foo { namespace Bar
                 arguments.push_back(arg.string);
             }
             if (final_option)
+            {
+                while (arg_it.has_next())
+                    arguments.push_back(arg_it.next_argument().string);
                 break;
+            }
+        }
+        if (!check_option_counts(result, counters))
+        {
+            if (auto_exit)
+                exit(EINVAL);
+            result.parse_arguments_result = Arguments::RESULT_ERROR;
+            return result;
         }
         return result;
     }

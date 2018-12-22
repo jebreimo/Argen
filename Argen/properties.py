@@ -12,18 +12,19 @@ ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
                        "separator", "separator_count", "text", "valid_values",
                        "value", "value_type", "variable"}
 
-MEMBER_PROPERTIES = {"member_count", "default_value", "member_type"}
+MEMBER_PROPERTIES = {"member_size", "default_value", "member_type"}
 
 _REVERSE_PROPERTY_ALIASES = {
     "callback": ["call"],
     "default_value": ["default"],
     "member_name": ["mem", "member", "membername"],
+    "member_size": ["size"],
+    "member_type": ["memtype", "mem_type", "memtype", "mem_type",
+                    "membertype"],
     "operation": ["op"],
     "post_operation": ["postop", "post_op", "postoperation"],
     "separator": ["sep"],
     "separator_count": ["sepcount", "sep_count", "separatorcount"],
-    "member_type": ["memtype", "mem_type", "memtype", "mem_type",
-                    "membertype"],
     "valid_values": ["validvalues", "values"],
     "value_type": ["type", "valuetype"],
     "variable": ["var"]
@@ -49,7 +50,8 @@ LEGAL_OPERATIONS = {
     "none",
     "assign",
     "append",
-    "extend"
+    "extend",
+    "help"
 }
 
 LEGAL_POST_OPERATIONS = {

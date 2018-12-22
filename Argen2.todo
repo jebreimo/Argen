@@ -19,3 +19,4 @@
     - "event-mode" where arguments are processed when they are first encountered
     - "batch-mode" where all arguments are read into a list before they are processed
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
+- If an argument has count, has operation "append" or "extend" and is the sole owner of its member, count should be considered the length of the list.

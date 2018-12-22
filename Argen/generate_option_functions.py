@@ -46,6 +46,12 @@ bool from_string(const std::string_view& str, T& value)
     return !stream.fail() && stream.eof();
 }
 
+bool from_string(const std::string_view& str, std::string& value)
+{
+    value = str;
+    return true;
+}
+
 bool read_value(std::string_view& value,
                 ArgumentIterator& iterator,
                 const Argument& argument)
@@ -80,17 +86,19 @@ std::vector<std::string_view> split_string(
     return result;
 }
 
+template <typename Arg>
 bool split_value(std::vector<std::string_view>& parts,
                  const std::string_view& value,
                  char separator,
                  size_t min_splits, size_t max_splits,
-                 const Argument& argument)
+                 const Arg& argument)
 {
     parts = split_string(value, separator, max_splits);
     if (parts.size() < min_splits + 1)
     {
         std::stringstream ss;
-        ss << argument << ": incorrect number of parts in value \\""
+        ss << to_string(argument)
+           << ": incorrect number of parts in value \\""
            << value << "\\".\\nIt must have ";
         if (min_splits == max_splits)
             ss << "exactly ";
@@ -104,10 +112,10 @@ bool split_value(std::vector<std::string_view>& parts,
     return true;
 }
 [[[ENDIF]]]    
-template <typename T>
+template <typename T, typename Arg>
 bool parse_and_assign(T& value,
                       const std::string_view& string,
-                      const Argument& argument)
+                      const Arg& argument)
 {
     if (from_string(string, value))
         return true;
@@ -117,10 +125,10 @@ bool parse_and_assign(T& value,
     return false;
 }
 
-template <typename T>
+template <typename T, typename Arg>
 bool parse_and_assign(std::vector<T>& value,
                       const std::vector<std::string_view>& strings,
-                      const Argument& argument)
+                      const Arg& argument)
 {
     value.clear();
     for (auto& string : strings)
@@ -137,10 +145,10 @@ bool parse_and_assign(std::vector<T>& value,
     return true;
 }
 
-template <typename T>
+template <typename T, typename Arg>
 bool parse_and_append(std::vector<T>& value,
                       const std::string_view& string,
-                      const Argument& argument)
+                      const Arg& argument)
 {
     value.clear();
     T temp;
@@ -168,10 +176,10 @@ bool extend(std::vector<T>& values, std::vector<T> newValues)
     return true;
 }
 
-template <typename T>
+template <typename T, typename Arg>
 bool parse_and_extend(std::vector<T>& value,
                       const std::vector<std::string_view>& strings,
-                      const Argument& argument)
+                      const Arg& argument)
 {
     for (auto& string : strings)
     {
@@ -187,10 +195,10 @@ bool parse_and_extend(std::vector<T>& value,
     return true;
 }
 
-template <typename T, typename CheckFunc>
+template <typename T, typename CheckFunc, typename Arg>
 bool check_value(T value, CheckFunc check_func,
                  const char* legal_values_text,
-                 const Argument& argument)
+                 const Arg& argument)
 {
     if (!check_func(value))
     {
@@ -203,11 +211,11 @@ bool check_value(T value, CheckFunc check_func,
     return true;
 }
 
-template <typename T, typename CheckFunc>
+template <typename T, typename CheckFunc, typename Arg>
 bool check_values(const std::vector<T>& values,
                   CheckFunc check_func,
                   const char* legal_values_text,
-                  const Argument& argument)
+                  const Arg& argument)
 {
     for (auto&& value : values)
     {

@@ -63,7 +63,6 @@ class Argument:
         self.valid_values = None
         self.value = None
         self.member = None
-        self.arguments = None
         self.value_type = None
 
     def __repr__(self):

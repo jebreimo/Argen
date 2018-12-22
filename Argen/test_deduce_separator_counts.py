@@ -11,3 +11,4 @@ import deduce_separator_counts as ds
 
 def test():
     assert ds.count_separators("FILE:FILE:...", ":") == (0, None)
+    assert ds.count_separators("FILE:FILE...", ":") == (0, None)

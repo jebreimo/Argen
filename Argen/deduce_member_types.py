@@ -65,8 +65,8 @@ def deduce_member_type(member, logger):
         typ = deduce_member_type_from_default_value(member)
         if typ:
             types.append(typ)
-    if member.member_count:
-        if member.member_count[1] != 1:
+    if member.size:
+        if member.size[1] != 1:
             types.append(dt.DeducedType(dt.Category.LIST,
                                         subtypes=[dt.DeducedType()],
                                         source="count"))
