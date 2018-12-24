@@ -44,7 +44,7 @@ OTHER OPTIONS
   {{-@| member: at | value: {2, 5, 3} | default: {0, 2, 4}}}  Text
   {{--flag| default: true}}  Text
   {{--size=ROWSxCOLS| separator: x | default: {800, 600}}}
-  {{--cuboid=LENxWIDxHEI| separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | count:1}}
+  {{--cuboid=LENxWIDxHEI| separator: x | values: -1000..1000 : -1000..1000 : 0..1000 | size:1}}
   {{--rect=LENxWID| separator: x | member: cuboid}}
   {{--line=LEN| member: cuboid }}
   {{--antiflag| member: flag | value: false}}

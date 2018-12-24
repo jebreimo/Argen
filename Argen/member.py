@@ -17,7 +17,7 @@ class Member:
         self.arguments = None
         self.default_value = None
         self.member_type = None
-        self.size = None
+        self.member_size = None
 
     def __str__(self):
         values = self.__dict__
@@ -32,28 +32,7 @@ class Member:
                 return True
 
 
-def get_accumulated_size(arguments):
-    min_size = max_size = 0
-    for arg in arguments:
-        count = arg.count
-        if not count:
-            if not arg.flags:
-                count = (1, 1)
-            else:
-                continue
-        if count[0]:
-            min_size += count[0]
-        if count[1] is None:
-            max_size = None
-        elif max_size is not None:
-            max_size += count[1]
-    if min_size != 0 or max_size != 0:
-        return min_size, max_size
-    else:
-        return None
-
-
-def foo(member, name, session):
+def parse_size(member, name, session):
     try:
         return parser_tools.get_int_range(member.properties.get(name))
     except ValueError:
@@ -72,10 +51,7 @@ def make_member(name, properties, arguments, session):
     mem = Member(name, properties)
     mem.arguments = arguments
     mem.properties = properties
-    mem.size = foo(mem, "size", session)
-    if not mem.size:
-        mem.size = get_accumulated_size(arguments)
-
+    mem.member_size = parse_size(mem, "size", session)
     mem.default_value = properties.get("default_value")
     if "member_type" in properties:
         mem.member_type = deducedtype.parse_type(properties["member_type"])

@@ -65,8 +65,8 @@ def deduce_member_type(member, logger):
         typ = deduce_member_type_from_default_value(member)
         if typ:
             types.append(typ)
-    if member.size:
-        if member.size[1] != 1:
+    if member.member_size:
+        if member.member_size[1] != 1:
             types.append(dt.DeducedType(dt.Category.LIST,
                                         subtypes=[dt.DeducedType()],
                                         source="count"))
@@ -98,11 +98,13 @@ def deduce_member_types(session):
                                         member.member_type),
                                      argument=member.arguments[0])
                 for arg in member.arguments[1:]:
-                    session.logger.debug("...also defined here.", argument=arg)
+                    session.logger.debug("... the member is also defined here.",
+                                         argument=arg)
             else:
                 session.logger.error("Unable to deduce member type for %s."
                                      % member.name,
                                      argument=member.arguments[0])
                 for arg in member.arguments[1:]:
-                    session.logger.info("...also defined here.", argument=arg)
+                    session.logger.info("... the member is also defined here.",
+                                        argument=arg)
     update_value_types(session)
