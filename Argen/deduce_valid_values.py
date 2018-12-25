@@ -6,7 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-import deducedtype
+import deducedtype as dt
 
 
 def deduce_valid_values(session):
@@ -14,7 +14,7 @@ def deduce_valid_values(session):
         valid_values = arg.valid_values
         if valid_values:
             value_type = arg.value_type
-            if deducedtype.is_tuple(value_type):
+            if dt.is_tuple(value_type):
                 subtypes = value_type.subtypes
                 if len(valid_values) > len(subtypes):
                     session.logger.error(

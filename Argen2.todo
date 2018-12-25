@@ -11,6 +11,7 @@
 + Support case-insensitive options
 + Type deduction:
     + how value-type is interpreted must depend on the argument's operation
++ Don't maintain a separate count where vector::size() is sufficient to check if an option or argument has been given a correct number of times.
 - Display a warning if there is no help option
 - Have two modes for generated parse_arguments: one that leaves argc and argv unchanged, one that removes all known options and arguments.
 - Deduce inline and member_inline, that is, replace member references with variable.member.
@@ -19,4 +20,3 @@
     - "event-mode" where arguments are processed when they are first encountered
     - "batch-mode" where all arguments are read into a list before they are processed
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
-- If an argument has count, has operation "append" or "extend" and is the sole owner of its member, count should be considered the length of the list.

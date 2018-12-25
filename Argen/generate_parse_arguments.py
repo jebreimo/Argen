@@ -38,7 +38,28 @@ def format_count(count):
         return "must be given %d or %d times" % (count[0], count[1])
     else:
         return "must be given between %d and %d times" % (count[0], count[1])
-    return ""
+
+
+def generate_test(value_range, variable):
+    lo, hi = value_range
+    if not lo and not hi:
+        return None
+    elif lo == hi:
+        return f"{variable} != {lo}"
+    elif lo and hi:
+        return f"{variable} < {lo} || {hi} < {variable}"
+    elif lo:
+        return f"{variable} < {lo}"
+    else:
+        return f"{hi} < {variable}"
+
+
+def get_all_flags(arguments):
+    flags = []
+    for arg in arguments:
+        if arg.flags:
+            flags.extend(arg.flags)
+    return flags
 
 
 class ParseArgumentsGenerator(templateprocessor.Expander):
@@ -68,19 +89,31 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
     def option_counter_checks(self, *args):
         result = []
         for opt in self._session.code_properties.counted_options:
-            result.append("if (counters.%s_counter != 3)" % opt.option_name)
+            test = generate_test(opt.count,
+                                 "counters.%s_counter" % opt.option_name)
+            result.append("if (%s)" % test)
             result.append("{")
             result.append("    write_error_text(\"%s %s.\");"
                           % (join_text(opt.flags, ", ", " or "),
                              format_count(opt.count)))
             result.append("    return false;")
             result.append("}")
-        # if (result.month.size() != 3)
-        # {
-        #     write_error_text("-m or --month must be given 3 times.");
-        #     return false;
-        # }
         return result
+
+    def member_size_checks(self, *args):
+        result = []
+        for mem in self._session.code_properties.sized_members:
+            test = generate_test(mem.member_size, "result.%s.size()" % mem.name)
+            result.append("if (%s)" % test)
+            result.append("{")
+            result.append("    write_error_text(\"%s %s.\");"
+                          % (join_text(get_all_flags(mem.arguments),
+                                       ", ", " or "),
+                             format_count(mem.member_size)))
+            result.append("    return false;")
+            result.append("}")
+        return result
+
 
 def generate_parse_arguments(session):
     return templateprocessor.make_lines(PARSE_ARGUMENTS_TEMPLATE,
@@ -142,6 +175,7 @@ OptionResult process_option(Arguments& result,
 bool check_option_counts(Arguments& result, MemberCounters& counters)
 {
     [[[option_counter_checks]]]
+    [[[member_size_checks]]]
     return true;
 }
 [[[ENDIF]]]

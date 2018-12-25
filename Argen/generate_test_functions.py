@@ -9,20 +9,26 @@
 import templateprocessor
 
 
-def generate_test(valid_values):
+def generate_test(value_range, variable):
+    lo, hi = value_range
+    if not lo and not hi:
+        return None
+    elif lo == hi:
+        return f"{variable} == {lo}"
+    elif lo and hi:
+        return f"{lo} <= {variable} && {variable} <= {hi}"
+    elif lo:
+        return f"{lo} <= {variable}"
+    else:
+        return f"{variable} <= {hi}"
+
+
+def generate_tests(valid_values):
     tests = []
     for entry in valid_values:
-        lo, hi = entry
-        if not lo and not hi:
-            continue
-        elif lo == hi:
-            tests.append(f"value == {lo}")
-        elif lo and hi:
-            tests.append(f"{lo} <= value && value <= {hi}")
-        elif lo:
-            tests.append(f"{lo} <= value")
-        else:
-            tests.append(f"value <= {hi}")
+        test = generate_test(entry, "value")
+        if test:
+            tests.append(test)
     return "[](auto&& v){return %s;}" % " || ".join(tests)
 
 
@@ -98,7 +104,7 @@ class CheckValueGenerator(templateprocessor.Expander):
         return str(self._value_type)
 
     def test(self, *args):
-        return generate_test(self._valid_values)
+        return generate_tests(self._valid_values)
 
     def legal_values(self, *args):
         return generate_text(self._valid_values)

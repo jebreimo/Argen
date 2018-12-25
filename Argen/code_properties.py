@@ -9,7 +9,7 @@
 import os.path
 import re
 from replace_variables import replace_variables
-from deducedtype import add_all_type_names
+import deducedtype as dt
 
 
 class CodeProperties:
@@ -29,6 +29,7 @@ class CodeProperties:
         # self.non_short_options = True
         # self.special_options = True
         self.counted_options = None
+        self.sized_members = None
         self.header_template = None
         self.source_template = None
         self.tracked_members = None
@@ -79,8 +80,8 @@ def get_argument_type_names(session):
         if arg.member:
             member_type = arg.member.member_type
             if arg.value is None and arg.operation != "none":
-                add_all_type_names(parsed_type_names, member_type)
-            add_all_type_names(all_type_names, member_type)
+                dt.add_all_type_names(parsed_type_names, member_type)
+            dt.add_all_type_names(all_type_names, member_type)
     return all_type_names, parsed_type_names
 
 
@@ -131,11 +132,26 @@ def get_header_includes(type_names):
 
 def get_counted_options(session):
     def is_count(c): return c and (c[0] or c[1])
-    # for arg in session.arguments:
-    #     if has_count(arg.count):
-    #
-    return [a for a in session.arguments
-            if is_count(a.count) and a.flags]
+    options = []
+    for arg in session.arguments:
+        size = arg.member and arg.member.member_size
+        count = arg.count
+        if is_count(count) and arg.flags \
+                and (size != count
+                     or arg.member.member_type.category != dt.Category.LIST):
+            options.append(arg)
+    return options
+
+
+def get_sized_members(session):
+    def is_count(c): return c and (c[0] or c[1])
+    members = []
+    for mem in session.members:
+        size = mem.member_size
+        if is_count(size) and mem.member_type.category == dt.Category.LIST \
+                and all(a.flags for a in mem.arguments):
+            members.append(mem)
+    return members
 
 
 def get_argument_groups(session):
@@ -252,6 +268,7 @@ def make_code_properties(session):
     all_type_names, parsed_type_names = get_argument_type_names(session)
     result.header_includes = get_header_includes(all_type_names)
     result.counted_options = get_counted_options(session)
+    result.sized_members = get_sized_members(session)
     result.parsed_type_names = parsed_type_names
 
     result.source_includes = ['"%s"' % session.header_file_name()]
