@@ -30,6 +30,14 @@ def get_operations(arguments):
     return {a.operation for a in arguments if a.operation}
 
 
+def report_member_size(member, arguments, session):
+    session.logger.debug("Deduced member_size: %s"
+                         % str(member.member_size), argument=arguments[0])
+    for i in range(1, len(arguments)):
+        session.logger.debug("... count is also defined here.",
+                             argument=arguments[i])
+
+
 def deduce_member_count(session):
     for mem in session.members:
         if mem.member_size:
@@ -38,11 +46,7 @@ def deduce_member_count(session):
         if count_sum:
             mem.member_size = count_sum
             args = [a for a in mem.arguments if a.count]
-            session.logger.debug("Deduced member_size: %s" % str(mem.member_size),
-                                 argument=args[0])
-            for i in range(1, len(args)):
-                session.logger.debug("... count is also defined here.",
-                                     argument=args[i])
+            report_member_size(mem, args, session)
         else:
             operations = get_operations(mem.arguments)
             if len(operations) == 1:
@@ -52,3 +56,5 @@ def deduce_member_count(session):
                     mem.member_size = (0, None)
                 elif "extend" in operations:
                     mem.member_size = (0, None)
+                args = [a for a in mem.arguments if a.operation]
+                report_member_size(mem, args, session)

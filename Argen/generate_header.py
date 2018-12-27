@@ -117,7 +117,6 @@ struct [[[class_name]]]
     }
 
     [[[members]]]
-
     enum Result
     {
         /** @brief [[[function_name]]] parsed the arguments successfully.
