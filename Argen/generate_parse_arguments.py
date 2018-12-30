@@ -122,7 +122,6 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
     def argument_size_checks(self, *args):
         result = []
         lo, hi = self.argument_size
-        result.append("")
         if lo == hi:
             phrase = str(lo)
         elif lo and not hi:
@@ -137,7 +136,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         result.append("{")
         result.append("    write_error_text(\"Incorrect number of arguments."
                       " Requires %s, received \"" % phrase)
-        result.append("                     + std::to_string(size) + \".\"")
+        result.append("                     + std::to_string(size) + \".\");")
         result.append("}")
         return result
 
