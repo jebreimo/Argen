@@ -7,6 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 import templateprocessor
+import tools
 from generate_parse_option import generate_option_cases
 
 
@@ -76,6 +77,10 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_values = any(a for a in session.arguments
                               if a.operation != "none" and a.value is None)
         self.has_member_counters = session.code_properties.counted_options
+        self.argument_size = tools.get_accumulated_count(session.code_properties.arguments)
+        self.has_argument_size_check = self.argument_size != (0, None)
+        self.has_final_checks = self.has_member_counters \
+                                or self.has_argument_size_check
 
     def option_cases(self, *args):
         return generate_option_cases(self._session)
@@ -113,6 +118,38 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
             result.append("    return false;")
             result.append("}")
         return result
+
+    def argument_size_checks(self, *args):
+        result = []
+        lo, hi = self.argument_size
+        result.append("")
+        if lo == hi:
+            phrase = str(lo)
+        elif lo and not hi:
+            phrase = "%d or more" % lo
+        elif not lo and hi:
+            phrase = "at most %d" % hi
+        elif lo == hi - 1:
+            phrase = "%d or %d" % (lo, hi)
+        else:
+            phrase = "from %d to %d" % (lo, hi)
+        result.append(f"if (size != {lo})")
+        result.append("{")
+        result.append("    write_error_text(\"Incorrect number of arguments."
+                      " Requires %s, received \"" % phrase)
+        result.append("                     + std::to_string(size) + \".\"")
+        result.append("}")
+        return result
+
+    def final_checks(self, *args):
+        checks = []
+        if self.has_member_counters:
+            checks.append("!check_option_counts(result, counters)")
+        if self.has_argument_size_check:
+            checks.append("!check_arguments_size(arguments.size())")
+        for i in range(1, len(checks)):
+            checks[i] = "|| " + checks[i]
+        return checks
 
 
 def generate_parse_arguments(session):
@@ -178,8 +215,16 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
     [[[member_size_checks]]]
     return true;
 }
-[[[ENDIF]]]
 
+[[[ENDIF]]]
+[[[IF has_argument_size_check]]]
+bool check_argument_size(size_t size)
+{
+    [[[argument_size_checks]]]
+    return true;
+}
+
+[[[ENDIF]]]
 [[[class_name]]] [[[function_name]]](int argc, char* argv[], bool auto_exit)
 {
     if (argc == 0)
@@ -247,8 +292,8 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
         }
 [[[ENDIF]]]
     }
-[[[IF has_member_counters]]]
-    if (!check_option_counts(result, counters))
+[[[IF has_final_checks]]]
+    if ([[[final_checks]]])
     {
         if (auto_exit)
             exit(EINVAL);

@@ -27,14 +27,14 @@ def deduce_option_names(session):
             name = make_option_name_from_flags(arg.flags, taken_names)
             if name:
                 arg.option_name = name
-                session.logger.debug("Deduced option name: " + name,
-                                     argument=arg)
+                session.logger.debug("Deduced option name for %s: %s"
+                                     % (arg, name), argument=arg)
                 taken_names[name] = arg
             else:
                 unnamed.append(arg)
     for arg in unnamed:
         name = name_tools.make_unique_name("symbols", taken_names)
         arg.option_name = name
-        session.logger.debug("Deduced option name: " + name,
-                             argument=arg)
+        session.logger.debug("Deduced option name for %s: %s"
+                             % (arg, name), argument=arg)
         taken_names[name] = arg

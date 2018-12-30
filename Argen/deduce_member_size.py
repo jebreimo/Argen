@@ -6,24 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-
-
-def get_accumulated_count(arguments):
-    min_count = max_count = 0
-    for arg in arguments:
-        count = arg.count
-        if not count:
-            continue
-        if count[0]:
-            min_count += count[0]
-        if count[1] is None:
-            max_count = None
-        elif max_count is not None:
-            max_count += count[1]
-    if min_count != 0 or max_count != 0:
-        return min_count, max_count
-    else:
-        return None
+import tools
 
 
 def get_operations(arguments):
@@ -38,11 +21,11 @@ def report_member_size(member, arguments, session):
                              argument=arguments[i])
 
 
-def deduce_member_count(session):
+def deduce_member_size(session):
     for mem in session.members:
         if mem.member_size:
             continue
-        count_sum = get_accumulated_count(mem.arguments)
+        count_sum = tools.get_accumulated_count(mem.arguments)
         if count_sum:
             mem.member_size = count_sum
             args = [a for a in mem.arguments if a.count]

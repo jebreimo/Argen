@@ -16,6 +16,7 @@ from parse_help_text import parse_help_text
 from replace_variables import replace_variables
 from sections import read_sections
 from session import Session
+import deduce_count as dc
 import deduce_flags_and_metavars as dfam
 import deduce_indices as di
 import deduce_member_size as dmc
@@ -122,11 +123,12 @@ def make_deductions(session):
         mm.make_members,
         di.deduce_indices,
         dv.deduce_values,
-        dmc.deduce_member_count,
+        dmc.deduce_member_size,
         do.deduce_operations,
         dvt.deduce_value_types,
         dmt.deduce_member_types,
         dvv.deduce_valid_values,
+        dc.deduce_count,
         va.validate_arguments
     ]
     for func in functions:
