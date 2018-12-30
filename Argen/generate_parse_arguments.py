@@ -218,7 +218,7 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
 
 [[[ENDIF]]]
 [[[IF has_argument_size_check]]]
-bool check_argument_size(size_t size)
+bool check_arguments_size(size_t size)
 {
     [[[argument_size_checks]]]
     return true;
