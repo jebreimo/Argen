@@ -1,1 +1,0 @@
-An example that demonstrates use of CLAPGen to create an argument parser.

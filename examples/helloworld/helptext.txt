@@ -1,7 +1,0 @@
-USAGE
-%prog% [options] <text>
-
-OPTIONS
--h, --help                  Display help
--s WIDxHEI, --size=WIDxHEI  Set the width and height of the surrounding box (default is 72x3)
--c CHAR, --character=CHAR   Set the 

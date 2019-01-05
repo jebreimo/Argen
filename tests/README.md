@@ -1,1 +1,0 @@
-This folder doesn't contain unit tests, but various help text files that test various features of CLAPgen.

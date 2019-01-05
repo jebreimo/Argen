@@ -1,3 +1,0 @@
-${a, alpha| Flags: a alpha}$
-${b VALUE, bravo VALUE | Flags: b bravo | Argument: VALUE}$
-${help | Flags: help}$
