@@ -21,7 +21,6 @@ class ArgumentIteratorGenerator(templateprocessor.Expander):
         self.has_normal_options = self.has_slash_options or self.has_dash_options
         self.has_both_options = self.has_slash_options and self.has_dash_options
         self.has_values = session.code_properties.has_option_values
-        self.has_delimited_values = session.code_properties.has_delimited_values
 
 
 def generate_argument_iterator(session):

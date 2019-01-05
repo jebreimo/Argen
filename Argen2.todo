@@ -13,6 +13,10 @@
     + how value-type is interpreted must depend on the argument's operation
 + Don't maintain a separate count where vector::size() is sufficient to check if an option or argument has been given a correct number of times.
 - Display a warning if there is no help option
+    - Make it easier to declare which option is the help option
+- Support partial argument parsing (i.e. a function that parses the arguments it knows and remove these from argv/argc, the remaining arguments can then be parsed by another function)
+    - Display error message if short options are used.
+    - Display error message if arguments (as opposed to options) are used.
 - Have two modes for generated parse_arguments: one that leaves argc and argv unchanged, one that removes all known options and arguments.
 - Deduce inline and member_inline, that is, replace member references with variable.member.
 - Support two different argument modes:
@@ -21,3 +25,4 @@
     - "batch-mode" where all arguments are read into a list before they are processed
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
 - Make sure "<file> ..." and "[file] ..." are interpreted and shown correctly.
+- Error if argument (no flag) has value

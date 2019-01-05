@@ -121,13 +121,3 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     if "value_type" in properties:
         arg.value_type = deducedtype.parse_type(properties["value_type"])
     return arg
-
-# def compare_metavar_properties(aprops, bprops):
-#     akeys = list(aprops.keys())
-#     bkeys = list(bprops.keys())
-#     if sorted(akeys) != sorted(bkeys):
-#         return False
-#     for key in akeys:
-#         if key != "metavar" and aprops[key] != bprops[key]:
-#             return False
-#     return True

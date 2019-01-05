@@ -46,7 +46,8 @@ class CodeProperties:
         self.min_line_width = 40
         self.dynamic_line_width = True
         self.has_option_values = False
-        self.has_delimited_values = False
+        self.has_delimited_options = False
+        self.has_delimited_arguments = False
         self.parsed_type_names = None
 
 
@@ -275,11 +276,14 @@ def make_code_properties(session):
 
     for argument in session.arguments:
         if argument.separator:
-            result.has_delimited_values = True
+            if argument.flags:
+                result.has_delimited_options = True
+            else:
+                result.has_delimited_arguments = True
         if argument.flags and not argument.value:
             result.has_option_values = True
 
-    if result.has_delimited_values:
+    if result.has_delimited_options:
         result.source_includes.append("<algorithm>")
     result.source_includes.extend(["<iostream>", "<string_view>"])
     if has_non_string_type_names(result.parsed_type_names):

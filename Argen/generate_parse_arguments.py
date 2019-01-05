@@ -8,7 +8,8 @@
 # ===========================================================================
 import templateprocessor
 import tools
-from generate_parse_option import generate_option_cases
+import generate_parse_option as gpo
+import generate_argument_processors as gap
 
 
 def join_text(words, separator, final_separator):
@@ -73,17 +74,18 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_final_option = any(o for o in self._options
                                     if o.post_operation == "final")
         self.has_program_name = session.code_properties.has_program_name
-        self.has_separators = session.code_properties.has_delimited_values
+        self.has_delimited_options = session.code_properties.has_delimited_options
+        self.has_delimited_arguments = session.code_properties.has_delimited_arguments
         self.has_values = any(a for a in session.arguments
                               if a.operation != "none" and a.value is None)
         self.has_member_counters = session.code_properties.counted_options
         self.argument_size = tools.get_accumulated_count(session.code_properties.arguments)
         self.has_argument_size_check = self.argument_size != (0, None)
-        self.has_final_checks = self.has_member_counters \
-                                or self.has_argument_size_check
+        self.has_arguments = session.code_properties.arguments
+        self.has_final_checks = self.has_member_counters or self.has_arguments
 
     def option_cases(self, *args):
-        return generate_option_cases(self._session)
+        return gpo.generate_option_cases(self._session)
 
     def option_counters(self, *args):
         result = []
@@ -132,20 +134,24 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
             phrase = "%d or %d" % (lo, hi)
         else:
             phrase = "from %d to %d" % (lo, hi)
-        result.append(f"if (size != {lo})")
+        result.append(f"if (arguments.size() != {lo})")
         result.append("{")
         result.append("    write_error_text(\"Incorrect number of arguments."
                       " Requires %s, received \"" % phrase)
-        result.append("                     + std::to_string(size) + \".\");")
+        result.append("                     + std::to_string(arguments.size())"
+                      " + \".\");")
         result.append("}")
         return result
+
+    def argument_processors(self, *args):
+        return gap.generate_argument_processors(self._session)
 
     def final_checks(self, *args):
         checks = []
         if self.has_member_counters:
             checks.append("!check_option_counts(result, counters)")
-        if self.has_argument_size_check:
-            checks.append("!check_arguments_size(arguments.size())")
+        if self.has_arguments:
+            checks.append("!process_arguments(result, arguments)")
         for i in range(1, len(checks)):
             checks[i] = "|| " + checks[i]
         return checks
@@ -195,15 +201,15 @@ OptionResult process_option(Arguments& result,
 [[[IF has_values]]]
     std::string_view value;
 [[[ENDIF]]]
-[[[IF has_separators]]]
+[[[IF has_delimited_options]]]
     std::vector<std::string_view> parts;
+[[[ENDIF]]]
     switch (option_code)
     {
     [[[option_cases]]]
     default:
         return OptionResult::UNKNOWN_OPTION;
     }
-[[[ENDIF]]]
     return OptionResult::NORMAL_OPTION;
 }
 
@@ -216,10 +222,19 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
 }
 
 [[[ENDIF]]]
-[[[IF has_argument_size_check]]]
-bool check_arguments_size(size_t size)
+[[[IF has_arguments]]]
+bool process_arguments(Arguments& result,
+                       const std::vector<std::string_view>& arguments)
 {
+[[[IF has_argument_size_check]]]
     [[[argument_size_checks]]]
+[[[ENDIF]]]
+    size_t i = 0;
+    const size_t n = arguments.size();
+[[[IF has_delimited_arguments]]]
+    std::vector<std::string_view> parts;
+[[[ENDIF]]]
+    [[[argument_processors]]]
     return true;
 }
 
@@ -237,7 +252,9 @@ bool check_arguments_size(size_t size)
 [[[IF has_member_counters]]]
     MemberCounters counters;
 [[[ENDIF]]]
+[[[IF has_arguments]]]
     std::vector<std::string_view> arguments;
+[[[ENDIF]]]
     ArgumentIterator arg_it(argc - 1, argv + 1);
 [[[IF has_final_option]]]
     bool final_option = false;
@@ -280,7 +297,15 @@ bool check_arguments_size(size_t size)
         }
         else
         {
+[[[IF has_arguments]]]
             arguments.push_back(arg.string);
+[[[ELSE]]]
+            write_error_text(to_string(arg) + ": the program doesn't take any arguments.");
+            if (auto_exit)
+                exit(EINVAL);
+            result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
+            return result;
+[[[ENDIF]]]
         }
 [[[IF has_final_option]]]
         if (final_option)

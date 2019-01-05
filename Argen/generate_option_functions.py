@@ -13,7 +13,8 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
     def __init__(self, session):
         self._session = session
         self.function_name = session.settings.function_name
-        self.has_separators = session.code_properties.has_delimited_values
+        self.has_separators = session.code_properties.has_delimited_options \
+                              or session.code_properties.has_delimited_arguments
 
 
 def generate_option_functions(session):
