@@ -1,0 +1,5 @@
+USAGE
+  ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
+
+ARGUMENTS
+  {{<x,y,z> ...| Separator: ,}} A list of points.

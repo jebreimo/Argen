@@ -49,6 +49,7 @@ class CodeProperties:
         self.has_delimited_options = False
         self.has_delimited_arguments = False
         self.parsed_type_names = None
+        self.has_non_string_values = False
 
 
 def get_internal_variables(session):
@@ -286,7 +287,10 @@ def make_code_properties(session):
     if result.has_delimited_options:
         result.source_includes.append("<algorithm>")
     result.source_includes.extend(["<iostream>", "<string_view>"])
-    if has_non_string_type_names(result.parsed_type_names):
+    result.has_non_string_values = has_non_string_type_names(result.parsed_type_names)
+    if result.has_non_string_values \
+            or result.has_delimited_arguments\
+            or result.has_delimited_options:
         result.source_includes.append("<sstream>")
     result.source_includes.sort()
 

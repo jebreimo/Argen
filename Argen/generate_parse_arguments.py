@@ -83,6 +83,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.has_argument_size_check = self.argument_size != (0, None)
         self.has_arguments = session.code_properties.arguments
         self.has_final_checks = self.has_member_counters or self.has_arguments
+        self.has_options = session.code_properties.options
 
     def option_cases(self, *args):
         return gpo.generate_option_cases(self._session)
@@ -174,6 +175,7 @@ std::string get_base_name(const std::string& path)
 }
 [[[ENDIF]]]
 
+[[[IF has_options]]]
 enum class OptionResult
 {
     NORMAL_OPTION,
@@ -222,6 +224,7 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
 }
 
 [[[ENDIF]]]
+[[[ENDIF]]]
 [[[IF has_arguments]]]
 bool process_arguments(Arguments& result,
                        const std::vector<std::string_view>& arguments)
@@ -249,11 +252,12 @@ bool process_arguments(Arguments& result,
 
 [[[ENDIF]]]
     [[[class_name]]] result;
-[[[IF has_member_counters]]]
-    MemberCounters counters;
-[[[ENDIF]]]
 [[[IF has_arguments]]]
     std::vector<std::string_view> arguments;
+[[[ENDIF]]]
+[[[IF has_options]]]
+[[[IF has_member_counters]]]
+    MemberCounters counters;
 [[[ENDIF]]]
     ArgumentIterator arg_it(argc - 1, argv + 1);
 [[[IF has_final_option]]]
@@ -316,6 +320,10 @@ bool process_arguments(Arguments& result,
         }
 [[[ENDIF]]]
     }
+[[[ELSE]]]
+    for (int i = 1; i < argc; ++i)
+        arguments.emplace_back(argv[i], strlen(argv[i]));
+[[[ENDIF]]]
 [[[IF has_final_checks]]]
     if ([[[final_checks]]])
     {

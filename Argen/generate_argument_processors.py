@@ -184,6 +184,7 @@ def determine_argument_ranges(counts):
     result = []
     acc_pos, acc_neg = 0, -min_count
     start = (acc_pos, acc_neg)
+    i = 0
     for i in range(len(counts)):
         lo, hi = counts[i]
         if hi is not None:
@@ -195,8 +196,8 @@ def determine_argument_ranges(counts):
         result.append((start, end))
         start = end
         if hi is None:
-            i += 1
             break
+    i += 1
     for i in range(i, len(counts)):
         lo, hi = counts[i]
         acc_neg += lo
@@ -232,6 +233,7 @@ def make_scope(lines):
         result.append("    " + line)
     result.append("}")
     return result
+
 
 def determine_argument_expressions(arguments):
     ranges = determine_argument_ranges([a.count for a in arguments])

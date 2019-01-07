@@ -15,6 +15,8 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
         self.function_name = session.settings.function_name
         self.has_separators = session.code_properties.has_delimited_options \
                               or session.code_properties.has_delimited_arguments
+        self.has_non_string_values = session.code_properties.has_non_string_values
+        self.has_options = session.code_properties.options
 
 
 def generate_option_functions(session):
@@ -39,20 +41,23 @@ Arguments& abort(Arguments& arguments,
     return arguments;
 }
 
+[[[IF has_non_string_values]]]
 template <typename T>
 bool from_string(const std::string_view& str, T& value)
 {
-    std::istringstream stream(std::string(str.data(), str.size()));
+    std::istringstream stream(to_string(str));
     stream >> value;
     return !stream.fail() && stream.eof();
 }
 
+[[[ENDIF]]]
 bool from_string(const std::string_view& str, std::string& value)
 {
     value = str;
     return true;
 }
 
+[[[IF has_options]]]
 bool read_value(std::string_view& value,
                 ArgumentIterator& iterator,
                 const Argument& argument)
@@ -66,6 +71,7 @@ bool read_value(std::string_view& value,
     return true;
 }
 
+[[[ENDIF]]]
 [[[IF has_separators]]]
 std::vector<std::string_view> split_string(
         const std::string_view& string,

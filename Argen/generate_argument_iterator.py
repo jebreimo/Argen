@@ -54,11 +54,6 @@ struct Argument
 [[[ENDIF]]]
 };
 
-std::string to_string(const std::string_view& wrapper)
-{
-    return std::string(wrapper.data(), wrapper.size());
-}
-
 std::string to_string(const Argument& argument)
 {
 [[[IF has_short_options]]]
@@ -129,6 +124,7 @@ public:
             return {{arg, length}, true, true};
         }
 [[[ENDIF]]]
+[[[IF has_normal_options]]]
 
         auto arg = m_ArgIt;
         size_t length = 0;
