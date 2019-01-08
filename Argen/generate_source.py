@@ -77,11 +77,7 @@ SOURCE_NAMESPACE_TEMPLATE = """\
 [[[namespace_end]]]
 [[[ELSE]]]
 [[[code]]]
-[[[ENDIF]]]
-int main(int argc, char* argv[])
-{
-    return 0;
-}
+[[[ENDIF]]]\
 """
 
 

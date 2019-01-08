@@ -3,3 +3,7 @@ USAGE
 
 ARGUMENTS
   {{<x,y,z> ...| Separator: ,}} A list of points.
+
+$$$ Settings
+Test = True
+

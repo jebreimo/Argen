@@ -23,12 +23,23 @@ def generate_test_code(session):
                                         TestCodeGenerator(session))
 
 
-TEST_TEMPLATE = """
+TEST_TEMPLATE = """\
+#ifdef ARGEN_MAIN
 #include <iostream>
+
+template <typename T>
+void write_value(std::ostream& stream, const char* label, const T& value)
+{
+    stream << label << value << "\\n";
+}
+
+#define WRITE_VALUE(name) write_value(std::cout, #name ": ", args.name)
 
 int main(int argc, char* argv[])
 {
-    [[[namespace]]]::write_help_text(std::cout, 0); 
+    auto args = parse_arguments(argc, argv);
+    WRITE_VALUE(parse_arguments_result);
     return 0;
 }
+#endif
 """

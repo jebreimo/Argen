@@ -8,6 +8,8 @@ add_custom_command(
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/helptext.txt
 )
 
+add_compile_definitions(ARGEN_MAIN)
+
 add_executable(list_of_tuple_argument
     ParseArguments.cpp
     ParseArguments.h)
