@@ -66,13 +66,26 @@ def find_next_separator(text, start_pos, separator):
             start_pos += 1
 
 
-def find_first_not_of(text, chars, start=0):
+def find_first_of(text, chars, start=0, end=-1):
     if not text:
-        return -1
-    for i in range(start, len(text)):
+        return 0
+    if end == -1:
+        end = len(text)
+    for i in range(start, end):
+        if text[i] in chars:
+            return i
+    return end
+
+
+def find_first_not_of(text, chars, start=0, end=-1):
+    if not text:
+        return 0
+    if end == -1:
+        end = len(text)
+    for i in range(start, end):
         if text[i] not in chars:
             return i
-    return -1
+    return end
 
 
 def find_last_not_of(text, chars):
@@ -102,7 +115,7 @@ def find_next_ellipsis(text, start=0):
 
 
 def is_ellipsis(text):
-    return len(text) >= 2 and find_first_not_of(text, ".") == -1
+    return len(text) >= 2 and find_first_not_of(text, ".") == len(text)
 
 
 def split_range(text):

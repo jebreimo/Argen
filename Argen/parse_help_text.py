@@ -128,7 +128,7 @@ class HelpTextTokenHandlers:
                                       self.line_number))
         if self.word_wrap:
             pos = parser_tools.find_first_not_of(token, " \t\r\n")
-            if pos:
+            if pos != len(token):
                 self.output_text.append(token[:pos])
                 self.output_text.append(self.session.syntax.alignment_char)
                 self.output_text.append(token[pos:])
