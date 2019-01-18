@@ -124,7 +124,6 @@ public:
             return {{arg, length}, true, true};
         }
 [[[ENDIF]]]
-[[[IF has_normal_options]]]
 
         auto arg = m_ArgIt;
         size_t length = 0;

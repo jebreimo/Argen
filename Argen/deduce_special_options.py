@@ -9,6 +9,8 @@
 
 
 def has_help_flags(flags):
+    if not flags:
+        return False
     for flag in flags:
         if flag.lower() not in ["-h", "--help", "/?"]:
             return False

@@ -61,7 +61,8 @@ def generate_options_text(session):
                 mandatory.extend([string] * arg.count[0])
             else:
                 mandatory.append(string)
-    return " ".join((" ".join(optional), " ".join(mandatory)))
+
+    return " ".join(optional + mandatory)
 
 
 def get_mandatory_optional(arg):
@@ -83,7 +84,7 @@ def get_mandatory_optional(arg):
 
 
 def format_mandatory(str):
-    if not str or (str[0] == "<" and str[-1] == ">"):
+    if not str or str[0] == "<":
         return str
     if str[0] == "[" and str[-1] == "]":
         str = str[1:-1]
@@ -91,7 +92,7 @@ def format_mandatory(str):
 
 
 def format_optional(str):
-    if not str or (str[0] == "[" and str[-1] == "]"):
+    if not str or str[0] == "[":
         return str
     if str[0] == "<" and str[-1] == ">":
         str = str[1:-1]
@@ -104,12 +105,7 @@ def generate_arguments_text(session):
     nbs = session.syntax.non_breaking_space
     result = []
     for arg in arguments:
-        name = arg.metavar.replace(" ", nbs)
-        man, opt = get_mandatory_optional(arg)
-        for i in range(1 if man == 1 or MAX_ARGUMENT_EXPANSION < man else man):
-            result.append(format_mandatory(name))
-        for i in range(1 if opt == 1 or MAX_ARGUMENT_EXPANSION < opt else opt):
-            result.append(format_optional(name))
+        result.append(arg.metavar.replace(" ", nbs))
     return " ".join(result)
 
 

@@ -2,8 +2,7 @@ USAGE
   ${PROGRAM} ${OPTIONS} ${ARGUMENTS}
 
 ARGUMENTS
-  {{<x,y,z> ...| Separator: ,}} A list of points.
+  {{<x,y,z> ... <x,y,z>| Type: {double, double, double} | Separator: ,}} A list of points.
 
 $$$ Settings
 Test = True
-

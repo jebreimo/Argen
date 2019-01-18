@@ -123,12 +123,13 @@ def make_deductions(session):
         mm.make_members,
         di.deduce_indices,
         dv.deduce_values,
+        dc.deduce_count_from_metavar,
         dmc.deduce_member_size,
         do.deduce_operations,
         dvt.deduce_value_types,
         dmt.deduce_member_types,
         dvv.deduce_valid_values,
-        dc.deduce_count,
+        dc.deduce_count_from_operation,
         va.validate_arguments
     ]
     for func in functions:

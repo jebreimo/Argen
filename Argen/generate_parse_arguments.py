@@ -135,7 +135,8 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
             phrase = "%d or %d" % (lo, hi)
         else:
             phrase = "from %d to %d" % (lo, hi)
-        result.append(f"if (arguments.size() != {lo})")
+        test = generate_test(self.argument_size, "arguments.size()")
+        result.append(f"if (%s)" % test)
         result.append("{")
         result.append("    write_error_text(\"Incorrect number of arguments."
                       " Requires %s, received \"" % phrase)

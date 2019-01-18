@@ -139,7 +139,7 @@ def generate_parameter_assignment(option, source, name):
     elif operation_type == Operations.ASSIGN_TUPLE:
         lines.append(make_split_value(option, source, name))
         for i in range(len(option.value_type.subtypes)):
-            name = "std::get<%d>(%s)" % (i, destination)
+            tmp_name = "std::get<%d>(%s)" % (i, destination)
             lines.append("parse_and_assign(%s, parts[%d], %s)" % (name, i, name))
         append_check_value(lines, option, operation_type, name)
     elif operation_type == Operations.ASSIGN_VECTOR:
@@ -156,8 +156,8 @@ def generate_parameter_assignment(option, source, name):
     elif operation_type == Operations.APPEND_TUPLE:
         lines.append(make_split_value(option, source, name))
         for i in range(len(option.value_type.subtypes)):
-            name = "std::get<%d>(temp)" % i
-            lines.append("parse_and_assign(%s, parts[%d], %s)" % (name, i, name))
+            tmp_name = "std::get<%d>(temp)" % i
+            lines.append("parse_and_assign(%s, parts[%d], %s)" % (tmp_name, i, name))
         append_check_value(lines, option, operation_type, name)
         lines.append("append(%s, std::move(temp))" % destination)
     elif operation_type == Operations.APPEND_VECTOR:
@@ -208,6 +208,17 @@ def determine_argument_ranges(counts):
     return result
 
 
+def has_temp_variable(arg):
+    operation_type = get_operation_type(arg)
+    if operation_type in (Operations.APPEND_TUPLE,
+                          Operations.APPEND_VECTOR):
+        return True
+    elif operation_type == Operations.EXTEND_VECTOR:
+        return arg.valid_values
+    else:
+        return False
+
+
 def make_read_argument(option, source, name):
     conditions = generate_parameter_assignment(option, source, name)
 
@@ -216,6 +227,8 @@ def make_read_argument(option, source, name):
 
     lines = []
     if conditions:
+        if has_temp_variable(option):
+            lines.append("%s temp;" % option.value_type)
         lines.append("if (!" + conditions[0])
         for i in range(1, len(conditions)):
             lines.append("    || !" + conditions[i])
@@ -242,7 +255,7 @@ def determine_argument_expressions(arguments):
         lo, hi = r
         arg = arguments[i]
         name = '"%s"' % arg.metavar
-        if hi[0] == -1 and lo[1] == hi[1] - 1:
+        if lo[0] == -1 and lo[1] == hi[1] - 1:
             result.extend(make_read_argument(arg, "arguments[i++]", name))
         elif hi[0] == -1:
             if hi[1] == 0:
