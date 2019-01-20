@@ -40,6 +40,9 @@ def validate_arguments(session):
                 and not (argument.callback or argument.inline):
             session.logger.warn("No value is assigned to member '%s'."
                                 % argument.member_name, argument=argument)
+        if not argument.flags and argument.value:
+            session.logger.error("Only options can have a constant assigned"
+                                 " to them.", argument=argument)
 
     if session.settings.immediate_callbacks:
         non_options = [a for a in session.arguments if not a.flags]

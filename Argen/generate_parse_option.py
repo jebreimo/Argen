@@ -6,126 +6,9 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-import deducedtype
+import generator_tools as gt
 import re
 import templateprocessor
-
-
-class Operations:
-    NO_OPERATION = 0
-    ASSIGN_CONSTANT = 1
-    ASSIGN_VALUE = 2
-    ASSIGN_TUPLE = 3
-    ASSIGN_VECTOR = 4
-    APPEND_CONSTANT = 11
-    APPEND_VALUE = 12
-    APPEND_TUPLE = 13
-    APPEND_VECTOR = 14
-    EXTEND_CONSTANT = 21
-    EXTEND_VECTOR = 24
-
-
-def get_operation_type(option):
-    if option.operation == "assign":
-        op_value = 0
-    elif option.operation == "append":
-        op_value = 10
-    elif option.operation == "extend":
-        op_value = 20
-    else:
-        return Operations.NO_OPERATION
-    if option.value:
-        type_value = 1
-    elif not option.value_type.subtypes:
-        type_value = 2
-    elif deducedtype.is_tuple(option.value_type):
-        type_value = 3
-    else:
-        type_value = 4
-    return op_value + type_value
-
-
-def generate_check_value_lambda(valid_values):
-    tests = []
-    for entry in valid_values:
-        lo, hi = entry
-        if not lo and not hi:
-            continue
-        elif lo == hi:
-            tests.append(f"v == {lo}")
-        elif lo and hi:
-            if len(valid_values) == 1:
-                tests.append(f"{lo} <= v && v <= {hi}")
-            else:
-                tests.append(f"({lo} <= v && v <= {hi})")
-        elif lo:
-            tests.append(f"{lo} <= v")
-        else:
-            tests.append(f"v <= {hi}")
-    return "[](auto&& v){return %s;}" % " || ".join(tests)
-
-
-def generate_check_value_text(valid_values):
-    tokens = []
-    for entry in valid_values:
-        lo, hi = entry
-        if not lo and not hi:
-            continue
-        elif lo == hi:
-            tokens.append(lo)
-        elif lo and hi:
-            tokens.append(f"{lo}...{hi}")
-        elif lo:
-            tokens.append(f"{lo}...")
-        else:
-            tokens.append(f"...{hi}")
-    return '"%s"' % ", ".join(t.replace('"', '\\"') for t in tokens)
-
-
-def make_check_value(function_name, value_name, valid_values):
-    return "%s(%s, %s, %s, arg)" \
-           % (function_name, value_name,
-              generate_check_value_lambda(valid_values),
-              generate_check_value_text(valid_values))
-
-
-def append_check_value(lines, option, operation_type):
-    valid_values = option.valid_values
-    if not valid_values:
-        return
-    if operation_type == Operations.ASSIGN_VALUE:
-        lines.append(make_check_value("check_value",
-                                      "result." + option.member_name,
-                                      valid_values[0]))
-    elif operation_type == Operations.ASSIGN_VECTOR:
-        lines.append(make_check_value("check_values",
-                                      "result." + option.member_name,
-                                      valid_values[0]))
-    elif operation_type == Operations.APPEND_VALUE:
-        lines.append(make_check_value("check_value",
-                                      "result.%s.back()" % option.member_name,
-                                      option.valid_values[0]))
-    elif operation_type in (Operations.APPEND_VECTOR, Operations.EXTEND_VECTOR):
-        lines.append(make_check_value("check_values", "temp",
-                                      option.valid_values[0]))
-    elif operation_type in (Operations.APPEND_TUPLE, Operations.ASSIGN_TUPLE):
-        if operation_type == Operations.ASSIGN_TUPLE:
-            variable = "result." + option.member_name
-        else:
-            variable = "temp"
-        for i in range(len(valid_values)):
-            lines.append(make_check_value("check_value",
-                                          "std::get<%d>(%s)" % (i, variable),
-                                          valid_values[i]))
-
-
-def make_split_value(option):
-    if option.separator_count[1]:
-        max_count = str(option.separator_count[1])
-    else:
-        max_count = "SIZE_MAX"
-    return "split_value(parts, value, '%s', %d, %s, arg)" \
-           % (option.separator, option.separator_count[0], max_count)
 
 
 def generate_constant_assignment(lines, option):
@@ -142,49 +25,8 @@ def generate_constant_assignment(lines, option):
 
 
 def generate_parameter_assignment(lines, option):
-    operation_type = get_operation_type(option)
-    dest_name = "result." + option.member_name
     lines.append("read_value(value, arg_it, arg)")
-    if operation_type == Operations.ASSIGN_VALUE:
-        lines.append("parse_and_assign(%s, value, arg)" % dest_name)
-        append_check_value(lines, option, operation_type)
-    elif operation_type == Operations.ASSIGN_TUPLE:
-        lines.append(make_split_value(option))
-        for i in range(len(option.value_type.subtypes)):
-            name = "std::get<%d>(%s)" % (i, dest_name)
-            lines.append("parse_and_assign(%s, parts[%d], arg)" % (name, i))
-        append_check_value(lines, option, operation_type)
-    elif operation_type == Operations.ASSIGN_VECTOR:
-        if option.separator is None:
-            lines.append("parse_and_assign(%s, std::vector<std::string_view>{value}, arg)"
-                         % dest_name)
-        else:
-            lines.append(make_split_value(option))
-            lines.append("parse_and_assign(%s, parts, arg)" % dest_name)
-        append_check_value(lines, option, operation_type)
-    elif operation_type == Operations.APPEND_VALUE:
-        lines.append("parse_and_append(%s, value, arg)" % dest_name)
-        append_check_value(lines, option, operation_type)
-    elif operation_type == Operations.APPEND_TUPLE:
-        lines.append(make_split_value(option))
-        for i in range(len(option.value_type.subtypes)):
-            name = "std::get<%d>(temp)" % i
-            lines.append("parse_and_assign(%s, parts[%d], arg)" % (name, i))
-        append_check_value(lines, option, operation_type)
-        lines.append("append(%s, std::move(temp))" % dest_name)
-    elif operation_type == Operations.APPEND_VECTOR:
-        lines.append(make_split_value(option))
-        for i in range(len(option.value_type.subtypes)):
-            lines.append("parse_and_assign(temp, parts, arg)")
-        lines.append("append(%s, std::move(temp))" % dest_name)
-        append_check_value(lines, option, operation_type)
-    elif operation_type == Operations.EXTEND_VECTOR:
-        lines.append(make_split_value(option))
-        if option.valid_values:
-            lines.append("parse_and_assign(temp, parts, arg)")
-            lines.append("extend(%s, std::move(temp))" % dest_name)
-        else:
-            lines.append("parse_and_extend(%s, parts, arg)" % dest_name)
+    gt.append_assignment_conditions(lines, option, "value", "arg")
 
 
 def generate_read_value(option):
@@ -256,11 +98,11 @@ class OptionCaseGenerator(templateprocessor.Expander):
         return self.option.post_operation == "final"
 
     def has_temp_variable(self, *args):
-        operation_type = get_operation_type(self.option)
-        if operation_type in (Operations.APPEND_TUPLE,
-                              Operations.APPEND_VECTOR):
+        operation_type = gt.get_operation_type(self.option)
+        if operation_type in (gt.Operations.APPEND_TUPLE,
+                              gt.Operations.APPEND_VECTOR):
             return True
-        elif operation_type == Operations.EXTEND_VECTOR:
+        elif operation_type == gt.Operations.EXTEND_VECTOR:
             return self.option.valid_values
         else:
             return False

@@ -6,6 +6,7 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
+import generator_tools as gt
 import templateprocessor
 
 
@@ -17,6 +18,13 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
                               or session.code_properties.has_delimited_arguments
         self.has_non_string_values = session.code_properties.has_non_string_values
         self.has_options = session.code_properties.options
+        methods = gt.get_assignment_methods(session.arguments)
+        self.has_parse_and_assign = "parse_and_assign" in methods
+        self.has_parse_and_assign_vector = "parse_and_assign_vector" in methods
+        self.has_parse_and_append = "parse_and_append" in methods
+        self.has_parse_and_extend = "parse_and_extend" in methods
+        self.has_append = "append" in methods
+        self.has_extend = "extend" in methods
         self.has_check_value = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") == -1)
         self.has_check_vector = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") != -1)
 
@@ -110,7 +118,9 @@ bool split_value(std::vector<std::string_view>& parts,
     }
     return true;
 }
-[[[ENDIF]]]    
+[[[ENDIF]]]
+[[[IF has_parse_and_assign]]]
+    
 template <typename T, typename Arg>
 bool parse_and_assign(T& value,
                       const std::string_view& string,
@@ -123,6 +133,8 @@ bool parse_and_assign(T& value,
                      + to_string(string) + "\\".");
     return false;
 }
+[[[ENDIF]]]
+[[[IF has_parse_and_assign_vector]]]
 
 template <typename T, typename Arg>
 bool parse_and_assign(std::vector<T>& value,
@@ -143,6 +155,8 @@ bool parse_and_assign(std::vector<T>& value,
     }
     return true;
 }
+[[[ENDIF]]]
+[[[IF has_parse_and_append]]]
 
 template <typename T, typename Arg>
 bool parse_and_append(std::vector<T>& value,
@@ -160,6 +174,8 @@ bool parse_and_append(std::vector<T>& value,
     value.push_back(temp);
     return true;
 }
+[[[ENDIF]]]
+[[[IF has_append]]]
 
 template <typename T>
 bool append(std::vector<T>& values, T&& value)
@@ -167,6 +183,8 @@ bool append(std::vector<T>& values, T&& value)
     values.push_back(std::forward<T>(value));
     return true;
 }
+[[[ENDIF]]]
+[[[IF has_extend]]]
 
 template <typename T>
 bool extend(std::vector<T>& values, std::vector<T> newValues)
@@ -174,6 +192,8 @@ bool extend(std::vector<T>& values, std::vector<T> newValues)
     values.insert(values.end(), newValues.begin(), newValues.end());
     return true;
 }
+[[[ENDIF]]]
+[[[IF has_parse_and_extend]]]
 
 template <typename T, typename Arg>
 bool parse_and_extend(std::vector<T>& value,
@@ -193,6 +213,7 @@ bool parse_and_extend(std::vector<T>& value,
     }
     return true;
 }
+[[[ENDIF]]]
 [[[IF has_check_value]]]
 
 template <typename T, typename CheckFunc, typename Arg>

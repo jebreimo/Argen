@@ -15,9 +15,9 @@ class ArgumentIteratorGenerator(templateprocessor.Expander):
         self._session = session
         self.has_short_options = session.code_properties.short_options
         self.has_slash_options = any(k[0] == '/'
-                                     for k in session.code_properties.options)
+                                     for k in session.code_properties.long_options)
         self.has_dash_options = any(k[0] == '-'
-                                     for k in session.code_properties.options)
+                                     for k in session.code_properties.long_options)
         self.has_normal_options = self.has_slash_options or self.has_dash_options
         self.has_both_options = self.has_slash_options and self.has_dash_options
         self.has_values = session.code_properties.has_option_values

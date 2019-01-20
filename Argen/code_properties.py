@@ -14,6 +14,12 @@ import deducedtype as dt
 
 class CodeProperties:
     def __init__(self):
+        self.long_options = None
+        self.short_options = None
+        self.options = None
+        self.arguments = None
+        self.logger = None
+
         self.header_includes = None
         self.source_includes = None
         self.source_file_name = ""
@@ -36,9 +42,6 @@ class CodeProperties:
         self.namespace_start = None
         self.namespace_end = None
         self.namespace = None
-        self.short_options = None
-        self.options = None
-        self.arguments = None
         self.equal_is_separator = False
         self.has_program_name = False
         self.default_line_width = 79
@@ -160,23 +163,19 @@ def get_sized_members(session):
 
 def get_argument_groups(session):
     short_options = {}
-    options = {}
-    arguments = []
+    long_options = {}
     for arg in session.arguments:
-        if not arg.flags:
-            arguments.append(arg)
-        else:
-            for flag in arg.flags:
-                if short_options is not None and len(flag) == 2 \
-                        and flag[0] == '-':
-                    short_options[flag] = arg
-                else:
-                    if short_options is not None and len(flag) > 2 \
-                            and flag[0] == '-' and flag[1] != '-':
-                        options.update(short_options)
-                        short_options = None
-                    options[flag] = arg
-    return short_options, options, arguments
+        for flag in arg.flags:
+            if short_options is not None and len(flag) == 2 \
+                    and flag[0] == '-':
+                short_options[flag] = arg
+            else:
+                if short_options is not None and len(flag) > 2 \
+                        and flag[0] == '-' and flag[1] != '-':
+                    long_options.update(short_options)
+                    short_options = None
+                long_options[flag] = arg
+    return short_options, long_options
 
 
 def can_use_equal_as_separator(session, code_properties):
@@ -255,72 +254,75 @@ def matches_regexp(regexp, strings):
 
 def make_code_properties(session):
     settings = session.settings
-    result = CodeProperties()
+    props = CodeProperties()
+
+    props.logger = session.logger
+
+    props.all_arguments = session.arguments
+    props.arguments = [a for a in session.arguments if not a.flags]
+    props.options = [a for a in session.arguments if a.flags]
+    props.short_options, props.long_options = get_argument_groups(session)
 
     name = settings.file_name + settings.header_extension
-    result.header_file_name = name
+    props.header_file_name = name
     if session.settings.header_dir_name:
         name = os.path.join(settings.header_dir_name, name)
-    result.header_file_path = name
+    props.header_file_path = name
 
     name = settings.file_name + settings.header_extension
-    result.header_file_name = name
+    props.header_file_name = name
     if session.settings.header_dir_name:
         name = os.path.join(settings.header_dir_name, name)
-    result.header_file_path = name
+    props.header_file_path = name
 
     internal_variables = get_internal_variables(session)
-    result.header_template = _replace_variables(
+    props.header_template = _replace_variables(
         internal_variables["HEADER"], session, internal_variables)
-    result.source_template = _replace_variables(
+    props.source_template = _replace_variables(
         internal_variables["SOURCE"], session, internal_variables)
 
     all_type_names, parsed_type_names = get_argument_type_names(session)
-    result.header_includes = get_header_includes(all_type_names)
-    result.counted_options = get_counted_options(session)
-    result.sized_members = get_sized_members(session)
-    result.parsed_type_names = parsed_type_names
+    props.header_includes = get_header_includes(all_type_names)
+    props.counted_options = get_counted_options(session)
+    props.sized_members = get_sized_members(session)
+    props.parsed_type_names = parsed_type_names
 
-    result.source_includes = ['"%s"' % session.header_file_name()]
+    props.source_includes = ['"%s"' % session.header_file_name()]
 
     for argument in session.arguments:
         if argument.separator:
             if argument.flags:
-                result.has_delimited_options = True
+                props.has_delimited_options = True
             else:
-                result.has_delimited_arguments = True
+                props.has_delimited_arguments = True
         if argument.flags and not argument.value:
-            result.has_option_values = True
+            props.has_option_values = True
 
-    if result.has_delimited_options:
-        result.source_includes.append("<algorithm>")
-    result.source_includes.extend(["<iostream>", "<string_view>"])
-    result.has_non_string_values = has_non_string_type_names(result.parsed_type_names)
-    if result.has_non_string_values \
-            or result.has_delimited_arguments\
-            or result.has_delimited_options:
-        result.source_includes.append("<sstream>")
-    result.source_includes.sort()
+    if props.has_delimited_options:
+        props.source_includes.append("<algorithm>")
+    props.source_includes.extend(["<iostream>", "<string_view>"])
+    props.has_non_string_values = has_non_string_type_names(props.parsed_type_names)
+    if props.has_non_string_values \
+            or props.has_delimited_arguments\
+            or props.has_delimited_options:
+        props.source_includes.append("<sstream>")
+    props.source_includes.sort()
 
     if session.settings.namespace:
         ns = " { namespace ".join(session.settings.namespace)
-        result.namespace_start = ["namespace " + ns, "{"]
-        result.namespace_end = "}" * len(session.settings.namespace)
-        result.namespace = "::".join(session.settings.namespace)
+        props.namespace_start = ["namespace " + ns, "{"]
+        props.namespace_end = "}" * len(session.settings.namespace)
+        props.namespace = "::".join(session.settings.namespace)
 
-    groups = get_argument_groups(session)
-    result.short_options = groups[0]
-    result.options = groups[1]
-    result.arguments = sorted(groups[2], key=lambda a: a.index)
-    if result.options:
-        result.equal_is_separator = can_use_equal_as_separator(session, result)
+    if props.long_options:
+        props.equal_is_separator = can_use_equal_as_separator(session, props)
 
-    determine_line_width_members(result, settings)
+    determine_line_width_members(props, settings)
 
     if not settings.case_sensitive:
-        result.case_insensitive = can_have_case_insensitive_flags(session)
-    result.has_program_name = ("${PROGRAM}" in session.help_text
+        props.case_insensitive = can_have_case_insensitive_flags(session)
+    props.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.brief_help_text)
-    result.has_tuples = matches_regexp(r"\btuple\b", result.parsed_type_names)
-    result.has_vectors = matches_regexp(r"\bvector\b", result.parsed_type_names)
-    return result
+    props.has_tuples = matches_regexp(r"\btuple\b", props.parsed_type_names)
+    props.has_vectors = matches_regexp(r"\bvector\b", props.parsed_type_names)
+    return props
