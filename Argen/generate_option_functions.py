@@ -17,6 +17,8 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
                               or session.code_properties.has_delimited_arguments
         self.has_non_string_values = session.code_properties.has_non_string_values
         self.has_options = session.code_properties.options
+        self.has_check_value = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") == -1)
+        self.has_check_vector = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") != -1)
 
 
 def generate_option_functions(session):
@@ -29,16 +31,6 @@ bool show_help(Arguments& arguments, const std::string& argument)
 {
     write_help_text(std::cout);
     return true;
-}
-
-Arguments& abort(Arguments& arguments,
-                 Arguments::Result result,
-                 bool autoExit)
-{
-    if (autoExit)
-        exit(EINVAL);
-    arguments.[[[function_name]]]_result = result;
-    return arguments;
 }
 
 [[[IF has_non_string_values]]]
@@ -201,6 +193,7 @@ bool parse_and_extend(std::vector<T>& value,
     }
     return true;
 }
+[[[IF has_check_value]]]
 
 template <typename T, typename CheckFunc, typename Arg>
 bool check_value(T value, CheckFunc check_func,
@@ -217,6 +210,8 @@ bool check_value(T value, CheckFunc check_func,
     }
     return true;
 }
+[[[ENDIF]]]
+[[[IF has_check_vector]]]
 
 template <typename T, typename CheckFunc, typename Arg>
 bool check_values(const std::vector<T>& values,
@@ -237,4 +232,5 @@ bool check_values(const std::vector<T>& values,
     }
     return true;
 }
+[[[ENDIF]]]
 """

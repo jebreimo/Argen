@@ -50,6 +50,8 @@ class CodeProperties:
         self.has_delimited_arguments = False
         self.parsed_type_names = None
         self.has_non_string_values = False
+        self.has_tuples = False
+        self.has_vectors = False
 
 
 def get_internal_variables(session):
@@ -245,6 +247,12 @@ def has_non_string_type_names(type_names):
                and not tn.startswith("std::pair"))
 
 
+def matches_regexp(regexp, strings):
+    if isinstance(regexp, str):
+        regexp = re.compile(regexp)
+    return any(regexp.search(s) for s in strings)
+
+
 def make_code_properties(session):
     settings = session.settings
     result = CodeProperties()
@@ -313,4 +321,6 @@ def make_code_properties(session):
         result.case_insensitive = can_have_case_insensitive_flags(session)
     result.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.brief_help_text)
+    result.has_tuples = matches_regexp(r"\btuple\b", result.parsed_type_names)
+    result.has_vectors = matches_regexp(r"\bvector\b", result.parsed_type_names)
     return result
