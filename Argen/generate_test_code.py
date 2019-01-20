@@ -86,7 +86,7 @@ template <typename T>
 void write_value(std::ostream& stream, const char* label, const std::vector<T>& vec)
 {
     for (size_t i = 0; i < vec.size(); ++i)
-    stream << label << "[i]: " << vec[i] << "\\n";
+    stream << label << "[" << i << "]: " << vec[i] << "\\n";
 }
 
 [[[ENDIF]]]
