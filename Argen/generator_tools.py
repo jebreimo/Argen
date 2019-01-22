@@ -203,6 +203,8 @@ def get_argument_assignment_methods(argument):
             return ["parse_and_assign_vector", "extend"]
         else:
             return ["parse_and_extend"]
+    else:
+        return []
 
 
 def get_assignment_methods(arguments):

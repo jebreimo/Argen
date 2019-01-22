@@ -17,22 +17,31 @@ def has_help_flags(flags):
     return True
 
 
-def deduce_help_option(session):
-    candidates = []
-    for arg in session.arguments:
+def find_best_help_options(arguments):
+    candidates = {"callback": [], "flag": [], "type": []}
+    for arg in arguments:
         if arg.callback == "show_help":
-            return arg, None
+            candidates["callback"].append(arg)
+        elif arg.callback:
+            continue
+        elif arg.argument_type == "help":
+            candidates["type"].append(arg)
         elif arg.callback is None and has_help_flags(arg.flags):
-            candidates.append(arg)
+            candidates["flag"].append(arg)
+    if candidates["type"]:
+        return candidates["type"]
+    if candidates["callback"]:
+        return candidates["callback"]
     best_candidates = []
-    if len(candidates) > 1:
-        for arg in candidates:
-            if (("--help" in arg.flags) or ("/?" in arg.flags)) \
-                    and (arg.post_operation in (None, "abort")):
-                best_candidates.append(arg)
-        if best_candidates:
-            candidates = best_candidates
-    for arg in candidates:
+    for arg in candidates["flag"]:
+        if (("--help" in arg.flags) or ("/?" in arg.flags)) \
+                and (arg.post_operation in (None, "abort")):
+            best_candidates.append(arg)
+    return best_candidates or candidates["flag"]
+
+
+def deduce_help_option(session):
+    for arg in find_best_help_options(session.arguments):
         arg.callback = "show_help"
         if arg.post_operation is None:
             arg.post_operation = "abort"
@@ -45,13 +54,11 @@ def deduce_help_option(session):
 
 
 def looks_like_final_option(arg):
+    if arg.argument_type == "final":
+        return True
     if not arg.flags or arg.flags[0] != "--" or len(arg.flags) != 1:
         return False
-    if not arg.properties:
-        return True
-    if len(arg.properties) != 1 or "operation" not in arg.properties:
-        return False
-    return arg.properties["operation"] == "none"
+    return arg.operation in (None, "none")
 
 
 def deduce_final_option(session):

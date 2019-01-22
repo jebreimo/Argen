@@ -7,7 +7,7 @@
 # License text is included with the source distribution.
 # ===========================================================================
 
-ARGUMENT_PROPERTIES = {"callback", "count", "flags", "index",
+ARGUMENT_PROPERTIES = {"argument_type", "callback", "count", "flags", "index",
                        "inline", "member_name", "operation", "post_operation",
                        "separator", "separator_count", "text", "valid_values",
                        "value", "value_type", "variable"}
@@ -59,4 +59,11 @@ LEGAL_POST_OPERATIONS = {
     "abort",
     "final",
     "return"
+}
+
+LEGAL_ARGUMENT_TYPES = {
+    "normal",
+    "help",
+    "info",
+    "final"
 }

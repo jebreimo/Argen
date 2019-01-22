@@ -92,29 +92,29 @@ def generate_test_functions(session):
     return lines
 
 
-class CheckValueGenerator(templateprocessor.Expander):
-    def __init__(self, valid_values, value_type, argument, session):
-        super().__init__()
-        self._session = session
-        self._argument = argument
-        self._valid_values = valid_values
-        self._value_type = value_type
+# class CheckValueGenerator(templateprocessor.Expander):
+#     def __init__(self, valid_values, value_type, argument, session):
+#         super().__init__()
+#         self._session = session
+#         self._argument = argument
+#         self._valid_values = valid_values
+#         self._value_type = value_type
+#
+#     def type(self, *args):
+#         return str(self._value_type)
+#
+#     def test(self, *args):
+#         return generate_tests(self._valid_values)
+#
+#     def legal_values(self, *args):
+#         return generate_text(self._valid_values)
 
-    def type(self, *args):
-        return str(self._value_type)
 
-    def test(self, *args):
-        return generate_tests(self._valid_values)
-
-    def legal_values(self, *args):
-        return generate_text(self._valid_values)
-
-
-def generate_complex_value_check(valid_values, value_type, argument, session):
-    gen = CheckValueGenerator(valid_values, value_type, argument, session)
-    text = templateprocessor.make_text(TEST_COMPLEX_LEGAL_VALUES, gen)
-    print(text)
-    return text
+# def generate_complex_value_check(valid_values, value_type, argument, session):
+#     gen = CheckValueGenerator(valid_values, value_type, argument, session)
+#     text = templateprocessor.make_text(TEST_COMPLEX_LEGAL_VALUES, gen)
+#     print(text)
+#     return text
 
 
 TEST_LEGAL_VALUES = """\

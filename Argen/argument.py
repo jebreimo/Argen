@@ -49,6 +49,7 @@ class Argument:
         self.raw_text = raw_text
         self.properties = properties
         self.callback = None
+        self.argument_type = None
         self.flags = None
         self.index = None
         self.inline = None
@@ -87,6 +88,7 @@ def make_argument(raw_text, properties, session, file_name, line_number):
     arg = Argument(raw_text, dict(properties))
     arg.line_number = line_number
     arg.file_name = file_name
+    arg.argument_type = properties.get("argument_type", "normal")
     arg.callback = properties.get("callback")
     if "flags" in properties:
         arg.flags = properties["flags"].split()
