@@ -260,6 +260,7 @@ def make_code_properties(session):
 
     props.all_arguments = session.arguments
     props.arguments = [a for a in session.arguments if not a.flags]
+    props.arguments.sort(key=lambda a: a.index)
     props.options = [a for a in session.arguments if a.flags]
     props.short_options, props.long_options = get_argument_groups(session)
 
