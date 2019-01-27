@@ -142,6 +142,7 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
                       " Requires %s, received \"" % phrase)
         result.append("                     + std::to_string(arguments.size())"
                       " + \".\");")
+        result.append("    return false;")
         result.append("}")
         return result
 
