@@ -14,10 +14,12 @@
 + Don't maintain a separate count where vector::size() is sufficient to check if an option or argument has been given a correct number of times.
 + Make sure "<file> ..." and "[file] ..." are interpreted and shown correctly.
 + Error if argument (no flag) has value
-- Display a warning if there is no help option
 + Make it easier to declare which option is the help option
-- Test the properties that have a LEGAL_*_VALUES set.
+- Use a custom return value, not EINVAL.
+- Change "must be given 1 time" to "must be given"
 - Don't include show_help if there is no help option
+- Display a warning if there is no help option
+- Test the properties that have a LEGAL_*_VALUES set.
 - Support partial argument parsing (i.e. a function that parses the arguments it knows and remove these from argv/argc, the remaining arguments can then be parsed by another function)
     - Display error message if short options are used.
     - Display error message if arguments (as opposed to options) are used.
