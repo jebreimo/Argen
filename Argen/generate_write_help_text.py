@@ -186,14 +186,17 @@ void write_help_text(std::ostream& stream, const char* text, unsigned line_width
 
 unsigned get_default_line_width()
 {
+    auto width = get_console_width();
+    if (width == 0)
+        return 80;
 [[[IF has_min_max_line_width]]]
-    return std::min(std::max(get_console_width(), [[[min_line_width]]]u), [[[max_line_width]]]u);
+    return std::min(std::max(width, [[[min_line_width]]]u), [[[max_line_width]]]u);
 [[[ELIF min_line_width]]]
-    return std::max(get_console_width(), [[[min_line_width]]]u);
+    return std::max(width, [[[min_line_width]]]u);
 [[[ELIF max_line_width]]]
-    return std::min(get_console_width(), [[[max_line_width]]]u);
+    return std::min(width, [[[max_line_width]]]u);
 [[[ELSE]]]
-    return get_console_width());
+    return width;
 [[[ENDIF]]]
 }
 

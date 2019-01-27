@@ -82,7 +82,6 @@ SOURCE_NAMESPACE_TEMPLATE = """\
 
 
 SOURCE_CONTENTS_TEMPLATE = """\
-
 std::string to_string(const std::string_view& wrapper)
 {
     return std::string(wrapper.data(), wrapper.size());
