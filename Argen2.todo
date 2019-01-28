@@ -15,7 +15,8 @@
 + Make sure "<file> ..." and "[file] ..." are interpreted and shown correctly.
 + Error if argument (no flag) has value
 + Make it easier to declare which option is the help option
-- Use a custom return value, not EINVAL.
++ Use a custom return value, not EINVAL.
+- Make it possible to assign a custom value to RESULT_ERROR.
 - Change "must be given 1 time" to "must be given"
 - Don't include show_help if there is no help option
 - Display a warning if there is no help option

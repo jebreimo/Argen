@@ -286,13 +286,13 @@ bool process_arguments(Arguments& result,
                 break;
             case OptionResult::INVALID_OPTION:
                 if (auto_exit)
-                    exit(EINVAL);
+                    exit(Arguments::RESULT_ERROR);
                 result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
                 break;
             case OptionResult::UNKNOWN_OPTION:
                 write_error_text(to_string(arg) + ": unknown option.");
                 if (auto_exit)
-                    exit(EINVAL);
+                    exit(Arguments::RESULT_ERROR);
                 result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
                 break;
             default:
@@ -308,7 +308,7 @@ bool process_arguments(Arguments& result,
 [[[ELSE]]]
             write_error_text(to_string(arg) + ": the program doesn't take any arguments.");
             if (auto_exit)
-                exit(EINVAL);
+                exit(Arguments::RESULT_ERROR);
             result.[[[function_name]]]_result = Arguments::RESULT_ERROR;
             return result;
 [[[ENDIF]]]
@@ -330,7 +330,7 @@ bool process_arguments(Arguments& result,
     if ([[[final_checks]]])
     {
         if (auto_exit)
-            exit(EINVAL);
+            exit(Arguments::RESULT_ERROR);
         result.parse_arguments_result = Arguments::RESULT_ERROR;
         return result;
     }
