@@ -41,8 +41,11 @@ def run_tests(root_dir):
 
 def main(args):
     root_dir = os.path.dirname(os.path.realpath(__file__))
-    if len(args) == 2:
+    if len(args) == 1 and args[0] in ("-r", "--rebuild"):
         touch_helptext_files(root_dir)
+    elif args:
+        print("Usage: %s [-r or --rebuild]" % sys.argv[0])
+        return 1
     build(root_dir)
     run_tests(root_dir)
 
