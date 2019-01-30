@@ -38,10 +38,11 @@ class HeaderContentsGenerator(templateprocessor.Expander):
         self.namespace_end = session.code_properties.namespace_end
         self.class_name = session.settings.class_name
         self.function_name = session.settings.function_name
+        self.error_exit_code = (" = %d" % session.settings.error_exit_code) \
+            if session.settings.error_exit_code else ""
         self._special_options = [a for a in session.arguments
                                  if a.option_name
                                  and a.post_operation in ("abort", "return")]
-
 
     def code(self, params, context):
         return templateprocessor.make_lines(HEADER_CONTENTS_TEMPLATE, self)
@@ -127,7 +128,7 @@ struct [[[class_name]]]
           * An error message has been displayed. The option and argument
           * members of this struct can not be relied upon.
           */
-        RESULT_ERROR[[[IF has_result_enums]]],
+        RESULT_ERROR[[[error_exit_code]]][[[IF has_result_enums]]],
         [[[result_enums]]][[[ENDIF]]]
     };
 

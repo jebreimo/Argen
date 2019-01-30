@@ -18,7 +18,7 @@
 + Use a custom return value, not EINVAL.
 + Don't include show_help if there is no help option
 + Change "must be given 1 time" to "must be given"
-- Make it possible to assign a custom value to RESULT_ERROR.
++ Make it possible to assign a custom value to RESULT_ERROR.
 - Display a warning if there is no help option
 - Test the properties that have a LEGAL_*_VALUES set.
 - Support partial argument parsing (i.e. a function that parses the arguments it knows and remove these from argv/argc, the remaining arguments can then be parsed by another function)

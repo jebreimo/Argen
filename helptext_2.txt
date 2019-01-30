@@ -94,6 +94,7 @@ HeaderExtension = ".hpp"
 Namespace = Foo::Bar
 Test = false
 CaseSensitive = False
+ErrorExitCode = 10
 
 $$$ BriefHelpText
 usage: ${SYNOPSIS}

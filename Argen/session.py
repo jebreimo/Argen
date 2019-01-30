@@ -60,6 +60,7 @@ class Settings:
         self.max_line_width = 0
         self.min_line_width = 0
         self.update_argv = False
+        self.error_exit_code = None
 
 
 class Session:
@@ -164,6 +165,10 @@ class Session:
             self.settings.max_line_width = int(value)
         elif name == "CaseSensitive":
             self.settings.case_sensitive = parse_bool(value)
+        elif name == "ErrorExitCode":
+            self.settings.error_exit_code = int(value)
+            if self.settings.error_exit_code <= 0:
+                self.logger.error("ErrorExitCode must be greater than 0.")
         else:
             return False
         return True
