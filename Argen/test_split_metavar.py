@@ -29,3 +29,4 @@ def test_normalize_metavar():
     assert sm.split_metavar("File name [.jpg]") == ["File name [.jpg]"]
     assert sm.split_metavar("[FILE ..>") == ["[FILE ..>"]
     assert sm.split_metavar("FILE:FILE:.. ... ") == ["FILE:FILE:..", "..."]
+    assert sm.split_metavar("<x,y> ... <x,y>") == ["<x,y>", "...", "<x,y>"]

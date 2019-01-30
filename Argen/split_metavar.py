@@ -50,18 +50,19 @@ class Parser:
     def _add_ellipsis(self, ignoreWhitespaceOnly=False):
         if self._ellipsis:
             if self._whitespace:
-                self._current_entry.append(self._whitespace)
+                if self._current_entry:
+                    self._current_entry.append(self._whitespace)
                 self._whitespace = None
             self._current_entry.append(self._ellipsis)
             self._ellipsis = None
         elif self._whitespace and not ignoreWhitespaceOnly:
-            self._current_entry.append(self._whitespace)
+            if self._current_entry:
+                self._current_entry.append(self._whitespace)
             self._whitespace = None
 
     def process_space(self, token):
         self._add_ellipsis()
-        if self._current_entry:
-            self._whitespace = token
+        self._whitespace = token
 
     def process_start_bracket(self, token):
         self._add_ellipsis()

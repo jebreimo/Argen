@@ -13,6 +13,7 @@ import sys
 
 COMMAND = "list_of_tuple_argument"
 
+
 def check_value(cmd, test, value_key, default_value, actual_value):
     expected_value = test.get(value_key, default_value)
     if actual_value != expected_value:
@@ -44,30 +45,49 @@ def main():
 
 TESTS = [
     {
-        "returncode": 22,
+        "returncode": 1,
         "stderr": b"""\
 usage: list_of_tuple_argument  <x,y,z> ... <x,y,z>
 
-Incorrect number of arguments. Requires 2, received 0.
+Incorrect number of arguments. Requires 2 or more, received 0.
 """
     },
     {
         "arguments": ["foo"],
-        "returncode": 22,
+        "returncode": 1,
         "stderr": b"""\
 usage: list_of_tuple_argument  <x,y,z> ... <x,y,z>
 
-Incorrect number of arguments. Requires 2, received 1.
+Incorrect number of arguments. Requires 2 or more, received 1.
 """
     },
     {
         "arguments": ["foo", "bar"],
-        "returncode": 22,
+        "returncode": 1,
         "stderr": b"""\
 usage: list_of_tuple_argument  <x,y,z> ... <x,y,z>
 
 <x,y,z> ... <x,y,z>: incorrect number of parts in value "foo".
 It must have exactly 3 parts separated by ,'s.
+"""
+    },
+    {
+        "arguments": ["2,3,5", "4,5.5,6"],
+        "returncode": 0,
+        "stdout": b"""\
+parse_arguments_result: 0
+points[0]: (2, 3, 5)
+points[1]: (4, 5.5, 6)
+"""
+    },
+    {
+        "arguments": ["2,3,5", "4,5.5,6", "5,7,12"],
+        "returncode": 0,
+        "stdout": b"""\
+parse_arguments_result: 0
+points[0]: (2, 3, 5)
+points[1]: (4, 5.5, 6)
+points[2]: (5, 7, 12)
 """
     }
 ]
