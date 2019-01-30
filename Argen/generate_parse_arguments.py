@@ -23,7 +23,7 @@ def format_count(count):
         return ""
     if count[0] == count[1]:
         if count[0] == 1:
-            return "must be given 1 time"
+            return "must be given"
         else:
             return "must be given %d times" % count[0]
     if count[0] and not count[1]:
