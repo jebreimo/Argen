@@ -27,6 +27,7 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
         self.has_extend = "extend" in methods
         self.has_check_value = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") == -1)
         self.has_check_vector = any(a for a in self._session.arguments if a.valid_values and a.member and str(a.value_type).find("vector") != -1)
+        self.has_help_option = any(a for a in self._session.arguments if a.argument_type == "help")
 
 
 def generate_option_functions(session):
@@ -35,12 +36,14 @@ def generate_option_functions(session):
 
 
 OPTION_FUNCTIONS_TEMPLATE = """\
+[[[IF has_help_option]]]
 bool show_help(Arguments& arguments, const std::string& argument)
 {
     write_help_text(std::cout);
     return true;
 }
 
+[[[ENDIF]]]
 [[[IF has_non_string_values]]]
 template <typename T>
 bool from_string(const std::string_view& str, T& value)
