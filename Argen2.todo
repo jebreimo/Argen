@@ -31,3 +31,6 @@
     - "event-mode" where arguments are processed when they are first encountered
     - "batch-mode" where all arguments are read into a list before they are processed
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
+
+Re-organize code:
+The preparatory step, currently called code_properties.py, ought to be the responsibility of the code_generators.

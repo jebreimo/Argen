@@ -26,7 +26,7 @@ def find_problematic_argument_callbacks(arguments):
 
 def validate_arguments(session):
     for argument in session.arguments:
-        if argument.operation == "assign" \
+        if argument.operation in ("assign", "append") \
                 and argument.value is None \
                 and deducedtype.is_tuple(argument.value_type):
             if argument.separator is None:
@@ -43,6 +43,12 @@ def validate_arguments(session):
         if not argument.flags and argument.value:
             session.logger.error("Only options can have a constant assigned"
                                  " to them.", argument=argument)
+        if argument.separator_count and not argument.separator:
+            session.logger.error("Separator is unspecified.",
+                                 argument=argument)
+        elif not argument.separator_count and argument.separator:
+            session.logger.error("Can not determine the separator count.",
+                                 argument=argument)
 
     if session.settings.immediate_callbacks:
         non_options = [a for a in session.arguments if not a.flags]

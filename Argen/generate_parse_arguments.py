@@ -277,9 +277,11 @@ bool process_arguments(Arguments& result,
             switch (process_option(result, arg, option_code, arg_it))
 [[[ENDIF]]]
             {
+[[[IF has_final_option]]]
             case OptionResult::FINAL_OPTION:
                 final_option = true;
                 break;
+[[[ENDIF]]]
             case OptionResult::ABORTING_OPTION:
                 if (auto_exit)
                     exit(0);
