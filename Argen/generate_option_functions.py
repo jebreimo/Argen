@@ -16,7 +16,6 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
         self.function_name = session.settings.function_name
         self.has_separators = session.code_properties.has_delimited_options \
                               or session.code_properties.has_delimited_arguments
-        self.has_non_string_values = session.code_properties.has_non_string_values
         self.has_options = session.code_properties.options
         methods = gt.get_assignment_methods(session.arguments)
         self.has_parse_and_assign = "parse_and_assign" in methods
@@ -44,22 +43,6 @@ bool show_help(Arguments& arguments, const std::string& argument)
 }
 
 [[[ENDIF]]]
-[[[IF has_non_string_values]]]
-template <typename T>
-bool from_string(const std::string_view& str, T& value)
-{
-    std::istringstream stream(to_string(str));
-    stream >> value;
-    return !stream.fail() && stream.eof();
-}
-
-[[[ENDIF]]]
-bool from_string(const std::string_view& str, std::string& value)
-{
-    value = str;
-    return true;
-}
-
 [[[IF has_options]]]
 bool read_value(std::string_view& value,
                 ArgumentIterator& iterator,

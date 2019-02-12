@@ -14,6 +14,7 @@ from generate_test_code import generate_test_code
 from generate_write_help_text import generate_write_help_text
 from generate_parse_arguments import generate_parse_arguments
 from generate_option_functions import generate_option_functions
+from generate_from_string import generate_from_string
 
 
 class SourceFileGenerator(templateprocessor.Expander):
@@ -51,6 +52,9 @@ class SourceFileGenerator(templateprocessor.Expander):
 
     def option_functions(self, *args):
         return generate_option_functions(self._session)
+
+    def from_string_functions(self, *args):
+        return generate_from_string(self._session)
 
     def options(self, *args):
         return generate_options(self._session)
@@ -92,55 +96,7 @@ std::string to_string(const std::string_view& wrapper)
 [[[get_console_width]]]
 [[[write_help_text_function]]]
 [[[options]]]
+[[[from_string_functions]]]
 [[[option_functions]]]
 [[[parse_arguments]]]
-"""
-
-SOURCE_CONTENTS = """\
-[[[IF namespace]]]
-[[[endNamespace]]]
-[[[ENDIF]]]
-[[[IF includeTest]]]
-
-#include <iomanip>
-
-template <typename It>
-void printAllValues(It begin, It end)
-{
-    if (begin == end)
-        return;
-    std::cout << *begin;
-    for (++begin; begin != end; ++begin)
-        std::cout << ", " << *begin;
-}
-
-#define PRINT_VALUE(member) \
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " "<< args.member << "\n"
-#define PRINT_STRING(member) \
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " \"" << args.member << "\"\n"
-#define PRINT_LIST(member) \
-    std::cout << std::setw([[[memberWidth]]]) << #member ":" << " {"; \
-    printAllValues(begin(args.member), end(args.member)); \
-    std::cout << "}\n"
-
-int main(int argc, char* argv[])
-{
-    std::cout << "\n============================= Input Arguments "
-                    "============================\n";
-    for (int i = 0; i < argc; ++i)
-        std::cout << "argv[" << i << "] = \"" << argv[i] << "\"\n";
-
-    std::cout << "\n============================== Parser output "
-                    "=============================\n";
-    auto args = [[[qualifiedFunctionName]]](argc, argv, false);
-
-    std::cout << "\n================================= Values "
-                    "=================================\n";
-    std::cout.setf(std::ios_base::boolalpha);
-    std::cout.setf(std::ios_base::left, std::ios_base::adjustfield);
-    [[[printMembers]]]
-    return 0;
-}
-
-[[[ENDIF]]]\
 """

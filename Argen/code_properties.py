@@ -12,6 +12,37 @@ from replace_variables import replace_variables
 import deducedtype as dt
 
 
+INTEGER_TYPES = {
+    "char",
+    "short",
+    "int",
+    "long",
+    "long long",
+    "int8_t",
+    "int16_t",
+    "int32_t",
+    "int64_t",
+    "ptrdiff_t",
+    "size_t",
+    "signed",
+    "signed char",
+    "signed short",
+    "signed int",
+    "signed long",
+    "signed long long",
+    "unsigned",
+    "unsigned char",
+    "unsigned short",
+    "unsigned int",
+    "unsigned long",
+    "unsigned long long",
+    "uint8_t",
+    "uint16_t",
+    "uint32_t",
+    "uint64_t"
+}
+
+
 class CodeProperties:
     def __init__(self):
         self.long_options = None
@@ -26,14 +57,7 @@ class CodeProperties:
         self.source_file_path = ""
         self.header_file_name = ""
         self.header_file_path = ""
-        # self.class_name = None
-        # self.parse_function_name = None
-        # self.expose_helptext_functions = None
-        # self.shortest_option_length = 0
         self.case_insensitive = True
-        # self.abbreviated_options = True
-        # self.non_short_options = True
-        # self.special_options = True
         self.counted_options = None
         self.sized_members = None
         self.header_template = None
@@ -52,9 +76,12 @@ class CodeProperties:
         self.has_delimited_options = False
         self.has_delimited_arguments = False
         self.parsed_type_names = None
+
+        self.has_strings = False
         self.has_non_string_values = False
         self.has_tuples = False
         self.has_vectors = False
+        self.has_integers = False
 
 
 def get_internal_variables(session):
@@ -240,16 +267,16 @@ def determine_line_width_members(code_properties, settings):
             code_properties.max_line_width = int(1.25 * default_width + 0.5)
 
 
-def has_non_string_type_names(type_names):
-    return any(tn for tn in type_names if tn != "std::string"
-               and not tn.startswith("std::vector")
-               and not tn.startswith("std::pair"))
-
-
-def matches_regexp(regexp, strings):
-    if isinstance(regexp, str):
-        regexp = re.compile(regexp)
-    return any(regexp.search(s) for s in strings)
+# def has_non_string_type_names(type_names):
+#     return any(tn for tn in type_names if tn != "std::string"
+#                and not tn.startswith("std::vector")
+#                and not tn.startswith("std::tuple"))
+#
+#
+# def matches_regexp(regexp, strings):
+#     if isinstance(regexp, str):
+#         regexp = re.compile(regexp)
+#     return any(regexp.search(s) for s in strings)
 
 
 def make_code_properties(session):
@@ -288,7 +315,19 @@ def make_code_properties(session):
     props.sized_members = get_sized_members(session)
     props.parsed_type_names = parsed_type_names
 
-    props.source_includes = ['"%s"' % session.header_file_name()]
+    tuple_regexp = re.compile(r"\btuple\b")
+    vector_regexp = re.compile(r"\bvector\b")
+    for type_name in parsed_type_names:
+        if vector_regexp.search(type_name):
+            props.has_vectors = True
+        elif tuple_regexp.search(type_name):
+            props.has_tuples = True
+        elif type_name in INTEGER_TYPES:
+            props.has_integers = True
+        elif type_name == "std::string":
+            props.has_strings = True
+        else:
+            props.has_non_string_values = True
 
     for argument in session.arguments:
         if argument.separator:
@@ -299,14 +338,19 @@ def make_code_properties(session):
         if argument.flags and not argument.value:
             props.has_option_values = True
 
+    source_includes = {'"%s"' % session.header_file_name()}
     if props.has_delimited_options:
-        props.source_includes.append("<algorithm>")
-    props.source_includes.extend(["<iostream>", "<string_view>"])
-    props.has_non_string_values = has_non_string_type_names(props.parsed_type_names)
+        source_includes.add("<algorithm>")
+    if props.has_integers:
+        source_includes.update(["<algorithm>", "<cstring>", "<iterator>",
+                                "<limits>", "<type_traits>"])
+    source_includes.update(["<iostream>", "<string_view>"])
+    # props.has_non_string_values = has_non_string_type_names(props.parsed_type_names)
     if props.has_non_string_values \
             or props.has_delimited_arguments\
             or props.has_delimited_options:
-        props.source_includes.append("<sstream>")
+        source_includes.add("<sstream>")
+    props.source_includes = list(source_includes)
     props.source_includes.sort()
 
     if session.settings.namespace:
@@ -324,6 +368,6 @@ def make_code_properties(session):
         props.case_insensitive = can_have_case_insensitive_flags(session)
     props.has_program_name = ("${PROGRAM}" in session.help_text
                                or "${PROGRAM}" in session.brief_help_text)
-    props.has_tuples = matches_regexp(r"\btuple\b", props.parsed_type_names)
-    props.has_vectors = matches_regexp(r"\bvector\b", props.parsed_type_names)
+    # props.has_tuples = matches_regexp(r"\btuple\b", props.parsed_type_names)
+    # props.has_vectors = matches_regexp(r"\bvector\b", props.parsed_type_names)
     return props
