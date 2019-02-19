@@ -121,11 +121,7 @@ def generate_argument_processors(session):
     return determine_argument_expressions(session.code_properties.arguments)
 
 
-ARGUMENT_PROCESSOR_TEMPLATE = """\
-[[[IF has_temp_variable]]]
-    {
-        [[[temp_variable_type]]] temp;
-    }
-[[[ELSE]]]
-[[[ENDIF]]]\
-"""
+def generate_immediate_argument_processor(session):
+    arg = session.code_properties.arguments[0]
+    name = '"%s"' % arg.metavar
+    return make_read_argument(arg, "arg.string", name)

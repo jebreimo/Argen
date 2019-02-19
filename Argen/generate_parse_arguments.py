@@ -82,7 +82,14 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
         self.argument_size = tools.get_accumulated_count(session.code_properties.arguments)
         self.has_argument_size_check = self.argument_size != (0, None)
         self.has_arguments = session.code_properties.arguments
-        self.has_final_checks = self.has_member_counters or self.has_arguments
+        self.has_normal_arguments = not session.settings.immediate_callbacks \
+            or len(session.code_properties.arguments) != 1 \
+            or not session.code_properties.arguments[0].callback
+        self.has_callback_argument = session.settings.immediate_callbacks \
+            and len(session.code_properties.arguments) == 1 \
+            and session.code_properties.arguments[0].callback
+        self.has_final_checks = self.has_member_counters \
+                                or self.has_normal_arguments
         self.has_options = session.code_properties.options
 
     def option_cases(self, *args):
@@ -149,11 +156,14 @@ class ParseArgumentsGenerator(templateprocessor.Expander):
     def argument_processors(self, *args):
         return gap.generate_argument_processors(self._session)
 
+    def process_callback_argument(self, *args):
+        return gap.generate_immediate_argument_processor(self._session)
+
     def final_checks(self, *args):
         checks = []
         if self.has_member_counters:
             checks.append("!check_option_counts(result, counters)")
-        if self.has_arguments:
+        if self.has_normal_arguments:
             checks.append("!process_arguments(result, arguments)")
         for i in range(1, len(checks)):
             checks[i] = "|| " + checks[i]
@@ -194,11 +204,11 @@ struct MemberCounters
 };
 [[[ENDIF]]]
 
-OptionResult process_option(Arguments& result,
+OptionResult process_option([[[class_name]]]& result,
 [[[IF has_member_counters]]]
                             MemberCounters& counters,
 [[[ENDIF]]]
-                            Argument& arg,
+                            const Argument& arg,
                             int option_code,
                             ArgumentIterator& arg_it)
 {
@@ -218,7 +228,7 @@ OptionResult process_option(Arguments& result,
 }
 
 [[[IF has_member_counters]]]
-bool check_option_counts(Arguments& result, MemberCounters& counters)
+bool check_option_counts([[[class_name]]]& result, MemberCounters& counters)
 {
     [[[option_counter_checks]]]
     [[[member_size_checks]]]
@@ -227,8 +237,8 @@ bool check_option_counts(Arguments& result, MemberCounters& counters)
 
 [[[ENDIF]]]
 [[[ENDIF]]]
-[[[IF has_arguments]]]
-bool process_arguments(Arguments& result,
+[[[IF has_normal_arguments]]]
+bool process_arguments([[[class_name]]]& result,
                        const std::vector<std::string_view>& arguments)
 {
 [[[IF has_argument_size_check]]]
@@ -240,6 +250,17 @@ bool process_arguments(Arguments& result,
     std::vector<std::string_view> parts;
 [[[ENDIF]]]
     [[[argument_processors]]]
+    return true;
+}
+
+[[[ENDIF]]]
+[[[IF has_callback_argument]]]
+bool process_argument([[[class_name]]]& result, const Argument& arg)
+{
+[[[IF has_delimited_arguments]]]
+    std::vector<std::string_view> parts;
+[[[ENDIF]]]
+    [[[process_callback_argument]]]
     return true;
 }
 
@@ -305,8 +326,10 @@ bool process_arguments(Arguments& result,
         }
         else
         {
-[[[IF has_arguments]]]
+[[[IF has_normal_arguments]]]
             arguments.push_back(arg.string);
+[[[ELIF has_callback_argument]]]
+            process_argument(result, arg);
 [[[ELSE]]]
             write_error_text(to_string(arg) + ": the program doesn't take any arguments.");
             if (auto_exit)
@@ -318,8 +341,13 @@ bool process_arguments(Arguments& result,
 [[[IF has_final_option]]]
         if (final_option)
         {
+[[[IF has_normal_arguments]]]
             while (arg_it.has_next())
                 arguments.push_back(arg_it.next_argument().string);
+[[[ELIF has_callback_argument]]]
+            while (arg_it.has_next())
+                process_argument(result, arg);
+[[[ENDIF]]]
             break;
         }
 [[[ENDIF]]]

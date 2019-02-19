@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-add_subdirectory(callbacks)
+add_subdirectory(immediate_callback_tuple)
 add_subdirectory(list_of_tuple_argument)

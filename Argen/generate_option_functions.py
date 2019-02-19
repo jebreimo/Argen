@@ -90,15 +90,13 @@ bool split_value(std::vector<std::string_view>& parts,
     if (parts.size() < min_splits + 1)
     {
         std::stringstream ss;
-        ss << to_string(argument)
-           << ": incorrect number of parts in value \\""
+        ss << to_string(argument) << ": incorrect number of parts in value \\""
            << value << "\\".\\nIt must have ";
         if (min_splits == max_splits)
             ss << "exactly ";
         else
             ss << "at least ";
-        ss << min_splits + 1 <<  " parts separated by " << separator
-           << "'s.";
+        ss << min_splits + 1 <<  " parts separated by " << separator << "'s.";
         write_error_text(ss.str());
         return false;
     }

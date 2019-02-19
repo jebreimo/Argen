@@ -19,6 +19,10 @@
 + Don't include show_help if there is no help option
 + Change "must be given 1 time" to "must be given"
 + Make it possible to assign a custom value to RESULT_ERROR.
++ Support two different argument modes:
+    + Report warnings when arguments have callbacks, but the list of arguments requires batch-mode
+    + "event-mode" where arguments are processed when they are first encountered
+    + "batch-mode" where all arguments are read into a list before they are processed
 - Display a warning if there is no help option
 - Test the properties that have a LEGAL_*_VALUES set.
 - Support partial argument parsing (i.e. a function that parses the arguments it knows and remove these from argv/argc, the remaining arguments can then be parsed by another function)
@@ -26,10 +30,6 @@
     - Display error message if arguments (as opposed to options) are used.
 - Have two modes for generated parse_arguments: one that leaves argc and argv unchanged, one that removes all known options and arguments.
 - Deduce inline and member_inline, that is, replace member references with variable.member.
-- Support two different argument modes:
-    + Report warnings when arguments have callbacks, but the list of arguments requires batch-mode
-    - "event-mode" where arguments are processed when they are first encountered
-    - "batch-mode" where all arguments are read into a list before they are processed
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
 
 Re-organize code:

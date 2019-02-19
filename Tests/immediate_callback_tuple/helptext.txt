@@ -5,12 +5,13 @@ ARGUMENTS
   {{<NUM,NUM> ...| Values: 0..20:0..30 | Separator: , | Callback: print_string_callback}} One or more tuples of integers.
 
 OPTIONS
-  {{-h, --help}} Show help.
+  {{-h, --help | Member: }} Show help.
   {{-o CHAR, --outer=CHAR| Default: "*"}} The outer characters.
   {{-i CHAR, --inner=CHAR| Default: "-"}} The inner characters.
 
 $$$ Settings
 Test = True
+ImmediateCallbacks = True
 
 $$$ Source
 #include "Callback.h"

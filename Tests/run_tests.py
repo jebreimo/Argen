@@ -33,10 +33,19 @@ def build(root_dir):
 
 
 def run_tests(root_dir):
+    env = os.environ.copy()
+    python_path = env.get("PYTHONPATH")
+    script_dir = os.path.join(root_dir, "scripts")
+    if not python_path:
+        python_path = script_dir
+    else:
+        python_path += os.pathsep + script_dir
+    env["PYTHONPATH"] = python_path
     for file_path in glob.glob(os.path.join(root_dir, "*/test.py")):
         test_name = os.path.basename(os.path.dirname(file_path))
         print(f"Testing {test_name}.")
-        subprocess.run([file_path], stdout=sys.stdout, stderr=sys.stderr)
+        subprocess.run([file_path], stdout=sys.stdout, stderr=sys.stderr,
+                       env=env)
 
 
 def main(args):

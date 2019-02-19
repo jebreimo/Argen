@@ -12,7 +12,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_compile_definitions(ARGEN_MAIN)
 
-add_executable(callbacks
+add_executable(immediate_callback_tuple
     Callback.cpp
     Callback.h
     ParseArguments.cpp
