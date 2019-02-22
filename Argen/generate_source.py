@@ -11,9 +11,10 @@ from generate_argument_iterator import generate_argument_iterator
 import generate_get_console_width
 from generate_option_list import generate_options
 from generate_test_code import generate_test_code
-from generate_write_help_text import generate_write_help_text
+from generate_write_formatted_text import generate_write_help_text
 from generate_parse_arguments import generate_parse_arguments
-from generate_option_functions import generate_option_functions
+from generate_parse_arguments_helpers import generate_parse_arguments_helpers
+from generate_value_processing_functions import generate_value_processing_functions
 from generate_from_string import generate_from_string
 
 
@@ -51,7 +52,7 @@ class SourceFileGenerator(templateprocessor.Expander):
         return generate_write_help_text(self._session)
 
     def option_functions(self, *args):
-        return generate_option_functions(self._session)
+        return generate_value_processing_functions(self._session)
 
     def from_string_functions(self, *args):
         return generate_from_string(self._session)
@@ -61,6 +62,9 @@ class SourceFileGenerator(templateprocessor.Expander):
 
     def has_options(self, *args):
         return self._session.code_properties.options
+
+    def parse_arguments_helpers(self, *args):
+        return generate_parse_arguments_helpers(self._session)
 
     def parse_arguments(self, *args):
         return generate_parse_arguments(self._session)
@@ -86,17 +90,23 @@ SOURCE_NAMESPACE_TEMPLATE = """\
 
 
 SOURCE_CONTENTS_TEMPLATE = """\
-std::string to_string(const std::string_view& wrapper)
+namespace
 {
-    return std::string(wrapper.data(), wrapper.size());
-}
+    std::string to_string(const std::string_view& wrapper)
+    {
+        return std::string(wrapper.data(), wrapper.size());
+    }
+
 [[[IF has_options]]]
-[[[argument_iterator]]]
+    [[[argument_iterator]]]
 [[[ENDIF]]]
-[[[get_console_width]]]
-[[[write_help_text_function]]]
-[[[options]]]
-[[[from_string_functions]]]
-[[[option_functions]]]
+    [[[get_console_width]]]
+    [[[write_help_text_function]]]
+    [[[options]]]
+    [[[from_string_functions]]]
+    [[[option_functions]]]
+    [[[parse_arguments_helpers]]]
+}
+
 [[[parse_arguments]]]
 """

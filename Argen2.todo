@@ -23,6 +23,8 @@
     + Report warnings when arguments have callbacks, but the list of arguments requires batch-mode
     + "event-mode" where arguments are processed when they are first encountered
     + "batch-mode" where all arguments are read into a list before they are processed
++ Place all internal functions and classes in a private namespace.
+    + Split generate_parse_arguments.py in two
 - Display a warning if there is no help option
 - Test the properties that have a LEGAL_*_VALUES set.
 - Support partial argument parsing (i.e. a function that parses the arguments it knows and remove these from argv/argc, the remaining arguments can then be parsed by another function)
@@ -33,4 +35,8 @@
 - Hide lines with "anonymous" arguments or options if they are empty after the argument definition has been removed.
 
 Re-organize code:
-The preparatory step, currently called code_properties.py, ought to be the responsibility of the code_generators.
+- Divide the code in three separate sub-modules:
+    - Parser
+    - Deductions
+    - Generator
+

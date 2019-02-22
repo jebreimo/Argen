@@ -29,7 +29,7 @@ class OptionFunctionsGenerator(templateprocessor.Expander):
         self.has_help_option = any(a for a in self._session.arguments if a.argument_type == "help")
 
 
-def generate_option_functions(session):
+def generate_value_processing_functions(session):
     generator = OptionFunctionsGenerator(session)
     return templateprocessor.make_lines(OPTION_FUNCTIONS_TEMPLATE, generator)
 

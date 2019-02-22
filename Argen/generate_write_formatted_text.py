@@ -46,10 +46,10 @@ const char HELP_TEXT[] =
 const char BRIEF_HELP_TEXT[] =
     [[[brief_help_text]]];
 
-class HelpTextWriter
+class FormattedTextWriter
 {
 public:
-    HelpTextWriter(std::ostream& stream, unsigned line_width)
+    FormattedTextWriter(std::ostream& stream, unsigned line_width)
         : m_Stream(stream),
           m_LineWidth(line_width)
 [[[IF has_alignment]]]
@@ -134,11 +134,11 @@ private:
     bool m_EmptyLine = true;
 };
 
-void write_help_text(std::ostream& stream, const char* text, unsigned line_width)
+void write_formatted_text(std::ostream& stream, const char* text, unsigned line_width)
 {
     if (line_width == 0)
         line_width = [[[line_width]]];
-    HelpTextWriter writer(stream, line_width);
+    FormattedTextWriter writer(stream, line_width);
     for (unsigned i = 0; text[i]; ++i)
     {
         switch (text[i])
@@ -198,20 +198,6 @@ unsigned get_default_line_width()
 [[[ELSE]]]
     return width;
 [[[ENDIF]]]
-}
-
-void write_help_text(std::ostream& stream, unsigned line_width)
-{
-    if (line_width == 0)
-        line_width = get_default_line_width();
-    write_help_text(stream, HELP_TEXT, line_width);  
-}
-
-void write_brief_help_text(std::ostream& stream, unsigned line_width)
-{
-    if (line_width == 0)
-        line_width = get_default_line_width();
-    write_help_text(stream, BRIEF_HELP_TEXT, line_width);
 }
 
 void write_error_text(const std::string& error_text,

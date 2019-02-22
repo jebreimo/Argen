@@ -6,7 +6,6 @@
 # This file is distributed under the BSD License.
 # License text is included with the source distribution.
 # ===========================================================================
-import generator_tools as gt
 import templateprocessor
 
 
